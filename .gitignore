@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.js
+*.js.map
+*.d.ts
+*.d.ts.map
+
+# Keep these JS files
+!eslint.config.js
+!jest.config.js
+!bin/**/*.js
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# NPM
+.npm/
+package-lock.json
+
+# Yarn
+yarn.lock
+.yarn/
+
+# Output from tool testing
+test-output/
+example-output/

@@ -1,0 +1,66 @@
+{
+  "name": "context-forge",
+  "version": "0.1.0",
+  "description": "CLI tool that generates context engineering documentation for Claude Code projects",
+  "main": "dist/index.js",
+  "bin": {
+    "context-forge": "./bin/context-forge.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint . --ext .ts,.js",
+    "format": "prettier --write \"**/*.{js,ts,json,md}\"",
+    "prepublishOnly": "npm run build && npm run lint && npm test"
+  },
+  "keywords": [
+    "cli",
+    "context-engineering",
+    "claude-code",
+    "project-generator",
+    "documentation",
+    "ai-assisted-development"
+  ],
+  "author": "",
+  "license": "MIT",
+  "homepage": "https://github.com/webdevtodayjason/context-forge#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webdevtodayjason/context-forge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/webdevtodayjason/context-forge/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "dist/",
+    "bin/",
+    "templates/"
+  ],
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0",
+    "fs-extra": "^11.3.0",
+    "handlebars": "^4.7.8",
+    "inquirer": "^12.7.0",
+    "ora": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.8",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.12",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "eslint": "^9.30.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.1",
+    "jest": "^30.0.4",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
+  }
+}
