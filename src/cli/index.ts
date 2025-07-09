@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init';
+import { validateCommand } from '../commands/validate';
 import { version } from '../../package.json';
 
 const program = new Command();
@@ -11,8 +12,9 @@ program
   .version(version, '-v, --version', 'output the current version')
   .helpOption('-h, --help', 'display help for command');
 
-// Add init command
+// Add commands
 program.addCommand(initCommand);
+program.addCommand(validateCommand);
 
 // Error handling wrapper
 const handleError = (error: Error) => {

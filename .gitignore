@@ -56,3 +56,6 @@ yarn.lock
 # Output from tool testing
 test-output/
 example-output/
+
+# Temporary files
+tmp/

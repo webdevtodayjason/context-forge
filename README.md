@@ -1,32 +1,79 @@
-# Context Forge
+<div align="center">
 
-A CLI tool that generates context engineering documentation for Claude Code projects, enabling efficient AI-assisted development workflows without requiring any AI APIs.
+# 🛠️ Context Forge
 
-## Overview
+**CLI tool for instant Claude Code project scaffolding with context engineering best practices**
 
-Context Forge helps developers quickly set up their projects with proper context engineering principles based on Andre Karpathy's methodology. It generates structured documentation that:
+[![npm version](https://img.shields.io/npm/v/context-forge.svg)](https://www.npmjs.com/package/context-forge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/webdevtodayjason/context-forge/pulls)
+[![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red.svg)](https://github.com/webdevtodayjason/context-forge)
 
-- Manages Claude Code's context window efficiently
-- Provides clear implementation stages and tasks
-- Maintains project consistency through documented rules
-- Enables step-by-step development without hallucination
+<p align="center">
+  <strong>Transform your project ideas into Claude Code-ready applications with intelligent context engineering</strong>
+</p>
 
-## Features
+[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Credits](#-credits)
+
+</div>
+
+---
+
+## 🌟 Overview
+
+Context Forge is a powerful CLI tool that bridges the gap between project requirements and AI-assisted development. By implementing Andre Karpathy's context engineering principles, it generates comprehensive documentation structures that enable Claude Code to understand and build your project efficiently—without hallucinations or context confusion.
+
+### Why Context Forge?
+
+In the age of AI-powered development, the key to success isn't just what you tell the AI—it's how you structure the context. Context Forge ensures your project has:
+
+- 📋 **Structured Documentation** - Organized context that AI can navigate efficiently
+- 🎯 **Staged Implementation** - Step-by-step development plans that prevent scope creep
+- 🔄 **Workflow Automation** - Clear rules that guide AI behavior consistently
+- 🚀 **Zero Setup Time** - From idea to structured project in minutes
+- 🔌 **No AI Required** - Works offline, no API keys needed
+
+## ✨ Features
+
+### Core Features
 
 - 🚀 **No AI Dependencies** - Works completely offline without API keys
 - 📋 **Interactive CLI** - Guided project setup with smart prompts
 - 🎯 **Template-based Generation** - Consistent, high-quality documentation
-- 🛠️ **Multiple Tech Stacks** - Support for Next.js, FastAPI, React, Express, and more
+- 🛠️ **Multiple Tech Stacks** - Support for 9+ frameworks with specific configurations
 - 📁 **Structured Output** - Organized documentation following best practices
 - ⚡ **Fast Setup** - Go from zero to Claude Code-ready in minutes
 
-## Installation
+### Advanced Features
+
+- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops
+- ✅ **Validation System** - Built-in code quality checks and gates
+- 🎨 **Tech-Stack Specific Templates** - Optimized CLAUDE.md for each framework
+- 📊 **Comprehensive Reporting** - Validation reports and progress tracking
+- 🔧 **Extensible Architecture** - Easy to add new tech stacks and features
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm 7+
+- Git (for version control)
+- A code editor (VS Code recommended)
+
+### Installation
 
 ```bash
+# Install globally (recommended)
 npm install -g context-forge
-```
 
-## Usage
+# Or install as a dev dependency
+npm install --save-dev context-forge
+
+# Or use npx without installation
+npx context-forge init
+```
 
 ### Basic Usage
 
@@ -37,9 +84,193 @@ context-forge init
 # Specify output directory
 context-forge init --output ./my-project
 
-# Use preset configurations
-context-forge init --preset nextjs-fastapi
+# Use with existing PRD file
+context-forge init --prd ./requirements.md
+
+# Skip interactive prompts with config
+context-forge init --config ./context-forge.json
+
+# Run validation on existing project
+context-forge validate
 ```
+
+## 💡 Usage Examples
+
+### Example 1: SaaS Dashboard Project
+
+```bash
+$ context-forge init
+
+? Project name: Analytics Dashboard
+? Project type: fullstack
+? Project description: Real-time analytics dashboard with data visualization
+? How would you like to provide the PRD? Create new PRD
+? Frontend framework: nextjs
+? Backend framework: fastapi
+? Database: postgresql
+? Select features: authentication, dashboard, realtime-updates, data-export
+? Project timeline: standard
+? Team size: small
+? Enable PRP generation? Yes
+? Enable validation system? Yes
+
+✅ Project initialized successfully!
+
+Generated files:
+- CLAUDE.md (Next.js 15 specific configuration)
+- Docs/Implementation.md (4 development stages)
+- Docs/project_structure.md
+- PRPs/base.md (Implementation prompt with validation gates)
+- .context-forge/config.json
+
+Next steps:
+1. cd analytics-dashboard
+2. Review CLAUDE.md for project rules
+3. Start with Stage 1 in Docs/Implementation.md
+```
+
+### Example 2: API-Only Microservice
+
+```bash
+$ context-forge init --output user-service
+
+? Project name: User Service
+? Project type: api
+? Project description: User management microservice with JWT auth
+? Frontend framework: none
+? Backend framework: express
+? Database: mongodb
+? Authentication method: jwt
+? Enable Docker support? Yes
+? Enable GitHub Actions? Yes
+
+Generated structure:
+user-service/
+├── CLAUDE.md              # Express.js specific rules
+├── Docs/
+├── PRPs/
+├── Dockerfile
+├── docker-compose.yml
+└── .github/workflows/
+```
+
+### Example 3: Using Configuration File
+
+```bash
+# context-forge.json
+{
+  "projectName": "E-Commerce Platform",
+  "projectType": "fullstack",
+  "description": "Modern e-commerce platform with AI recommendations",
+  "prd": {
+    "content": "# E-Commerce Platform\n\n## Overview\n...",
+    "features": [
+      {
+        "id": "auth",
+        "name": "User Authentication",
+        "priority": "must-have",
+        "complexity": "medium"
+      },
+      {
+        "id": "catalog",
+        "name": "Product Catalog",
+        "priority": "must-have",
+        "complexity": "complex"
+      },
+      {
+        "id": "cart",
+        "name": "Shopping Cart",
+        "priority": "must-have",
+        "complexity": "medium"
+      },
+      {
+        "id": "ai-recommendations",
+        "name": "AI Product Recommendations",
+        "priority": "should-have",
+        "complexity": "complex"
+      }
+    ]
+  },
+  "techStack": {
+    "frontend": "react",
+    "backend": "django",
+    "database": "postgresql",
+    "cache": "redis",
+    "search": "elasticsearch"
+  },
+  "extras": {
+    "prp": true,
+    "validation": true,
+    "docker": true,
+    "cicd": true,
+    "testing": true
+  }
+}
+
+# Run with config
+$ context-forge init --config context-forge.json --output ecommerce-platform
+```
+
+## 🎯 Real-World Scenarios
+
+### Scenario 1: Startup MVP
+
+You're building an MVP for a startup. You need to move fast but maintain quality:
+
+```bash
+# 1. Initialize with MVP timeline
+context-forge init --preset startup-mvp
+
+# 2. Review generated Implementation.md
+cat Docs/Implementation.md
+# Shows 2-week sprint plan with daily tasks
+
+# 3. Start development with Claude Code
+# Open CLAUDE.md in Claude Code
+# Follow Stage 1 tasks systematically
+
+# 4. Validate progress daily
+context-forge validate --levels syntax,tests
+```
+
+### Scenario 2: Enterprise Migration
+
+Migrating a legacy system to modern stack:
+
+```bash
+# 1. Create detailed PRD first
+context-forge init --prd legacy-migration-prd.md
+
+# 2. Select enterprise options
+# - Choose 'enterprise' timeline
+# - Enable all validation options
+# - Select comprehensive testing
+
+# 3. Generated structure includes:
+# - Migration strategy in Implementation.md
+# - Rollback procedures
+# - Comprehensive test suites
+# - Security audit checklists
+```
+
+### Scenario 3: Hackathon Project
+
+24-hour hackathon, need to prototype fast:
+
+```bash
+# 1. Quick setup
+npx context-forge init --preset hackathon
+
+# 2. Skip optional features
+# - Disable PRP (too detailed for hackathon)
+# - Basic validation only
+# - Focus on core features
+
+# 3. Get building in < 5 minutes
+# CLAUDE.md has simplified rules for rapid development
+```
+
+## 📚 Documentation
 
 ### Generated Files Structure
 
@@ -47,15 +278,52 @@ Context Forge creates the following documentation structure:
 
 ```
 project-folder/
-├── CLAUDE.md                    # Main context file with rules
+├── CLAUDE.md                    # Main context file with tech-stack specific rules
 ├── Docs/
 │   ├── Implementation.md       # Staged development plan
 │   ├── project_structure.md    # Folder organization
 │   ├── UI_UX_doc.md           # Design specifications
 │   └── Bug_tracking.md        # Bug tracking template
+├── PRPs/                      # Product Requirement Prompts (if enabled)
+│   ├── base.md               # Core implementation PRP
+│   ├── planning.md           # Architecture planning
+│   └── validation-gate.md    # Validation requirements
+└── .context-forge/           # Configuration and metadata
+    └── config.json
 ```
 
-## Interactive Setup
+### Understanding Generated Files
+
+#### CLAUDE.md
+The main context file that Claude Code reads first. It contains:
+- Project overview and tech stack
+- Development philosophy (KISS, YAGNI)
+- Code structure rules and limits
+- Tech-stack specific guidelines
+- Testing requirements
+- Pre-commit checklist
+
+#### Docs/Implementation.md
+Your roadmap with staged development:
+- **Stage 1**: Foundation (1-2 weeks) - Setup, configuration, base structure
+- **Stage 2**: Core Features (2-3 weeks) - Must-have functionality
+- **Stage 3**: Advanced Features (2-3 weeks) - Should-have features
+- **Stage 4**: Polish & Optimization (1-2 weeks) - Testing, performance
+
+Each stage contains:
+- Dependencies and prerequisites
+- Detailed task checklist
+- Validation requirements
+- Expected deliverables
+
+#### PRPs (Product Requirement Prompts)
+Advanced prompts for complex implementations:
+- **base.md** - Implementation blueprint with pseudocode
+- **planning.md** - Architecture diagrams and decisions
+- **spec.md** - Technical specifications
+- **validation-gate.md** - Quality checkpoints
+
+### Interactive Setup Flow
 
 When you run `context-forge init`, you'll be guided through:
 
@@ -64,33 +332,79 @@ When you run `context-forge init`, you'll be guided through:
 3. **Tech Stack Selection** - Choose frontend, backend, and database
 4. **Feature Selection** - Pick core features for your MVP
 5. **Configuration** - Timeline, team size, and deployment
+6. **Advanced Options** - PRP, validation, AI docs
 
-## Supported Tech Stacks
+### Supported Tech Stacks
 
-### Frontend
-- Next.js (App Router/Pages Router)
-- React
-- Vue.js
-- Angular
-- Vanilla JavaScript
+#### Frontend Frameworks
+- **Next.js 15** - App Router, Server Components, React 19
+- **React** - SPA with TypeScript and modern patterns
+- **Vue.js 3** - Composition API and TypeScript
+- **Angular** - Standalone components, RxJS
+- **Vanilla JavaScript** - No framework approach
 
-### Backend
-- FastAPI (Python)
-- Express.js (Node.js)
-- Django (Python)
-- Spring Boot (Java)
-- Ruby on Rails
+#### Backend Frameworks
+- **FastAPI** (Python) - Async, Pydantic v2, type hints
+- **Express.js** (Node.js) - TypeScript, middleware patterns
+- **Django** (Python) - MVT, ORM, admin interface
+- **Spring Boot** (Java) - REST APIs, dependency injection
+- **Ruby on Rails** - Convention over configuration
 
-### Databases
-- PostgreSQL
-- MySQL
-- MongoDB
-- SQLite
-- Redis
+#### Databases
+- PostgreSQL, MySQL, MongoDB, SQLite, Redis
 
-## Configuration File
+### Validation System
 
-You can skip the interactive prompts by providing a configuration file:
+Context Forge includes a powerful validation system that ensures code quality:
+
+```bash
+# Run all critical validations
+context-forge validate
+
+# Run specific validation levels
+context-forge validate --levels syntax,tests
+
+# Run all validations including optional ones
+context-forge validate --all
+
+# Generate detailed report
+context-forge validate --report
+
+# Validate in specific directory
+context-forge validate --path ./my-project
+```
+
+#### Validation Levels
+
+| Level | Description | Critical | Commands |
+|-------|-------------|----------|----------|
+| **syntax** | Type checking and linting | ✅ Yes | `tsc`, `eslint`, `mypy`, etc. |
+| **tests** | Unit and integration tests | ✅ Yes | `jest`, `pytest`, `rspec`, etc. |
+| **coverage** | Code coverage analysis | ❌ No | With coverage reporters |
+| **build** | Production build | ✅ Yes | Framework-specific build |
+| **security** | Vulnerability scanning | ❌ No | `npm audit`, `safety`, etc. |
+
+#### Example Validation Report
+
+```
+📊 Validation Report - Analytics Dashboard
+==================================================
+✅ Status: PASSED
+
+Total: 5 | Passed: 5 | Failed: 0
+
+✅ syntax:tsc --noEmit (342ms)
+✅ syntax:eslint src --ext .ts,.tsx (567ms)
+✅ tests:jest --coverage (4521ms)
+✅ build:next build (8234ms)
+✅ security:npm audit (1023ms)
+
+Full report saved to: .validation-reports/latest-report.md
+```
+
+### Configuration File
+
+Skip interactive prompts with a configuration file:
 
 ```json
 {
@@ -104,20 +418,127 @@ You can skip the interactive prompts by providing a configuration file:
     "auth": "jwt"
   },
   "features": [
-    "authentication",
-    "dashboard",
-    "crud-operations"
-  ]
+    {
+      "id": "auth",
+      "name": "Authentication",
+      "priority": "must-have"
+    }
+  ],
+  "extras": {
+    "prp": true,
+    "validation": true,
+    "docker": true
+  }
 }
 ```
 
 Use with: `context-forge init --config context-forge.json`
 
-## Development
+## 🔄 Complete Workflow
+
+### Step 1: Initialize Your Project
+
+```bash
+# Run the init command
+context-forge init
+
+# Answer the interactive prompts
+# Context Forge will analyze your requirements and generate appropriate documentation
+```
+
+### Step 2: Review Generated Documentation
+
+```bash
+# 1. Start with CLAUDE.md
+cat CLAUDE.md
+# This is your project's "constitution" - rules Claude Code will follow
+
+# 2. Check your implementation plan
+cat Docs/Implementation.md
+# This breaks down development into manageable stages
+
+# 3. Review project structure
+cat Docs/project_structure.md
+# This defines how your code should be organized
+```
+
+### Step 3: Start Development with Claude Code
+
+1. Open your project in Claude Code
+2. Add the entire project folder to Claude's context
+3. Start with Stage 1 tasks from Implementation.md
+4. Claude will follow the rules in CLAUDE.md automatically
+
+### Step 4: Validate Your Progress
+
+```bash
+# After completing each stage
+context-forge validate
+
+# Before committing code
+context-forge validate --levels syntax,tests
+
+# For comprehensive check
+context-forge validate --all --report
+```
+
+### Step 5: Iterate and Improve
+
+- Update Bug_tracking.md when you encounter issues
+- Claude Code will learn from documented bugs
+- Run validation frequently to maintain quality
+
+## 🎮 Advanced Usage
+
+### Custom Templates
+
+Create your own templates in `~/.context-forge/templates/`:
+
+```bash
+# Custom tech stack template
+~/.context-forge/templates/claude/my-stack.md
+
+# Custom validation commands
+~/.context-forge/templates/validation/my-validation.json
+```
+
+### Hooks and Automation
+
+Add pre/post hooks in `.context-forge/hooks/`:
+
+```bash
+# pre-init.sh - Run before initialization
+#!/bin/bash
+echo "Setting up environment..."
+
+# post-init.sh - Run after initialization
+#!/bin/bash
+echo "Installing dependencies..."
+npm install
+```
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/validate.yml
+name: Context Forge Validation
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - run: npm install -g context-forge
+      - run: context-forge validate --all
+```
+
+## 🏗️ Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/context-forge.git
+git clone https://github.com/webdevtodayjason/context-forge.git
 cd context-forge
 
 # Install dependencies
@@ -131,24 +552,75 @@ npm run dev
 
 # Run tests
 npm test
+
+# Run linting
+npm run lint
 ```
 
-## Contributing
+### Project Structure
+
+```
+context-forge/
+├── src/
+│   ├── cli/              # CLI entry point and commands
+│   ├── commands/         # Command implementations
+│   ├── generators/       # Document generators
+│   ├── templates/        # Handlebars templates
+│   ├── data/            # Tech stack configurations
+│   └── types/           # TypeScript definitions
+├── templates/           # Document templates
+└── tests/              # Test files
+```
+
+## 🙏 Credits
+
+### Special Thanks
+
+This project was inspired by and built upon the work of amazing developers:
+
+- **[Rasmus Widing (Wirasm)](https://github.com/Wirasm)** - For the incredible [PRPs-agentic-eng](https://github.com/Wirasm/PRPs-agentic-eng) project that provided the foundation for our PRP (Product Requirement Prompt) system. The PRP methodology and validation loops are directly inspired by Rasmus's groundbreaking work.
+- **[AILABS (@AILABS-393)](https://www.youtube.com/@AILABS-393)** - For the excellent educational content and YouTube tutorials on AI-assisted development, prompt engineering, and Claude Code workflows
+- **[AI Labs Discord Community](https://discord.gg/tqU6S6qZ)** - For feedback, ideas, and support
+- **[Dynamous.ai Community](https://dynamous.ai)** - For pioneering work in AI-assisted development and collaborative innovation
+
+### Built With
+
+- **[Andre Karpathy](https://karpathy.ai/)** - Context engineering principles
+- **[Claude Code by Anthropic](https://claude.ai/code)** - The AI assistant this tool is designed for
+- **[Commander.js](https://github.com/tj/commander.js/)** - CLI framework
+- **[Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)** - Interactive prompts
+- **[Handlebars](https://handlebarsjs.com/)** - Template engine
+
+## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-## License
+### Ways to Contribute
+
+- 🐛 Report bugs and issues
+- 💡 Suggest new features
+- 📝 Improve documentation
+- 🔧 Add new tech stack templates
+- 🌐 Translate documentation
+- ⭐ Star the project!
+
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🔗 Links
 
-- Based on context engineering principles by Andre Karpathy
-- Designed for use with Claude Code by Anthropic
-- Built with Commander.js, Inquirer.js, and Handlebars
+- **Repository**: [github.com/webdevtodayjason/context-forge](https://github.com/webdevtodayjason/context-forge)
+- **npm Package**: [npmjs.com/package/context-forge](https://www.npmjs.com/package/context-forge)
+- **Issues**: [GitHub Issues](https://github.com/webdevtodayjason/context-forge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/webdevtodayjason/context-forge/discussions)
 
-## Support
+---
 
-- Report issues: [GitHub Issues](https://github.com/yourusername/context-forge/issues)
-- Documentation: [Wiki](https://github.com/yourusername/context-forge/wiki)
-- Discussions: [GitHub Discussions](https://github.com/yourusername/context-forge/discussions)
+<div align="center">
+
+**Made with ❤️ by the Context Forge community**
+
+*Empowering developers to build smarter, not harder*
+
+</div>
