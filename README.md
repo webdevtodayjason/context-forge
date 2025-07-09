@@ -68,12 +68,11 @@ In the age of AI-powered development, the key to success isn't just what you tel
 # Install globally (recommended)
 npm install -g context-forge
 
-# Or install as a dev dependency
-npm install --save-dev context-forge
-
 # Or use npx without installation
 npx context-forge init
 ```
+
+**Note**: Context Forge is a CLI tool and should be installed globally. Do not install it as a project dependency with `npm install context-forge` as this will add unnecessary files to your project.
 
 ### Basic Usage
 
@@ -295,7 +294,9 @@ project-folder/
 ### Understanding Generated Files
 
 #### CLAUDE.md
+
 The main context file that Claude Code reads first. It contains:
+
 - Project overview and tech stack
 - Development philosophy (KISS, YAGNI)
 - Code structure rules and limits
@@ -304,20 +305,25 @@ The main context file that Claude Code reads first. It contains:
 - Pre-commit checklist
 
 #### Docs/Implementation.md
+
 Your roadmap with staged development:
+
 - **Stage 1**: Foundation (1-2 weeks) - Setup, configuration, base structure
 - **Stage 2**: Core Features (2-3 weeks) - Must-have functionality
 - **Stage 3**: Advanced Features (2-3 weeks) - Should-have features
 - **Stage 4**: Polish & Optimization (1-2 weeks) - Testing, performance
 
 Each stage contains:
+
 - Dependencies and prerequisites
 - Detailed task checklist
 - Validation requirements
 - Expected deliverables
 
 #### PRPs (Product Requirement Prompts)
+
 Advanced prompts for complex implementations:
+
 - **base.md** - Implementation blueprint with pseudocode
 - **planning.md** - Architecture diagrams and decisions
 - **spec.md** - Technical specifications
@@ -337,6 +343,7 @@ When you run `context-forge init`, you'll be guided through:
 ### Supported Tech Stacks
 
 #### Frontend Frameworks
+
 - **Next.js 15** - App Router, Server Components, React 19
 - **React** - SPA with TypeScript and modern patterns
 - **Vue.js 3** - Composition API and TypeScript
@@ -344,6 +351,7 @@ When you run `context-forge init`, you'll be guided through:
 - **Vanilla JavaScript** - No framework approach
 
 #### Backend Frameworks
+
 - **FastAPI** (Python) - Async, Pydantic v2, type hints
 - **Express.js** (Node.js) - TypeScript, middleware patterns
 - **Django** (Python) - MVT, ORM, admin interface
@@ -351,6 +359,7 @@ When you run `context-forge init`, you'll be guided through:
 - **Ruby on Rails** - Convention over configuration
 
 #### Databases
+
 - PostgreSQL, MySQL, MongoDB, SQLite, Redis
 
 ### Validation System
@@ -376,13 +385,13 @@ context-forge validate --path ./my-project
 
 #### Validation Levels
 
-| Level | Description | Critical | Commands |
-|-------|-------------|----------|----------|
-| **syntax** | Type checking and linting | ✅ Yes | `tsc`, `eslint`, `mypy`, etc. |
-| **tests** | Unit and integration tests | ✅ Yes | `jest`, `pytest`, `rspec`, etc. |
-| **coverage** | Code coverage analysis | ❌ No | With coverage reporters |
-| **build** | Production build | ✅ Yes | Framework-specific build |
-| **security** | Vulnerability scanning | ❌ No | `npm audit`, `safety`, etc. |
+| Level        | Description                | Critical | Commands                        |
+| ------------ | -------------------------- | -------- | ------------------------------- |
+| **syntax**   | Type checking and linting  | ✅ Yes   | `tsc`, `eslint`, `mypy`, etc.   |
+| **tests**    | Unit and integration tests | ✅ Yes   | `jest`, `pytest`, `rspec`, etc. |
+| **coverage** | Code coverage analysis     | ❌ No    | With coverage reporters         |
+| **build**    | Production build           | ✅ Yes   | Framework-specific build        |
+| **security** | Vulnerability scanning     | ❌ No    | `npm audit`, `safety`, etc.     |
 
 #### Example Validation Report
 
@@ -621,6 +630,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ by the Context Forge community**
 
-*Empowering developers to build smarter, not harder*
+_Empowering developers to build smarter, not harder_
 
 </div>
