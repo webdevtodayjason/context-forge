@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2025-01-10
+
+### 🔧 Improvements
+
+- Updated welcome message to be AI-agnostic: "Let's set up AI-optimized documentation for your project"
+- Updated init command description to reflect multi-IDE support
+- Added windsurf and copilot to the --ide flag help text
+- Fixed messaging throughout to remove Claude Code-specific references
+
+### 📚 Documentation
+
+- Added npm downloads badge to README
+- Added GitHub release badge to README
+- Made npm installation section more prominent
+- Added npm package visualization badge
+
 ## [0.2.0] - 2025-01-10
 
 ### 🎉 Major Release: Multi-IDE Support
