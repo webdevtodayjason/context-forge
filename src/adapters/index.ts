@@ -65,7 +65,7 @@ export const IDE_INFO: Record<SupportedIDE, IDEInfo> = {
     description: "Google's Gemini AI tools (CLI and Code Assist)",
     configFiles: ['GEMINI.md', '.gemini/'],
     supportsValidation: true,
-    supportsPRP: false,
+    supportsPRP: true,
   },
 };
 

@@ -61,7 +61,7 @@ Context Forge is a powerful CLI tool that bridges the gap between project requir
 <tr>
 <td align="center"><img src="https://img.shields.io/badge/Cline-Extension-green?style=flat-square" /><br><b><a href="./docs/ide-configs/cline/">Cline</a></b><br><em>PRP + Context mgmt</em></td>
 <td align="center"><img src="https://img.shields.io/badge/Roo%20Code-Extension-purple?style=flat-square" /><br><b><a href="./docs/ide-configs/roo/">Roo Code</a></b><br><em>Hierarchical rules</em></td>
-<td align="center"><img src="https://img.shields.io/badge/Gemini-Google-orange?style=flat-square&logo=google" /><br><b><a href="./docs/ide-configs/gemini/">Gemini</a></b><br><em>CLI & Code Assist</em></td>
+<td align="center"><img src="https://img.shields.io/badge/Gemini-Google-orange?style=flat-square&logo=google" /><br><b><a href="./docs/ide-configs/gemini/">Gemini</a></b><br><em>PRP + CLI & Code Assist</em></td>
 <td align="center"><img src="https://img.shields.io/badge/GitHub%20Copilot-black?style=flat-square&logo=github" /><br><b><a href="./docs/ide-configs/copilot/">GitHub Copilot</a></b><br><em>Custom instructions</em></td>
 </tr>
 </table>
@@ -77,7 +77,7 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - **[🟩 Windsurf Guide](./docs/ide-configs/windsurf/)** - PRP support, Cascade AI integration, workflows
 - **[🟢 Cline Guide](./docs/ide-configs/cline/)** - PRP support, context management, code patterns, advanced commands
 - **[🟣 Roo Code Guide](./docs/ide-configs/roo/)** - Workspace rules, YAML configuration, team settings
-- **[🟠 Gemini Guide](./docs/ide-configs/gemini/)** - Hierarchical context, CLI commands, Code Assist integration
+- **[🟠 Gemini Guide](./docs/ide-configs/gemini/)** - PRP support, hierarchical context, CLI commands, Code Assist integration
 - **[⚫ GitHub Copilot Guide](./docs/ide-configs/copilot/)** - Custom instructions, VS Code settings, language-specific rules
 
 ## ✨ Features
@@ -95,7 +95,7 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 
 ### Advanced Features
 
-- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude, Cursor, Windsurf & Cline)
+- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude, Cursor, Windsurf, Cline, Copilot & Gemini)
 - ✅ **Validation System** - Built-in code quality checks and gates
 - 🎨 **Tech-Stack Specific Templates** - Optimized CLAUDE.md for each framework
 - 📊 **Comprehensive Reporting** - Validation reports and progress tracking
@@ -329,6 +329,7 @@ npx context-forge init --preset hackathon
 Context Forge creates IDE-specific documentation structures:
 
 #### Claude Code (Default)
+
 ```
 project-folder/
 ├── CLAUDE.md                    # Main context file with tech-stack specific rules
@@ -341,6 +342,7 @@ project-folder/
 ```
 
 #### Cursor IDE
+
 ```
 project-folder/
 ├── .cursorrules               # Main Cursor rules file
@@ -356,6 +358,7 @@ project-folder/
 ```
 
 #### Cline
+
 ```
 project-folder/
 └── .clinerules/              # Configuration directory
@@ -371,14 +374,22 @@ project-folder/
 ```
 
 #### Gemini
+
 ```
 project-folder/
 ├── GEMINI.md                 # Main Gemini configuration
 └── .gemini/
-    └── context/
-        ├── project.md       # Project context
-        ├── architecture.md  # Architecture docs
-        └── guidelines.md    # Development guidelines
+    ├── context/
+    │   ├── project.md       # Project context
+    │   ├── architecture.md  # Architecture docs
+    │   └── guidelines.md    # Development guidelines
+    ├── prp/                 # PRP files (if features defined)
+    │   ├── overview.md      # PRP implementation overview
+    │   ├── stage-1-foundation.md
+    │   ├── stage-2-core.md
+    │   ├── stage-3-advanced.md
+    │   └── validation.md
+    └── config.yaml          # Gemini config with PRP settings
 ```
 
 ### Understanding Generated Files

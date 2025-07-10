@@ -34,20 +34,24 @@ Cursor now supports PRP methodology through MDC format files in the `.cursor/rul
 # Cursor Rules for MyProject
 
 ## Project: E-Commerce Platform
+
 A modern e-commerce platform with AI-powered recommendations
 
 ## Development Philosophy
+
 - Keep It Simple (KISS) - Choose straightforward solutions
 - You Aren't Gonna Need It (YAGNI) - Avoid speculative features
 - Don't Repeat Yourself (DRY) - Reuse code effectively
 
 ## Code Structure Rules
+
 - Never create files longer than 500 lines
 - Functions should be focused and single-purpose
 - Components/Classes should have single responsibility
 - Use descriptive variable and function names
 
 ## Tech Stack Rules
+
 - Use Next.js 15 App Router patterns
 - Implement React Server Components where appropriate
 - Follow file-based routing conventions
@@ -55,29 +59,32 @@ A modern e-commerce platform with AI-powered recommendations
 - Implement Pydantic v2 models
 
 ## File Organization
+
 \`\`\`
 frontend/
 ├── src/
-│   ├── app/
-│   ├── components/
-│   └── lib/
+│ ├── app/
+│ ├── components/
+│ └── lib/
 └── package.json
 
 backend/
 ├── app/
-│   ├── api/
-│   ├── core/
-│   └── models/
+│ ├── api/
+│ ├── core/
+│ └── models/
 └── requirements.txt
 \`\`\`
 
 ## Testing Requirements
+
 - Minimum 85% code coverage
 - Write tests for all new features
 - Test user behavior, not implementation details
 - Include both unit and integration tests
 
 ## Security Guidelines
+
 - Validate all user inputs
 - Use environment variables for sensitive data
 - Implement proper authentication and authorization
@@ -85,12 +92,14 @@ backend/
 - Never commit secrets to version control
 
 ## Cursor-Specific Guidelines
+
 - Use Cursor's AI features for code generation
 - Follow the project's established patterns
 - Always review AI-generated code before committing
 - Use Cursor's chat for clarification on complex tasks
 
 ## Pre-commit Checklist
+
 - [ ] All tests passing
 - [ ] Linting passes
 - [ ] Type checking passes
@@ -105,18 +114,21 @@ backend/
 # Global Cursor Rules
 
 ## General Coding Standards
+
 - Write clean, readable, and maintainable code
 - Follow language-specific best practices
 - Use meaningful commit messages
 - Document complex logic
 
 ## AI Assistance Guidelines
+
 - Be specific in your prompts
 - Review all generated code
 - Test thoroughly before committing
 - Don't rely solely on AI for critical logic
 
 ## Common Patterns
+
 - Use dependency injection
 - Implement proper error handling
 - Follow SOLID principles
@@ -129,10 +141,13 @@ backend/
 # Project-Specific Rules: E-Commerce Platform
 
 ## Project Context
+
 A scalable e-commerce platform with real-time inventory management
 
 ## Key Features to Implement
+
 ### User Authentication (must-have)
+
 - JWT-based authentication
 - Social login integration
 - Complexity: medium
@@ -142,22 +157,26 @@ A scalable e-commerce platform with real-time inventory management
   - Add password reset functionality
 
 ### Product Catalog (must-have)
+
 - Dynamic product listings
 - Advanced search and filtering
 - Complexity: complex
 
 ### Shopping Cart (must-have)
+
 - Persistent cart storage
 - Real-time updates
 - Complexity: medium
 
 ## Implementation Stages
+
 1. **Foundation** - Set up project structure and core dependencies
 2. **Core Features** - Implement must-have functionality
 3. **Enhancement** - Add should-have features
 4. **Polish** - Optimize and refine
 
 ## Project-Specific Guidelines
+
 - Use Server Components by default, Client Components only when needed
 - Implement proper loading and error states
 - Optimize images with next/image
@@ -168,19 +187,22 @@ A scalable e-commerce platform with real-time inventory management
 ## Example: PRP Files
 
 ### prp-overview.mdc
+
 ```markdown
 ---
 type: project
-globs: ["**/*"]
+globs: ['**/*']
 alwaysApply: true
 ---
 
 # PRP Implementation Overview: E-Commerce Platform
 
 ## What is PRP?
+
 Product Requirement Prompts provide a structured approach to implementing features...
 
 ## Implementation Stages
+
 - 📋 Stage 1: Foundation (see prp-stage-1.mdc)
 - 🚀 Stage 2: Core Features (see prp-stage-2.mdc)
 - ✨ Stage 3: Advanced Features (see prp-stage-3.mdc)
@@ -188,10 +210,11 @@ Product Requirement Prompts provide a structured approach to implementing featur
 ```
 
 ### prp-stage-2.mdc
+
 ```markdown
 ---
 type: project
-globs: ["**/*"]
+globs: ['**/*']
 alwaysApply: true
 ---
 
@@ -200,10 +223,12 @@ alwaysApply: true
 ## Features to Implement
 
 ### User Authentication
+
 **Description**: JWT-based authentication with social login
 **Complexity**: medium
 
 #### Tasks:
+
 - [ ] Create data models/schemas
 - [ ] Implement business logic
 - [ ] Create API endpoints
@@ -211,6 +236,7 @@ alwaysApply: true
 - [ ] Write unit tests
 
 #### Acceptance Criteria:
+
 - [ ] Users can register with email/password
 - [ ] Users can login and receive JWT token
 - [ ] Protected routes require authentication
@@ -219,6 +245,7 @@ alwaysApply: true
 ## Usage with Cursor IDE
 
 1. Generate the configuration:
+
    ```bash
    context-forge init --ide cursor
    ```
@@ -245,16 +272,19 @@ alwaysApply: true
 ## Cursor-Specific Features
 
 ### Rule Hierarchy
+
 - `.cursorrules` - Main entry point
 - `.cursor/rules/global.md` - Team/company standards
 - `.cursor/rules/project.md` - Project-specific guidance
 
 ### Integration Tips
+
 - Use Cursor's chat to ask about rules
 - Reference rules in your prompts
 - Let Cursor learn from your codebase
 
 ### Performance Tips
+
 - Keep rule files concise
 - Use clear section headers
 - Organize rules by topic
