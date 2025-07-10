@@ -519,4 +519,3 @@ failure_message: "Checks failed. Please fix issues before committing."
     return 'prettier';
   }
 }
-

@@ -1,7 +1,7 @@
 {
   "name": "context-forge",
   "version": "0.2.0",
-  "description": "CLI tool that generates context engineering documentation for Claude Code projects",
+  "description": "Universal AI IDE configuration generator - Creates optimized configs for Claude Code, Cursor, Windsurf, Cline, Copilot, and more",
   "main": "dist/index.js",
   "bin": {
     "context-forge": "./bin/context-forge.js"
@@ -20,6 +20,22 @@
     "claude-code",
     "claude",
     "anthropic",
+    "cursor-ide",
+    "cursor",
+    "windsurf",
+    "windsurf-ide",
+    "cascade-ai",
+    "cline",
+    "claude-dev",
+    "roo-code",
+    "roo",
+    "github-copilot",
+    "copilot",
+    "gemini",
+    "gemini-cli",
+    "ai-ide",
+    "ai-assistant",
+    "ai-configuration",
     "project-generator",
     "scaffolding",
     "documentation",
@@ -30,7 +46,10 @@
     "developer-tools",
     "automation",
     "context-window",
-    "prompt-engineering"
+    "prompt-engineering",
+    "multi-ide",
+    "ide-configuration",
+    "code-assistant"
   ],
   "author": "Jason Smith <webdevtodayjason@gmail.com>",
   "license": "MIT",
