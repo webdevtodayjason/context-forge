@@ -11,9 +11,24 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/webdevtodayjason/context-forge/pulls)
 [![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red.svg)](https://github.com/webdevtodayjason/context-forge)
 
+![Context Forge Banner](./img/context-forge-banner.png)
+
 <p align="center">
-  <strong>Transform your project ideas into Claude Code-ready applications with intelligent context engineering</strong>
+  <strong>Transform your project ideas into AI-ready applications with intelligent context engineering</strong>
 </p>
+
+<div align="center">
+  <h3>🎉 NEW: Multi-IDE Support!</h3>
+  <p><strong>Now supporting 7+ AI-powered IDEs and assistants!</strong></p>
+  <p>
+    <img src="https://img.shields.io/badge/NEW-Cursor%20IDE-blue?style=for-the-badge" alt="Cursor IDE" />
+    <img src="https://img.shields.io/badge/NEW-Windsurf-cyan?style=for-the-badge" alt="Windsurf" />
+    <img src="https://img.shields.io/badge/NEW-Cline-green?style=for-the-badge" alt="Cline" />
+    <img src="https://img.shields.io/badge/NEW-Roo%20Code-purple?style=for-the-badge" alt="Roo Code" />
+    <img src="https://img.shields.io/badge/NEW-Gemini-orange?style=for-the-badge" alt="Gemini" />
+  </p>
+  <p><em>Generate IDE-specific configurations for your favorite AI coding assistant with a single command!</em></p>
+</div>
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Credits](#-credits)
 
@@ -23,28 +38,58 @@
 
 ## 🌟 Overview
 
-Context Forge is a powerful CLI tool that bridges the gap between project requirements and AI-assisted development. By implementing Andre Karpathy's context engineering principles, it generates comprehensive documentation structures that enable Claude Code to understand and build your project efficiently—without hallucinations or context confusion.
+Context Forge is a powerful CLI tool that bridges the gap between project requirements and AI-assisted development. By implementing Andre Karpathy's context engineering principles, it generates comprehensive documentation structures that enable AI IDEs to understand and build your project efficiently—without hallucinations or context confusion.
 
-### Why Context Forge?
+### 🚀 Why Choose Context Forge?
 
-In the age of AI-powered development, the key to success isn't just what you tell the AI—it's how you structure the context. Context Forge ensures your project has:
+**🌐 Universal AI IDE Support** - Works with ALL major AI coding assistants  
+**⚡ Zero Configuration** - Intelligent defaults for each IDE  
+**🎯 One Command** - Generate configs for multiple IDEs simultaneously  
+**🔄 Format Conversion** - Switch between IDEs without starting over  
+**📦 No Lock-in** - Your project, your choice of AI assistant
 
-- 📋 **Structured Documentation** - Organized context that AI can navigate efficiently
-- 🎯 **Staged Implementation** - Step-by-step development plans that prevent scope creep
-- 🔄 **Workflow Automation** - Clear rules that guide AI behavior consistently
-- 🚀 **Zero Setup Time** - From idea to structured project in minutes
-- 🔌 **No AI Required** - Works offline, no API keys needed
+### 🤖 Supported AI IDEs & Assistants
+
+<table>
+<tr>
+<td align="center"><img src="https://img.shields.io/badge/Claude%20Code-Anthropic-black?style=flat-square&logo=anthropic" /><br><b><a href="./docs/ide-configs/claude/">Claude Code</a></b><br><em>Full PRP support</em></td>
+<td align="center"><img src="https://img.shields.io/badge/Cursor-IDE-blue?style=flat-square" /><br><b><a href="./docs/ide-configs/cursor/">Cursor IDE</a></b><br><em>MDC format</em></td>
+<td align="center"><img src="https://img.shields.io/badge/Windsurf-IDE-cyan?style=flat-square" /><br><b><a href="./docs/ide-configs/windsurf/">Windsurf</a></b><br><em>Cascade AI</em></td>
+</tr>
+<tr>
+<td align="center"><img src="https://img.shields.io/badge/Cline-Extension-green?style=flat-square" /><br><b><a href="./docs/ide-configs/cline/">Cline</a></b><br><em>Context management</em></td>
+<td align="center"><img src="https://img.shields.io/badge/Roo%20Code-Extension-purple?style=flat-square" /><br><b><a href="./docs/ide-configs/roo/">Roo Code</a></b><br><em>Hierarchical rules</em></td>
+<td align="center"><img src="https://img.shields.io/badge/Gemini-Google-orange?style=flat-square&logo=google" /><br><b><a href="./docs/ide-configs/gemini/">Gemini</a></b><br><em>CLI & Code Assist</em></td>
+<td align="center"><img src="https://img.shields.io/badge/GitHub%20Copilot-black?style=flat-square&logo=github" /><br><b><a href="./docs/ide-configs/copilot/">GitHub Copilot</a></b><br><em>Custom instructions</em></td>
+</tr>
+</table>
+
+> **Coming Soon:** Amazon CodeWhisperer, Tabnine, and more!
+
+### 📚 IDE Configuration Guides
+
+Need help understanding how each IDE uses its configuration? Check out our detailed guides:
+
+- **[🤖 Claude Code Guide](./docs/ide-configs/claude/)** - Full PRP support, validation system, tech-stack templates
+- **[🔵 Cursor IDE Guide](./docs/ide-configs/cursor/)** - MDC format, hierarchical rules, project structure
+- **[🟩 Windsurf Guide](./docs/ide-configs/windsurf/)** - Cascade AI integration, workflows, predictive coding
+- **[🟢 Cline Guide](./docs/ide-configs/cline/)** - Context management, code patterns, advanced commands
+- **[🟣 Roo Code Guide](./docs/ide-configs/roo/)** - Workspace rules, YAML configuration, team settings
+- **[🟠 Gemini Guide](./docs/ide-configs/gemini/)** - Hierarchical context, CLI commands, Code Assist integration
+- **[⚫ GitHub Copilot Guide](./docs/ide-configs/copilot/)** - Custom instructions, VS Code settings, language-specific rules
 
 ## ✨ Features
 
 ### Core Features
 
 - 🚀 **No AI Dependencies** - Works completely offline without API keys
-- 📋 **Interactive CLI** - Guided project setup with smart prompts
-- 🎯 **Template-based Generation** - Consistent, high-quality documentation
+- 🤖 **Multi-IDE Support** - Generate configs for multiple AI IDEs at once
+- 📋 **Interactive CLI** - Guided project setup with IDE selection
+- 🎯 **Template-based Generation** - IDE-specific documentation formats
 - 🛠️ **Multiple Tech Stacks** - Support for 9+ frameworks with specific configurations
-- 📁 **Structured Output** - Organized documentation following best practices
-- ⚡ **Fast Setup** - Go from zero to Claude Code-ready in minutes
+- 📁 **Structured Output** - Organized documentation following each IDE's conventions
+- ⚡ **Fast Setup** - Go from zero to AI-ready project in minutes
+- 🔄 **Format Conversion** - Convert between different IDE formats (coming soon)
 
 ### Advanced Features
 
@@ -658,5 +703,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Made with ❤️ by the Context Forge community**
 
 _Empowering developers to build smarter, not harder_
+
+</div>
+
+---
+
+<div align="center">
+  <img src="./img/context-forge-logo.png" alt="Context Forge Logo" height="60" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="./img/sem-logo.png" alt="SimFreak Logo" height="60" />
+</div>
+
+<br>
+
+<div align="center">
+  
+[![Star History Chart](https://api.star-history.com/svg?repos=webdevtodayjason/context-forge&type=Date)](https://star-history.com/#webdevtodayjason/context-forge&Date)
 
 </div>

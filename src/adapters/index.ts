@@ -4,6 +4,8 @@ import { CursorAdapter } from './cursor';
 import { RooCodeAdapter } from './roo';
 import { ClineAdapter } from './cline';
 import { GeminiAdapter } from './gemini';
+import { WindsurfAdapter } from './windsurf';
+import { CopilotAdapter } from './copilot';
 import { ProjectConfig, SupportedIDE, IDEInfo } from '../types';
 
 export { IDEAdapter, GeneratedFile } from './base';
@@ -45,15 +47,15 @@ export const IDE_INFO: Record<SupportedIDE, IDEInfo> = {
     id: 'windsurf',
     name: 'Windsurf IDE',
     description: 'AI-powered IDE with Cascade AI integration',
-    configFiles: ['.windsurf/', 'cascade-rules.md'],
-    supportsValidation: false,
+    configFiles: ['.windsurfrules.md', '.codeiumignore', 'global_rules.md'],
+    supportsValidation: true,
     supportsPRP: false,
   },
   copilot: {
     id: 'copilot',
     name: 'GitHub Copilot',
     description: 'AI pair programmer from GitHub',
-    configFiles: ['.vscode/settings.json', '.github/copilot-config.yml'],
+    configFiles: ['.github/copilot-instructions.md', '.vscode/settings.json'],
     supportsValidation: false,
     supportsPRP: false,
   },
@@ -79,10 +81,10 @@ export function createAdapter(ide: SupportedIDE, config: ProjectConfig): IDEAdap
       return new ClineAdapter(config);
     case 'gemini':
       return new GeminiAdapter(config);
-    // TODO: Implement remaining adapters
     case 'windsurf':
+      return new WindsurfAdapter(config);
     case 'copilot':
-      throw new Error(`${ide} adapter not yet implemented`);
+      return new CopilotAdapter(config);
     default:
       throw new Error(`Unknown IDE: ${ide}`);
   }
