@@ -5,9 +5,11 @@
 **CLI tool for instant Claude Code project scaffolding with context engineering best practices**
 
 [![npm version](https://img.shields.io/npm/v/context-forge.svg)](https://www.npmjs.com/package/context-forge)
+[![npm downloads](https://img.shields.io/npm/dm/context-forge.svg)](https://www.npmjs.com/package/context-forge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![GitHub release](https://img.shields.io/github/release/webdevtodayjason/context-forge.svg)](https://github.com/webdevtodayjason/context-forge/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/webdevtodayjason/context-forge/pulls)
 [![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red.svg)](https://github.com/webdevtodayjason/context-forge)
 
@@ -99,6 +101,14 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - 📊 **Comprehensive Reporting** - Validation reports and progress tracking
 - 🔧 **Extensible Architecture** - Easy to add new tech stacks and features
 
+## 📦 Installation
+
+```bash
+npm install -g context-forge
+```
+
+[![npm](https://nodei.co/npm/context-forge.png)](https://npmjs.org/package/context-forge)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -107,19 +117,17 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - Git (for version control)
 - A code editor (VS Code recommended)
 
-### Installation
+### Basic Usage
 
 ```bash
-# Install globally (recommended)
-npm install -g context-forge
+# Initialize a new project
+context-forge init
 
 # Or use npx without installation
 npx context-forge init
 ```
 
 **Note**: Context Forge is a CLI tool and should be installed globally. Do not install it as a project dependency with `npm install context-forge` as this will add unnecessary files to your project.
-
-### Basic Usage
 
 ```bash
 # Initialize in current directory
