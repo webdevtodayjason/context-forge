@@ -55,7 +55,7 @@ Context Forge is a powerful CLI tool that bridges the gap between project requir
 <table>
 <tr>
 <td align="center"><img src="https://img.shields.io/badge/Claude%20Code-Anthropic-black?style=flat-square&logo=anthropic" /><br><b><a href="./docs/ide-configs/claude/">Claude Code</a></b><br><em>Full PRP support</em></td>
-<td align="center"><img src="https://img.shields.io/badge/Cursor-IDE-blue?style=flat-square" /><br><b><a href="./docs/ide-configs/cursor/">Cursor IDE</a></b><br><em>MDC format</em></td>
+<td align="center"><img src="https://img.shields.io/badge/Cursor-IDE-blue?style=flat-square" /><br><b><a href="./docs/ide-configs/cursor/">Cursor IDE</a></b><br><em>PRP + MDC format</em></td>
 <td align="center"><img src="https://img.shields.io/badge/Windsurf-IDE-cyan?style=flat-square" /><br><b><a href="./docs/ide-configs/windsurf/">Windsurf</a></b><br><em>Cascade AI</em></td>
 </tr>
 <tr>
@@ -73,7 +73,7 @@ Context Forge is a powerful CLI tool that bridges the gap between project requir
 Need help understanding how each IDE uses its configuration? Check out our detailed guides:
 
 - **[🤖 Claude Code Guide](./docs/ide-configs/claude/)** - Full PRP support, validation system, tech-stack templates
-- **[🔵 Cursor IDE Guide](./docs/ide-configs/cursor/)** - MDC format, hierarchical rules, project structure
+- **[🔵 Cursor IDE Guide](./docs/ide-configs/cursor/)** - PRP support, MDC format, hierarchical rules
 - **[🟩 Windsurf Guide](./docs/ide-configs/windsurf/)** - Cascade AI integration, workflows, predictive coding
 - **[🟢 Cline Guide](./docs/ide-configs/cline/)** - Context management, code patterns, advanced commands
 - **[🟣 Roo Code Guide](./docs/ide-configs/roo/)** - Workspace rules, YAML configuration, team settings
@@ -95,7 +95,7 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 
 ### Advanced Features
 
-- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops
+- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude & Cursor)
 - ✅ **Validation System** - Built-in code quality checks and gates
 - 🎨 **Tech-Stack Specific Templates** - Optimized CLAUDE.md for each framework
 - 📊 **Comprehensive Reporting** - Validation reports and progress tracking
@@ -347,7 +347,12 @@ project-folder/
 └── .cursor/
     └── rules/
         ├── global.md         # Global development rules
-        └── project.md        # Project-specific rules
+        ├── project.md        # Project-specific rules
+        ├── prp-overview.mdc  # PRP implementation overview
+        ├── prp-stage-1.mdc   # Foundation setup tasks
+        ├── prp-stage-2.mdc   # Core feature implementation
+        ├── prp-stage-3.mdc   # Advanced features & polish
+        └── prp-validation.mdc # Validation gates & checks
 ```
 
 #### Cline

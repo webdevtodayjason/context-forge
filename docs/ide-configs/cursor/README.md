@@ -1,6 +1,6 @@
 # Cursor IDE Configuration
 
-Cursor is an AI-powered IDE built on VS Code that provides intelligent code completion and AI assistance. Context Forge generates Cursor-specific rule files following their MDC (Markdown Configuration) format.
+Cursor is an AI-powered IDE built on VS Code that provides intelligent code completion and AI assistance. Context Forge generates Cursor-specific rule files following their MDC (Markdown Configuration) format, including comprehensive PRP (Product Requirement Prompt) support.
 
 ## Generated File Structure
 
@@ -10,8 +10,23 @@ project-root/
 └── .cursor/
     └── rules/
         ├── global.md         # Global development rules
-        └── project.md        # Project-specific rules
+        ├── project.md        # Project-specific rules
+        ├── prp-overview.mdc  # PRP implementation overview
+        ├── prp-stage-1.mdc   # Foundation setup tasks
+        ├── prp-stage-2.mdc   # Core feature implementation
+        ├── prp-stage-3.mdc   # Advanced features & polish
+        └── prp-validation.mdc # Validation gates & checks
 ```
+
+## PRP (Product Requirement Prompt) Support
+
+Cursor now supports PRP methodology through MDC format files in the `.cursor/rules/` directory. This provides:
+
+- **Staged Implementation**: Clear development phases with specific tasks
+- **Validation Gates**: Quality checks between stages
+- **Task Checklists**: Detailed implementation steps
+- **Acceptance Criteria**: Clear success metrics for features
+- **MDC Format**: Native Cursor format with metadata headers
 
 ## Example: .cursorrules
 
@@ -148,6 +163,57 @@ A scalable e-commerce platform with real-time inventory management
 - Optimize images with next/image
 - Use Pydantic for request/response validation
 - Implement async endpoints for better performance
+```
+
+## Example: PRP Files
+
+### prp-overview.mdc
+```markdown
+---
+type: project
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# PRP Implementation Overview: E-Commerce Platform
+
+## What is PRP?
+Product Requirement Prompts provide a structured approach to implementing features...
+
+## Implementation Stages
+- 📋 Stage 1: Foundation (see prp-stage-1.mdc)
+- 🚀 Stage 2: Core Features (see prp-stage-2.mdc)
+- ✨ Stage 3: Advanced Features (see prp-stage-3.mdc)
+- ✅ Validation Gates (see prp-validation.mdc)
+```
+
+### prp-stage-2.mdc
+```markdown
+---
+type: project
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# PRP Stage 2: Core Features
+
+## Features to Implement
+
+### User Authentication
+**Description**: JWT-based authentication with social login
+**Complexity**: medium
+
+#### Tasks:
+- [ ] Create data models/schemas
+- [ ] Implement business logic
+- [ ] Create API endpoints
+- [ ] Add validation
+- [ ] Write unit tests
+
+#### Acceptance Criteria:
+- [ ] Users can register with email/password
+- [ ] Users can login and receive JWT token
+- [ ] Protected routes require authentication
 ```
 
 ## Usage with Cursor IDE
