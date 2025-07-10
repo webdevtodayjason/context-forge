@@ -6,13 +6,24 @@ import fs from 'fs-extra';
 import { runPrompts } from '../prompts';
 import { generateDocumentation } from '../../generators';
 import { validateOutputPath } from '../../utils/validator';
-import { ProjectConfig } from '../../types';
+import { ProjectConfig, SupportedIDE } from '../../types';
+import { getSupportedIDEs } from '../../adapters';
 
 export const initCommand = new Command('init')
   .description('Initialize context engineering documentation for your project')
   .option('-o, --output <path>', 'output directory for generated files', '.')
   .option('-p, --preset <preset>', 'use a preset configuration')
   .option('-c, --config <path>', 'path to configuration file')
+  .option('-i, --ide <ide>', 'target IDE (claude, cursor, roo, cline, gemini)', (value) => {
+    const validIDEs = getSupportedIDEs();
+    const ides = value.split(',').map((ide) => ide.trim());
+    for (const ide of ides) {
+      if (!validIDEs.includes(ide as SupportedIDE)) {
+        throw new Error(`Invalid IDE: ${ide}. Valid options: ${validIDEs.join(', ')}`);
+      }
+    }
+    return ides as SupportedIDE[];
+  })
   .action(async (options) => {
     console.log(chalk.blue.bold('\n🚀 Welcome to Context Forge!\n'));
     console.log(
@@ -44,24 +55,29 @@ export const initCommand = new Command('init')
         config = await runPrompts();
       }
 
+      // Override targetIDEs if --ide flag was used
+      if (options.ide) {
+        config.targetIDEs = options.ide;
+      }
+
       // Generate documentation
       console.log(chalk.blue.bold('\n📝 Generating documentation...\n'));
       await generateDocumentation(config, outputPath);
 
       // Success message
       console.log(chalk.green.bold('\n✨ Context Forge setup complete!\n'));
-      console.log(chalk.white('Generated files:'));
-      console.log(chalk.gray(`  ${outputPath}/`));
-      console.log(chalk.gray('  ├── CLAUDE.md'));
-      console.log(chalk.gray('  └── Docs/'));
-      console.log(chalk.gray('      ├── Implementation.md'));
-      console.log(chalk.gray('      ├── project_structure.md'));
-      console.log(chalk.gray('      ├── UI_UX_doc.md'));
-      console.log(chalk.gray('      └── Bug_tracking.md'));
+      console.log(chalk.white('Generated files in:'), chalk.cyan(outputPath));
+
+      // Show IDE-specific instructions
+      const targetIDEs = config.targetIDEs || ['claude'];
+      console.log(chalk.white('\nGenerated configurations for:'));
+      targetIDEs.forEach((ide) => {
+        console.log(chalk.gray(`  • ${ide.charAt(0).toUpperCase() + ide.slice(1)}`));
+      });
 
       console.log(chalk.blue.bold('\n🎯 Next steps:\n'));
       console.log(chalk.white('1. Review the generated documentation'));
-      console.log(chalk.white('2. Open your project in Claude Code'));
+      console.log(chalk.white(`2. Open your project in your AI IDE`));
       console.log(chalk.white('3. Start implementing using the staged approach'));
       console.log(chalk.white('4. Update documentation as your project evolves\n'));
     } catch (error) {

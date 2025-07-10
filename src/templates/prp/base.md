@@ -7,8 +7,9 @@
 ## Why
 
 {{#each reasons}}
+
 - {{this}}
-{{/each}}
+  {{/each}}
 
 ## What
 
@@ -17,8 +18,9 @@
 ### Success Criteria
 
 {{#each successCriteria}}
+
 - [ ] {{this}}
-{{/each}}
+      {{/each}}
 
 ## All Needed Context
 
@@ -64,6 +66,7 @@ Define the core data models to ensure type safety and consistency:
 ```{{language}}
 # TODO: Add data models based on requirements
 ```
+
 {{/if}}
 
 ### Task Breakdown
@@ -84,6 +87,7 @@ Task {{@index}}: {{name}}
 ### Implementation Details
 
 {{#each tasks}}
+
 #### Task {{@index}}: {{name}}
 
 ```{{language}}
@@ -184,13 +188,15 @@ def test_{{name}}():
 ## Final Validation Checklist
 
 {{#each checklist}}
+
 - [ ] {{this}}
-{{/each}}
+      {{/each}}
 
 ---
 
 ## Anti-Patterns to Avoid
 
 {{#each antiPatterns}}
+
 - ❌ {{this}}
-{{/each}}
+  {{/each}}

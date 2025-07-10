@@ -3,17 +3,21 @@
 This file provides comprehensive guidance to Claude Code when working with this Django application with Python.
 
 ## Project Overview
+
 {{description}}
 
 ## Core Development Philosophy
 
 ### KISS (Keep It Simple, Stupid)
+
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible.
 
 ### YAGNI (You Aren't Gonna Need It)
+
 Avoid building functionality on speculation. Implement features only when they are needed.
 
 ### Design Principles
+
 - **Fat Models, Thin Views**: Business logic in models, not views
 - **DRY (Don't Repeat Yourself)**: Use Django's built-in features
 - **Convention over Configuration**: Follow Django patterns
@@ -22,6 +26,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🧱 Code Structure & Modularity
 
 ### File and Function Limits
+
 - **Never create a file longer than 500 lines of code**
 - **View functions/classes should be under 100 lines**
 - **Model methods should be under 50 lines**
@@ -30,6 +35,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🚀 Django & Python Best Practices
 
 ### Type Hints (MANDATORY)
+
 - **MUST use type hints** for all functions
 - **MUST use Django-stubs** for type checking
 - **MUST validate with mypy**
@@ -44,10 +50,10 @@ class Article(models.Model):
     title: models.CharField = models.CharField(max_length=200)
     content: models.TextField = models.TextField()
     published: models.BooleanField = models.BooleanField(default=False)
-    
+
     def get_word_count(self) -> int:
         return len(self.content.split())
-    
+
     @classmethod
     def get_published(cls) -> models.QuerySet['Article']:
         return cls.objects.filter(published=True)
@@ -64,6 +70,7 @@ def article_detail(request: HttpRequest, pk: int) -> HttpResponse:
 ```
 
 ### Typical Django Structure
+
 ```
 myproject/
 ├── apps/                  # Django apps
@@ -89,6 +96,7 @@ myproject/
 ## 🛡️ Model Design & Validation
 
 ### Model Best Practices
+
 ```python
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -97,28 +105,28 @@ from typing import Optional
 
 class Product(models.Model):
     """Product model with proper validation and methods."""
-    
+
     name = models.CharField(max_length=200, db_index=True)
     slug = models.SlugField(unique=True, max_length=200)
     price = models.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(0)]
     )
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['slug']),
             models.Index(fields=['-created_at']),
         ]
-    
+
     def __str__(self) -> str:
         return self.name
-    
+
     def save(self, *args, **kwargs) -> None:
         # Custom validation
         if not self.slug:
@@ -129,6 +137,7 @@ class Product(models.Model):
 ## 🧪 Testing Strategy
 
 ### Requirements
+
 - **MINIMUM 85% code coverage** for Django projects
 - **MUST use pytest-django**
 - **MUST test all views, models, and forms**
@@ -149,11 +158,11 @@ class TestArticleViews:
             content="Test content",
             published=True
         )
-        
+
         response = client.get(reverse('articles:list'))
         assert response.status_code == 200
         assert "Test Article" in response.content.decode()
-    
+
     def test_article_detail(self, client: Client, article_factory):
         article = article_factory(published=True)
         response = client.get(
@@ -165,6 +174,7 @@ class TestArticleViews:
 ## 🔄 Views & URL Patterns
 
 ### Class-Based Views (Preferred)
+
 ```python
 from django.views.generic import ListView, DetailView, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -176,10 +186,10 @@ class ArticleListView(ListView):
     template_name = 'articles/list.html'
     context_object_name = 'articles'
     paginate_by = 20
-    
+
     def get_queryset(self):
         return Article.objects.filter(published=True)
-    
+
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['total_count'] = self.get_queryset().count()
@@ -189,7 +199,7 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
     model = Article
     fields = ['title', 'content']
     success_url = reverse_lazy('articles:list')
-    
+
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
@@ -198,6 +208,7 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
 ## 🔐 Security Requirements
 
 ### Django Security Checklist
+
 ```python
 # settings/production.py
 SECRET_KEY = env('SECRET_KEY')  # Never hardcode
@@ -232,6 +243,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ## 💅 Code Style & Quality
 
 ### Tools Configuration
+
 ```toml
 # pyproject.toml
 [tool.ruff]
@@ -270,6 +282,7 @@ python_files = ["test_*.py", "*_test.py"]
 ## 🗄️ Database & ORM
 
 ### Query Optimization
+
 ```python
 # Avoid N+1 queries
 articles = Article.objects.select_related('author').prefetch_related('tags')
@@ -317,6 +330,7 @@ class Article(models.Model):
 ## Django-Specific Patterns
 
 ### Custom Middleware
+
 ```python
 from django.utils.deprecation import MiddlewareMixin
 from typing import Optional
@@ -325,7 +339,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
     def process_request(self, request: HttpRequest) -> Optional[HttpResponse]:
         # Log request details
         return None
-    
+
     def process_response(
         self, request: HttpRequest, response: HttpResponse
     ) -> HttpResponse:
@@ -334,6 +348,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
 ```
 
 ### Form Handling
+
 ```python
 from django import forms
 from django.core.exceptions import ValidationError
@@ -342,7 +357,7 @@ class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
         fields = ['title', 'content', 'tags']
-    
+
     def clean_title(self) -> str:
         title = self.cleaned_data['title']
         if Article.objects.filter(title=title).exists():
@@ -353,11 +368,13 @@ class ArticleForm(forms.ModelForm):
 ## Workflow Rules
 
 ### Before Starting Any Task
+
 - Consult `/Docs/Implementation.md` for current stage and available tasks
 - Check Django version compatibility
 - Review existing patterns in the codebase
 
 ### Django Development Flow
+
 1. Design models with proper validation
 2. Create and optimize migrations
 3. Build views following Django patterns
@@ -366,8 +383,10 @@ class ArticleForm(forms.ModelForm):
 6. Document API if applicable
 
 {{#if prpConfig}}
+
 ### PRP Workflow
+
 - Check `/PRPs/` directory for detailed implementation prompts
 - Follow validation loops defined in PRPs
 - Use ai_docs/ for Django-specific documentation
-{{/if}}
+  {{/if}}

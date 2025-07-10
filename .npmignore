@@ -1,0 +1,67 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Config files
+tsconfig.json
+jest.config.js
+eslint.config.js
+.prettierrc
+.editorconfig
+
+# Development files
+*.map
+*.test.js
+*.spec.js
+examples/
+tmp/
+PRPs-agentic-eng/
+
+# Documentation source files
+prd-forge-plan.md
+context-engineering-prompts-starter.md
+context-forge-descriptions.md
+
+# Git and CI
+.git/
+.github/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+*.tgz
+.npm/
+
+# Context Forge specific
+.context-forge/
+.validation-reports/

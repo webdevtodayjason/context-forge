@@ -273,8 +273,9 @@ npx context-forge init --preset hackathon
 
 ### Generated Files Structure
 
-Context Forge creates the following documentation structure:
+Context Forge creates IDE-specific documentation structures:
 
+#### Claude Code (Default)
 ```
 project-folder/
 ├── CLAUDE.md                    # Main context file with tech-stack specific rules
@@ -283,12 +284,38 @@ project-folder/
 │   ├── project_structure.md    # Folder organization
 │   ├── UI_UX_doc.md           # Design specifications
 │   └── Bug_tracking.md        # Bug tracking template
-├── PRPs/                      # Product Requirement Prompts (if enabled)
-│   ├── base.md               # Core implementation PRP
-│   ├── planning.md           # Architecture planning
-│   └── validation-gate.md    # Validation requirements
-└── .context-forge/           # Configuration and metadata
-    └── config.json
+└── PRPs/                      # Product Requirement Prompts (if enabled)
+```
+
+#### Cursor IDE
+```
+project-folder/
+├── .cursorrules               # Main Cursor rules file
+└── .cursor/
+    └── rules/
+        ├── global.md         # Global development rules
+        └── project.md        # Project-specific rules
+```
+
+#### Cline
+```
+project-folder/
+├── .clinerules               # Main Cline configuration
+└── .clinerules/
+    ├── context.md           # Project context
+    ├── rules.md             # Development rules
+    └── patterns.md          # Code patterns
+```
+
+#### Gemini
+```
+project-folder/
+├── GEMINI.md                 # Main Gemini configuration
+└── .gemini/
+    └── context/
+        ├── project.md       # Project context
+        ├── architecture.md  # Architecture docs
+        └── guidelines.md    # Development guidelines
 ```
 
 ### Understanding Generated Files

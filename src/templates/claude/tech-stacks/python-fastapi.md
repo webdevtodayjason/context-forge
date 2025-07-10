@@ -3,17 +3,21 @@
 This file provides comprehensive guidance to Claude Code when working with this FastAPI application with Python.
 
 ## Project Overview
+
 {{description}}
 
 ## Core Development Philosophy
 
 ### KISS (Keep It Simple, Stupid)
+
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible.
 
 ### YAGNI (You Aren't Gonna Need It)
+
 Avoid building functionality on speculation. Implement features only when they are needed.
 
 ### Design Principles
+
 - **Dependency Injection**: Use FastAPI's dependency system effectively
 - **Type Safety**: Leverage Python type hints and Pydantic models
 - **Async First**: Use async/await for I/O operations
@@ -22,6 +26,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🧱 Code Structure & Modularity
 
 ### File and Function Limits
+
 - **Never create a file longer than 500 lines of code**
 - **Functions should be under 50 lines**
 - **Classes should have a single responsibility**
@@ -30,6 +35,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🚀 FastAPI & Python Best Practices
 
 ### Type Hints (MANDATORY)
+
 - **MUST use type hints** for all function parameters and returns
 - **MUST use Pydantic models** for request/response validation
 - **MUST use Python 3.10+** type features
@@ -57,6 +63,7 @@ async def create_user(user: UserCreate) -> dict[str, Any]:
 ## 🛡️ Data Validation with Pydantic
 
 ### Validation Rules
+
 - **MUST validate ALL external data**: Request bodies, query params, headers
 - **MUST use Pydantic v2** syntax
 - **MUST fail fast**: Let Pydantic handle validation errors
@@ -71,7 +78,7 @@ class UserModel(BaseModel):
     email: EmailStr
     created_at: datetime
     is_active: bool = True
-    
+
     @field_validator('email')
     @classmethod
     def email_must_be_valid(cls, v: str) -> str:
@@ -85,7 +92,7 @@ class Settings(BaseSettings):
     app_name: str = "{{projectName}}"
     database_url: str
     secret_key: str
-    
+
     class Config:
         env_file = ".env"
 ```
@@ -93,6 +100,7 @@ class Settings(BaseSettings):
 ## 🧪 Testing Strategy
 
 ### Requirements
+
 - **MINIMUM 80% code coverage**
 - **MUST use pytest** for testing
 - **MUST test all endpoints**
@@ -116,6 +124,7 @@ async def test_create_user():
 ## 🔄 Async Patterns
 
 ### Best Practices
+
 - **Use async/await** for all I/O operations
 - **Use asyncio.gather()** for concurrent operations
 - **Avoid blocking operations** in async functions
@@ -160,6 +169,7 @@ def get_password_hash(password: str) -> str:
 ## 💅 Code Style & Quality
 
 ### Tools and Configuration
+
 - **Black** for code formatting
 - **Ruff** for linting
 - **mypy** for type checking
@@ -215,11 +225,13 @@ disallow_untyped_defs = true
 ## Workflow Rules
 
 ### Before Starting Any Task
+
 - Consult `/Docs/Implementation.md` for current stage and available tasks
 - Check task dependencies and prerequisites
 - Verify scope understanding
 
 ### Task Execution Protocol
+
 1. Read task from Implementation.md
 2. Check relevant documentation
 3. Implement following existing patterns
@@ -227,6 +239,7 @@ disallow_untyped_defs = true
 5. Mark task complete only when fully working
 
 ### Error Handling Pattern
+
 ```python
 from fastapi import HTTPException, status
 
@@ -241,8 +254,10 @@ async def get_user(user_id: int) -> User:
 ```
 
 {{#if prpConfig}}
+
 ### PRP Workflow
+
 - Check `/PRPs/` directory for detailed implementation prompts
 - Follow validation loops defined in PRPs
 - Use ai_docs/ for additional context when needed
-{{/if}}
+  {{/if}}

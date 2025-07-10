@@ -3,17 +3,21 @@
 This file provides comprehensive guidance to Claude Code when working with this Express.js application with Node.js and TypeScript.
 
 ## Project Overview
+
 {{description}}
 
 ## Core Development Philosophy
 
 ### KISS (Keep It Simple, Stupid)
+
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible.
 
 ### YAGNI (You Aren't Gonna Need It)
+
 Avoid building functionality on speculation. Implement features only when they are needed.
 
 ### Design Principles
+
 - **Middleware Composition**: Build with small, focused middleware
 - **Error Handling**: Centralized error handling middleware
 - **Async/Await**: Use modern async patterns
@@ -22,6 +26,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🧱 Code Structure & Modularity
 
 ### File and Function Limits
+
 - **Never create a file longer than 300 lines**
 - **Route handlers should be under 50 lines**
 - **Middleware functions should have single responsibility**
@@ -30,6 +35,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🚀 Express & TypeScript Best Practices
 
 ### TypeScript Integration (MANDATORY)
+
 ```typescript
 import express, { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
@@ -75,24 +81,17 @@ export const createUser = async (
 ## 🛡️ Input Validation
 
 ### Express Validator Pattern
+
 ```typescript
 import { body, param, query } from 'express-validator';
 
 export const userValidation = {
   create: [
-    body('email')
-      .isEmail()
-      .normalizeEmail()
-      .withMessage('Valid email required'),
-    body('password')
-      .isLength({ min: 8 })
-      .withMessage('Password must be at least 8 characters'),
-    body('name')
-      .trim()
-      .notEmpty()
-      .withMessage('Name is required'),
+    body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+    body('name').trim().notEmpty().withMessage('Name is required'),
   ],
-  
+
   update: [
     param('id').isUUID().withMessage('Valid user ID required'),
     body('name').optional().trim().notEmpty(),
@@ -113,6 +112,7 @@ export const validate = (req: Request, res: Response, next: NextFunction): void 
 ## 🧪 Testing Strategy
 
 ### Requirements
+
 - **MINIMUM 80% code coverage**
 - **MUST use Jest and Supertest**
 - **MUST test all endpoints**
@@ -143,31 +143,24 @@ describe('POST /users', () => {
 ## 🔄 Async Error Handling
 
 ### Async Handler Wrapper
+
 ```typescript
 // utils/asyncHandler.ts
-export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
-) => (req: Request, res: Response, next: NextFunction): void => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+export const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
+  (req: Request, res: Response, next: NextFunction): void => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
 
 // Usage in routes
-router.post('/users', 
-  userValidation.create, 
-  validate, 
-  asyncHandler(createUser)
-);
+router.post('/users', userValidation.create, validate, asyncHandler(createUser));
 ```
 
 ### Global Error Handler
+
 ```typescript
 // middleware/errorHandler.ts
-export const errorHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
 
@@ -186,6 +179,7 @@ export const errorHandler = (
 ## 🔐 Security Requirements
 
 ### Security Middleware Setup
+
 ```typescript
 import helmet from 'helmet';
 import cors from 'cors';
@@ -195,10 +189,12 @@ import rateLimit from 'express-rate-limit';
 app.use(helmet());
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+    credentials: true,
+  })
+);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -216,14 +212,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 ## 💅 Code Style & Quality
 
 ### ESLint Configuration
+
 ```javascript
 module.exports = {
   parser: '@typescript-eslint/parser',
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'prettier',
-  ],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
   rules: {
     '@typescript-eslint/explicit-function-return-type': 'error',
     '@typescript-eslint/no-explicit-any': 'error',
@@ -250,6 +243,7 @@ module.exports = {
 ## 🗄️ Database Patterns
 
 ### Query Builder/ORM Usage
+
 ```typescript
 // Using Prisma example
 import { PrismaClient } from '@prisma/client';
@@ -298,6 +292,7 @@ export class UserService {
 ## API Documentation
 
 ### OpenAPI/Swagger Setup
+
 ```typescript
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
@@ -320,11 +315,13 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 ## Workflow Rules
 
 ### Before Starting Any Task
+
 - Consult `/Docs/Implementation.md` for current stage and available tasks
 - Check task dependencies and prerequisites
 - Verify scope understanding
 
 ### API Development Flow
+
 1. Define route and validation
 2. Implement service layer logic
 3. Add error handling
@@ -333,8 +330,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 6. Test with actual HTTP client
 
 {{#if prpConfig}}
+
 ### PRP Workflow
+
 - Check `/PRPs/` directory for detailed implementation prompts
 - Follow validation loops defined in PRPs
 - Use ai_docs/ for additional context when needed
-{{/if}}
+  {{/if}}

@@ -8,7 +8,9 @@ const program = new Command();
 
 program
   .name('context-forge')
-  .description('CLI tool that generates context engineering documentation for Claude Code projects')
+  .description(
+    'CLI tool that generates context engineering documentation for AI-powered development'
+  )
   .version(version, '-v, --version', 'output the current version')
   .helpOption('-h, --help', 'display help for command');
 

@@ -3,17 +3,21 @@
 This file provides comprehensive guidance to Claude Code when working with this Vue.js 3 application with TypeScript and Composition API.
 
 ## Project Overview
+
 {{description}}
 
 ## Core Development Philosophy
 
 ### KISS (Keep It Simple, Stupid)
+
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible.
 
 ### YAGNI (You Aren't Gonna Need It)
+
 Avoid building functionality on speculation. Implement features only when they are needed.
 
 ### Design Principles
+
 - **Composition over Options API**: Use Composition API for better TypeScript support
 - **Single File Components**: Keep templates, logic, and styles together
 - **Reactive by Design**: Leverage Vue's reactivity system
@@ -22,6 +26,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🧱 Code Structure & Modularity
 
 ### File and Component Limits
+
 - **Never create a file longer than 300 lines**
 - **Components should be under 200 lines**
 - **Composables should be under 100 lines**
@@ -30,6 +35,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🚀 Vue 3 & TypeScript Best Practices
 
 ### TypeScript Integration (MANDATORY)
+
 - **MUST use `<script setup lang="ts">`** for all components
 - **MUST define props with TypeScript**
 - **MUST type all refs and computed properties**
@@ -37,41 +43,41 @@ Avoid building functionality on speculation. Implement features only when they a
 
 ```vue
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import type { PropType } from 'vue'
+import { ref, computed, onMounted } from 'vue';
+import type { PropType } from 'vue';
 
 interface User {
-  id: number
-  name: string
-  email: string
+  id: number;
+  name: string;
+  email: string;
 }
 
 // Props with TypeScript
 const props = defineProps({
   user: {
     type: Object as PropType<User>,
-    required: true
+    required: true,
   },
   isActive: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 
 // Typed emits
 const emit = defineEmits<{
-  update: [user: User]
-  delete: [id: number]
-}>()
+  update: [user: User];
+  delete: [id: number];
+}>();
 
 // Typed refs
-const count = ref<number>(0)
-const users = ref<User[]>([])
+const count = ref<number>(0);
+const users = ref<User[]>([]);
 
 // Typed computed
 const fullName = computed<string>(() => {
-  return `${props.user.name} (${props.user.email})`
-})
+  return `${props.user.name} (${props.user.email})`;
+});
 </script>
 ```
 
@@ -82,6 +88,7 @@ const fullName = computed<string>(() => {
 ```
 
 ### Typical Vue.js Structure
+
 ```
 src/
 ├── assets/               # Static assets
@@ -101,30 +108,31 @@ src/
 ## 🎣 Composables Pattern
 
 ### Creating Reusable Composables
+
 ```typescript
 // composables/useUser.ts
-import { ref, computed, Ref } from 'vue'
-import type { User } from '@/types'
+import { ref, computed, Ref } from 'vue';
+import type { User } from '@/types';
 
 export function useUser(userId: Ref<number>) {
-  const user = ref<User | null>(null)
-  const loading = ref(false)
-  const error = ref<Error | null>(null)
+  const user = ref<User | null>(null);
+  const loading = ref(false);
+  const error = ref<Error | null>(null);
 
-  const isAdmin = computed(() => user.value?.role === 'admin')
+  const isAdmin = computed(() => user.value?.role === 'admin');
 
   async function fetchUser() {
-    loading.value = true
-    error.value = null
-    
+    loading.value = true;
+    error.value = null;
+
     try {
-      const response = await fetch(`/api/users/${userId.value}`)
-      if (!response.ok) throw new Error('Failed to fetch user')
-      user.value = await response.json()
+      const response = await fetch(`/api/users/${userId.value}`);
+      if (!response.ok) throw new Error('Failed to fetch user');
+      user.value = await response.json();
     } catch (e) {
-      error.value = e as Error
+      error.value = e as Error;
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 
@@ -133,53 +141,56 @@ export function useUser(userId: Ref<number>) {
     loading: readonly(loading),
     error: readonly(error),
     isAdmin,
-    fetchUser
-  }
+    fetchUser,
+  };
 }
 ```
 
 ## 🛡️ Form Validation
 
 ### VeeValidate with TypeScript and Zod
+
 ```vue
 <script setup lang="ts">
-import { useForm } from 'vee-validate'
-import { toTypedSchema } from '@vee-validate/zod'
-import * as z from 'zod'
+import { useForm } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import * as z from 'zod';
 
-const schema = z.object({
-  email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-})
+const schema = z
+  .object({
+    email: z.string().email('Invalid email'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
 
 const { handleSubmit, errors, defineField } = useForm<FormData>({
-  validationSchema: toTypedSchema(schema)
-})
+  validationSchema: toTypedSchema(schema),
+});
 
-const [email, emailAttrs] = defineField('email')
-const [password, passwordAttrs] = defineField('password')
-const [confirmPassword, confirmPasswordAttrs] = defineField('confirmPassword')
+const [email, emailAttrs] = defineField('email');
+const [password, passwordAttrs] = defineField('password');
+const [confirmPassword, confirmPasswordAttrs] = defineField('confirmPassword');
 
 const onSubmit = handleSubmit(async (values) => {
   // Handle form submission
-  console.log(values)
-})
+  console.log(values);
+});
 </script>
 
 <template>
   <form @submit="onSubmit">
     <input v-model="email" v-bind="emailAttrs" />
     <span v-if="errors.email">{{ errors.email }}</span>
-    
+
     <input v-model="password" v-bind="passwordAttrs" type="password" />
     <span v-if="errors.password">{{ errors.password }}</span>
-    
+
     <button type="submit">Submit</button>
   </form>
 </template>
@@ -188,78 +199,80 @@ const onSubmit = handleSubmit(async (values) => {
 ## 🧪 Testing Strategy
 
 ### Requirements
+
 - **MINIMUM 80% code coverage**
 - **MUST use Vitest** for unit tests
 - **MUST use Vue Test Utils** for component tests
 - **MUST test user interactions**
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import UserCard from '@/components/UserCard.vue'
-import type { User } from '@/types'
+import { describe, it, expect, vi } from 'vitest';
+import { mount } from '@vue/test-utils';
+import UserCard from '@/components/UserCard.vue';
+import type { User } from '@/types';
 
 describe('UserCard', () => {
   const mockUser: User = {
     id: 1,
     name: 'John Doe',
-    email: 'john@example.com'
-  }
+    email: 'john@example.com',
+  };
 
   it('renders user information', () => {
     const wrapper = mount(UserCard, {
-      props: { user: mockUser }
-    })
-    
-    expect(wrapper.text()).toContain('John Doe')
-    expect(wrapper.text()).toContain('john@example.com')
-  })
+      props: { user: mockUser },
+    });
+
+    expect(wrapper.text()).toContain('John Doe');
+    expect(wrapper.text()).toContain('john@example.com');
+  });
 
   it('emits update event when clicked', async () => {
     const wrapper = mount(UserCard, {
-      props: { user: mockUser }
-    })
-    
-    await wrapper.find('button').trigger('click')
-    
-    expect(wrapper.emitted()).toHaveProperty('update')
-    expect(wrapper.emitted('update')?.[0]).toEqual([mockUser])
-  })
-})
+      props: { user: mockUser },
+    });
+
+    await wrapper.find('button').trigger('click');
+
+    expect(wrapper.emitted()).toHaveProperty('update');
+    expect(wrapper.emitted('update')?.[0]).toEqual([mockUser]);
+  });
+});
 ```
 
 ## 🔄 State Management with Pinia
 
 ### Type-Safe Stores
+
 ```typescript
 // stores/user.ts
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { User } from '@/types'
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import type { User } from '@/types';
 
 export const useUserStore = defineStore('user', () => {
   // State
-  const users = ref<User[]>([])
-  const currentUser = ref<User | null>(null)
-  const loading = ref(false)
+  const users = ref<User[]>([]);
+  const currentUser = ref<User | null>(null);
+  const loading = ref(false);
 
   // Getters
-  const userCount = computed(() => users.value.length)
-  const isAuthenticated = computed(() => !!currentUser.value)
-  
+  const userCount = computed(() => users.value.length);
+  const isAuthenticated = computed(() => !!currentUser.value);
+
   // Actions
   async function fetchUsers() {
-    loading.value = true
+    loading.value = true;
     try {
-      const response = await fetch('/api/users')
-      users.value = await response.json()
+      const response = await fetch('/api/users');
+      users.value = await response.json();
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 
   function setCurrentUser(user: User | null) {
-    currentUser.value = user
+    currentUser.value = user;
   }
 
   return {
@@ -272,29 +285,30 @@ export const useUserStore = defineStore('user', () => {
     isAuthenticated,
     // Actions
     fetchUsers,
-    setCurrentUser
-  }
-})
+    setCurrentUser,
+  };
+});
 ```
 
 ## 💅 Code Style & Quality
 
 ### ESLint Configuration
+
 ```javascript
 module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:vue/vue3-recommended',
     'plugin:@typescript-eslint/recommended',
-    '@vue/typescript/recommended'
+    '@vue/typescript/recommended',
   ],
   rules: {
     'vue/multi-word-component-names': 'error',
     'vue/component-api-style': ['error', ['script-setup']],
     '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/explicit-function-return-type': 'off'
-  }
-}
+    '@typescript-eslint/explicit-function-return-type': 'off',
+  },
+};
 ```
 
 ## 📋 Development Commands
@@ -317,13 +331,12 @@ module.exports = {
 ## 🎨 Component Patterns
 
 ### Async Components with Suspense
+
 ```vue
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent } from 'vue';
 
-const AsyncUserList = defineAsyncComponent(() => 
-  import('@/components/UserList.vue')
-)
+const AsyncUserList = defineAsyncComponent(() => import('@/components/UserList.vue'));
 </script>
 
 <template>
@@ -339,24 +352,25 @@ const AsyncUserList = defineAsyncComponent(() =>
 ```
 
 ### Provide/Inject with TypeScript
+
 ```typescript
 // types/injection-keys.ts
-import type { InjectionKey } from 'vue'
-import type { User } from './user'
+import type { InjectionKey } from 'vue';
+import type { User } from './user';
 
-export const UserKey: InjectionKey<User> = Symbol('user')
+export const UserKey: InjectionKey<User> = Symbol('user');
 
 // Parent component
-import { provide } from 'vue'
-import { UserKey } from '@/types/injection-keys'
+import { provide } from 'vue';
+import { UserKey } from '@/types/injection-keys';
 
-provide(UserKey, currentUser)
+provide(UserKey, currentUser);
 
 // Child component
-import { inject } from 'vue'
-import { UserKey } from '@/types/injection-keys'
+import { inject } from 'vue';
+import { UserKey } from '@/types/injection-keys';
 
-const user = inject(UserKey) // Type-safe!
+const user = inject(UserKey); // Type-safe!
 ```
 
 ## ⚠️ CRITICAL GUIDELINES
@@ -382,37 +396,38 @@ const user = inject(UserKey) // Type-safe!
 ## Performance Guidelines
 
 ### Optimization Techniques
+
 ```vue
 <script setup lang="ts">
-import { shallowRef, computed, watchEffect } from 'vue'
+import { shallowRef, computed, watchEffect } from 'vue';
 
 // Use shallowRef for large objects
-const largeData = shallowRef<LargeObject>({})
+const largeData = shallowRef<LargeObject>({});
 
 // Computed with getter and setter
 const fullName = computed({
   get: () => `${firstName.value} ${lastName.value}`,
   set: (value) => {
-    const [first, last] = value.split(' ')
-    firstName.value = first
-    lastName.value = last
-  }
-})
+    const [first, last] = value.split(' ');
+    firstName.value = first;
+    lastName.value = last;
+  },
+});
 
 // Efficient watchers
 watchEffect(() => {
   // Only runs when dependencies change
-  console.log(user.value.name)
-})
+  console.log(user.value.name);
+});
 </script>
 
 <template>
   <!-- Use v-show for frequent toggling -->
   <div v-show="isVisible">Frequently toggled</div>
-  
+
   <!-- Use v-if for conditional rendering -->
   <div v-if="user">{{ user.name }}</div>
-  
+
   <!-- Key for list items -->
   <li v-for="item in items" :key="item.id">
     {{ item.name }}
@@ -423,11 +438,13 @@ watchEffect(() => {
 ## Workflow Rules
 
 ### Before Starting Any Task
+
 - Consult `/Docs/Implementation.md` for current stage and available tasks
 - Check Vue 3 migration guide if updating from Vue 2
 - Review existing component patterns
 
 ### Component Development Flow
+
 1. Define TypeScript interfaces
 2. Create component with script setup
 3. Implement template with proper bindings
@@ -436,8 +453,10 @@ watchEffect(() => {
 6. Document props and events
 
 {{#if prpConfig}}
+
 ### PRP Workflow
+
 - Check `/PRPs/` directory for detailed implementation prompts
 - Follow validation loops defined in PRPs
 - Use ai_docs/ for Vue-specific documentation
-{{/if}}
+  {{/if}}

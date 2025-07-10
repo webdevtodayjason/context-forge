@@ -13,19 +13,22 @@
 ## System Components
 
 {{#each components}}
+
 ### {{name}}
 
 **Purpose**: {{purpose}}
 
 **Key Responsibilities**:
 {{#each responsibilities}}
+
 - {{this}}
-{{/each}}
+  {{/each}}
 
 **Dependencies**:
 {{#each dependencies}}
+
 - {{this}}
-{{/each}}
+  {{/each}}
 
 {{/each}}
 
@@ -38,12 +41,14 @@
 ## Technical Decisions
 
 {{#each decisions}}
+
 ### {{decision}}
 
 **Options Considered**:
 {{#each options}}
+
 - {{name}}: {{description}}
-{{/each}}
+  {{/each}}
 
 **Decision**: {{chosen}}
 
@@ -54,19 +59,22 @@
 ## Implementation Phases
 
 {{#each phases}}
+
 ### Phase {{@index}}: {{name}}
 
 **Duration**: {{duration}}
 
 **Goals**:
 {{#each goals}}
+
 - {{this}}
-{{/each}}
+  {{/each}}
 
 **Deliverables**:
 {{#each deliverables}}
+
 - {{this}}
-{{/each}}
+  {{/each}}
 
 **Dependencies**: {{#if dependencies}}{{dependencies}}{{else}}None{{/if}}
 
@@ -75,6 +83,7 @@
 ## Risk Analysis
 
 {{#each risks}}
+
 ### {{risk}}
 
 **Probability**: {{probability}}
@@ -86,34 +95,40 @@
 ## Security Considerations
 
 {{#each security}}
+
 - {{this}}
-{{/each}}
+  {{/each}}
 
 ## Performance Requirements
 
 {{#each performance}}
+
 - **{{metric}}**: {{requirement}}
-{{/each}}
+  {{/each}}
 
 ## Monitoring & Observability
 
 {{#each monitoring}}
+
 ### {{area}}
 
 **Metrics**:
 {{#each metrics}}
+
 - {{this}}
-{{/each}}
+  {{/each}}
 
 **Alerts**:
 {{#each alerts}}
+
 - {{this}}
-{{/each}}
+  {{/each}}
 
 {{/each}}
 
 ## Future Considerations
 
 {{#each future}}
+
 - {{this}}
-{{/each}}
+  {{/each}}

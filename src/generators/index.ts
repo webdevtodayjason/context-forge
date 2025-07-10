@@ -3,107 +3,57 @@ import fs from 'fs-extra';
 import ora from 'ora';
 import chalk from 'chalk';
 import { ProjectConfig } from '../types';
-import { generateClaudeMd } from './claudeMd';
-import { generateImplementation } from './implementation';
-import { generateProjectStructure } from './projectStructure';
-import { generateUiUx } from './uiUx';
-import { generateBugTracking } from './bugTracking';
-import { generatePRP } from './prp';
+import { createAdapter, getIDEInfo } from '../adapters';
 
 export async function generateDocumentation(
   config: ProjectConfig,
   outputPath: string
 ): Promise<void> {
-  const docsPath = path.join(outputPath, 'Docs');
-
-  // Ensure directories exist
+  // Ensure output directory exists
   await fs.ensureDir(outputPath);
-  await fs.ensureDir(docsPath);
 
-  // Create additional directories based on extras
-  if (config.extras.prp) {
-    await fs.ensureDir(path.join(outputPath, 'PRPs'));
+  // Default to Claude if no IDEs specified
+  const targetIDEs = config.targetIDEs || ['claude'];
+
+  console.log(chalk.blue(`\n📝 Generating documentation for ${targetIDEs.length} IDE(s)...\n`));
+
+  // Generate files for each selected IDE
+  for (const ide of targetIDEs) {
+    const ideInfo = getIDEInfo(ide);
+    console.log(chalk.cyan(`\nGenerating ${ideInfo.name} configuration...`));
+
+    try {
+      const adapter = createAdapter(ide, config);
+      const files = await adapter.generateFiles(outputPath);
+
+      // Create necessary directories and write files
+      for (const file of files) {
+        const spinner = ora(`Creating ${path.basename(file.path)}...`).start();
+        try {
+          await fs.ensureDir(path.dirname(file.path));
+          await fs.writeFile(file.path, file.content, 'utf-8');
+          spinner.succeed(`Created ${path.basename(file.path)}`);
+        } catch (error) {
+          spinner.fail(`Failed to create ${path.basename(file.path)}`);
+          throw error;
+        }
+      }
+
+      console.log(chalk.green(`✓ ${ideInfo.name} configuration complete`));
+    } catch (error) {
+      if ((error as Error).message.includes('not yet implemented')) {
+        console.log(chalk.yellow(`⚠️  ${ideInfo.name} adapter coming soon`));
+      } else {
+        throw error;
+      }
+    }
   }
+
+  // Generate common directories if needed
   if (config.extras.aiDocs) {
     await fs.ensureDir(path.join(outputPath, 'ai_docs'));
-  }
-  if (config.extras.claudeCommands) {
-    await fs.ensureDir(path.join(outputPath, '.claude', 'commands'));
-  }
-
-  const generators = [
-    {
-      name: 'CLAUDE.md',
-      path: path.join(outputPath, 'CLAUDE.md'),
-      generator: () => generateClaudeMd(config),
-    },
-    {
-      name: 'Implementation.md',
-      path: path.join(docsPath, 'Implementation.md'),
-      generator: () => generateImplementation(config),
-    },
-    {
-      name: 'project_structure.md',
-      path: path.join(docsPath, 'project_structure.md'),
-      generator: () => generateProjectStructure(config),
-    },
-    {
-      name: 'UI_UX_doc.md',
-      path: path.join(docsPath, 'UI_UX_doc.md'),
-      generator: () => generateUiUx(config),
-    },
-    {
-      name: 'Bug_tracking.md',
-      path: path.join(docsPath, 'Bug_tracking.md'),
-      generator: () => generateBugTracking(config),
-    },
-  ];
-
-  // Add PRP generation if enabled
-  if (config.extras.prp) {
-    generators.push({
-      name: 'PRP (Base)',
-      path: path.join(
-        outputPath,
-        'PRPs',
-        `${config.projectName.toLowerCase().replace(/\s+/g, '-')}-prp.md`
-      ),
-      generator: () => generatePRP(config, 'base'),
-    });
-
-    // Generate planning PRP if it's a complex project
-    if (config.timeline === 'enterprise' || config.teamSize !== 'solo') {
-      generators.push({
-        name: 'PRP (Planning)',
-        path: path.join(
-          outputPath,
-          'PRPs',
-          `${config.projectName.toLowerCase().replace(/\s+/g, '-')}-planning.md`
-        ),
-        generator: () => generatePRP(config, 'planning'),
-      });
-    }
-  }
-
-  // Generate AI docs readme if enabled
-  if (config.extras.aiDocs) {
-    generators.push({
-      name: 'AI Docs README',
-      path: path.join(outputPath, 'ai_docs', 'README.md'),
-      generator: () => generateAIDocsReadme(config),
-    });
-  }
-
-  for (const { name, path: filePath, generator } of generators) {
-    const spinner = ora(`Generating ${name}...`).start();
-    try {
-      const content = await generator();
-      await fs.writeFile(filePath, content, 'utf-8');
-      spinner.succeed(`Generated ${name}`);
-    } catch (error) {
-      spinner.fail(`Failed to generate ${name}`);
-      throw error;
-    }
+    const aiDocsContent = await generateAIDocsReadme(config);
+    await fs.writeFile(path.join(outputPath, 'ai_docs', 'README.md'), aiDocsContent, 'utf-8');
   }
 
   console.log(chalk.green('\n✅ All documentation files generated successfully!'));

@@ -1,6 +1,6 @@
 {
   "name": "context-forge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI tool that generates context engineering documentation for Claude Code projects",
   "main": "dist/index.js",
   "bin": {
@@ -18,11 +18,21 @@
     "cli",
     "context-engineering",
     "claude-code",
+    "claude",
+    "anthropic",
     "project-generator",
+    "scaffolding",
     "documentation",
-    "ai-assisted-development"
+    "ai-assisted-development",
+    "prp",
+    "product-requirement-prompt",
+    "validation",
+    "developer-tools",
+    "automation",
+    "context-window",
+    "prompt-engineering"
   ],
-  "author": "",
+  "author": "Jason Smith <webdevtodayjason@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/webdevtodayjason/context-forge#readme",
   "repository": {
@@ -33,7 +43,8 @@
     "url": "https://github.com/webdevtodayjason/context-forge/issues"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=7.0.0"
   },
   "files": [
     "dist/",

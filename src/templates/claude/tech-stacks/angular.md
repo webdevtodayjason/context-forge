@@ -3,17 +3,21 @@
 This file provides comprehensive guidance to Claude Code when working with this Angular application with TypeScript and RxJS.
 
 ## Project Overview
+
 {{description}}
 
 ## Core Development Philosophy
 
 ### KISS (Keep It Simple, Stupid)
+
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible.
 
 ### YAGNI (You Aren't Gonna Need It)
+
 Avoid building functionality on speculation. Implement features only when they are needed.
 
 ### Design Principles
+
 - **Component-Based Architecture**: Build with reusable, testable components
 - **Dependency Injection**: Use Angular's DI system effectively
 - **Reactive Programming**: Leverage RxJS for async operations
@@ -22,6 +26,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🧱 Code Structure & Modularity
 
 ### File and Component Limits
+
 - **Never create a file longer than 300 lines**
 - **Components should be under 200 lines**
 - **Services should be under 150 lines**
@@ -30,6 +35,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🚀 Angular & TypeScript Best Practices
 
 ### Component Structure (MANDATORY)
+
 - **MUST use standalone components** (Angular 15+)
 - **MUST follow Angular style guide**
 - **MUST use OnPush change detection** where possible
@@ -58,7 +64,7 @@ interface User {
       <button (click)="onEdit()">Edit</button>
     </div>
   `,
-  styleUrls: ['./user-card.component.scss']
+  styleUrls: ['./user-card.component.scss'],
 })
 export class UserCardComponent {
   @Input({ required: true }) user!: User;
@@ -77,6 +83,7 @@ export class UserCardComponent {
 ```
 
 ### Typical Angular Structure
+
 ```
 src/
 ├── app/
@@ -105,28 +112,29 @@ src/
 ## 🎯 Services & Dependency Injection
 
 ### Service Pattern with RxJS
+
 ```typescript
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, map, catchError, of } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/users';
-  
+
   private usersSubject = new BehaviorSubject<User[]>([]);
   users$ = this.usersSubject.asObservable();
 
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(this.apiUrl).pipe(
-      map(users => {
+      map((users) => {
         this.usersSubject.next(users);
         return users;
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('Failed to fetch users:', error);
         return of([]);
       })
@@ -134,9 +142,7 @@ export class UserService {
   }
 
   getUser(id: number): Observable<User | null> {
-    return this.http.get<User>(`${this.apiUrl}/${id}`).pipe(
-      catchError(() => of(null))
-    );
+    return this.http.get<User>(`${this.apiUrl}/${id}`).pipe(catchError(() => of(null)));
   }
 
   createUser(user: Omit<User, 'id'>): Observable<User> {
@@ -148,6 +154,7 @@ export class UserService {
 ## 🛡️ Form Handling & Validation
 
 ### Reactive Forms with Strong Typing
+
 ```typescript
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
@@ -167,50 +174,55 @@ interface UserForm {
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <input formControlName="email" type="email" />
-      <div *ngIf="email?.invalid && email?.touched">
-        Email is required and must be valid
-      </div>
-      
+      <div *ngIf="email?.invalid && email?.touched">Email is required and must be valid</div>
+
       <input formControlName="password" type="password" />
       <div *ngIf="password?.invalid && password?.touched">
         Password must be at least 8 characters
       </div>
-      
+
       <button type="submit" [disabled]="form.invalid">Submit</button>
     </form>
-  `
+  `,
 })
 export class UserFormComponent implements OnInit {
   private fb = inject(FormBuilder);
-  
+
   form!: FormGroup<UserForm>;
 
   ngOnInit(): void {
-    this.form = this.fb.group({
-      email: this.fb.control('', {
-        validators: [Validators.required, Validators.email],
-        nonNullable: true
-      }),
-      password: this.fb.control('', {
-        validators: [Validators.required, Validators.minLength(8)],
-        nonNullable: true
-      }),
-      confirmPassword: this.fb.control('', {
-        validators: [Validators.required],
-        nonNullable: true
-      })
-    }, {
-      validators: this.passwordMatchValidator
-    });
+    this.form = this.fb.group(
+      {
+        email: this.fb.control('', {
+          validators: [Validators.required, Validators.email],
+          nonNullable: true,
+        }),
+        password: this.fb.control('', {
+          validators: [Validators.required, Validators.minLength(8)],
+          nonNullable: true,
+        }),
+        confirmPassword: this.fb.control('', {
+          validators: [Validators.required],
+          nonNullable: true,
+        }),
+      },
+      {
+        validators: this.passwordMatchValidator,
+      }
+    );
   }
 
-  get email() { return this.form.get('email'); }
-  get password() { return this.form.get('password'); }
+  get email() {
+    return this.form.get('email');
+  }
+  get password() {
+    return this.form.get('password');
+  }
 
-  passwordMatchValidator(control: AbstractControl): {[key: string]: boolean} | null {
+  passwordMatchValidator(control: AbstractControl): { [key: string]: boolean } | null {
     const password = control.get('password');
     const confirmPassword = control.get('confirmPassword');
-    
+
     if (password?.value !== confirmPassword?.value) {
       return { passwordMismatch: true };
     }
@@ -228,6 +240,7 @@ export class UserFormComponent implements OnInit {
 ## 🧪 Testing Strategy
 
 ### Requirements
+
 - **MINIMUM 85% code coverage** for Angular projects
 - **MUST use Angular Testing Library**
 - **MUST test components, services, and guards**
@@ -244,7 +257,7 @@ describe('UserCardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [UserCardComponent]
+      imports: [UserCardComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(UserCardComponent);
@@ -261,10 +274,10 @@ describe('UserCardComponent', () => {
 
   it('should emit edit event when button clicked', () => {
     spyOn(component.edit, 'emit');
-    
+
     const button = fixture.nativeElement.querySelector('button');
     button.click();
-    
+
     expect(component.edit.emit).toHaveBeenCalledWith(component.user);
   });
 });
@@ -273,28 +286,25 @@ describe('UserCardComponent', () => {
 ## 🔄 RxJS Patterns
 
 ### Best Practices for Observables
+
 ```typescript
 import { Component, OnDestroy } from '@angular/core';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-search',
-  template: `
-    <input (input)="search($event)" placeholder="Search..." />
-  `
+  template: ` <input (input)="search($event)" placeholder="Search..." /> `,
 })
 export class SearchComponent implements OnDestroy {
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
-  
+
   constructor(private userService: UserService) {
-    this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$)
-    ).subscribe(searchTerm => {
-      this.performSearch(searchTerm);
-    });
+    this.searchSubject
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((searchTerm) => {
+        this.performSearch(searchTerm);
+      });
   }
 
   search(event: Event): void {
@@ -303,11 +313,12 @@ export class SearchComponent implements OnDestroy {
   }
 
   private performSearch(term: string): void {
-    this.userService.searchUsers(term).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(users => {
-      // Handle search results
-    });
+    this.userService
+      .searchUsers(term)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((users) => {
+        // Handle search results
+      });
   }
 
   ngOnDestroy(): void {
@@ -320,27 +331,34 @@ export class SearchComponent implements OnDestroy {
 ## 💅 Code Style & Quality
 
 ### ESLint Configuration
+
 ```javascript
 module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@angular-eslint/recommended',
-    'plugin:@typescript-eslint/recommended'
+    'plugin:@typescript-eslint/recommended',
   ],
   rules: {
-    '@angular-eslint/directive-selector': ['error', {
-      type: 'attribute',
-      prefix: 'app',
-      style: 'camelCase'
-    }],
-    '@angular-eslint/component-selector': ['error', {
-      type: 'element',
-      prefix: 'app',
-      style: 'kebab-case'
-    }],
+    '@angular-eslint/directive-selector': [
+      'error',
+      {
+        type: 'attribute',
+        prefix: 'app',
+        style: 'camelCase',
+      },
+    ],
+    '@angular-eslint/component-selector': [
+      'error',
+      {
+        type: 'element',
+        prefix: 'app',
+        style: 'kebab-case',
+      },
+    ],
     '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/explicit-function-return-type': 'error'
-  }
+    '@typescript-eslint/explicit-function-return-type': 'error',
+  },
 };
 ```
 
@@ -362,6 +380,7 @@ module.exports = {
 ## 🔐 Security Requirements
 
 ### HTTP Interceptors for Security
+
 ```typescript
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
@@ -370,24 +389,20 @@ import { AuthService } from './auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getToken();
-  
+
   if (token) {
     const cloned = req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`)
+      headers: req.headers.set('Authorization', `Bearer ${token}`),
     });
     return next(cloned);
   }
-  
+
   return next(req);
 };
 
 // In app.config.ts
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideHttpClient(
-      withInterceptors([authInterceptor])
-    )
-  ]
+  providers: [provideHttpClient(withInterceptors([authInterceptor]))],
 };
 ```
 
@@ -415,6 +430,7 @@ export const appConfig: ApplicationConfig = {
 ## Guards & Interceptors
 
 ### Route Guards
+
 ```typescript
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
@@ -424,12 +440,12 @@ import { map } from 'rxjs';
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  
+
   return authService.isAuthenticated$.pipe(
-    map(isAuthenticated => {
+    map((isAuthenticated) => {
       if (!isAuthenticated) {
         router.navigate(['/login'], {
-          queryParams: { returnUrl: state.url }
+          queryParams: { returnUrl: state.url },
         });
         return false;
       }
@@ -442,11 +458,13 @@ export const authGuard: CanActivateFn = (route, state) => {
 ## Workflow Rules
 
 ### Before Starting Any Task
+
 - Consult `/Docs/Implementation.md` for current stage and available tasks
 - Check Angular version compatibility
 - Review Angular style guide
 
 ### Angular Development Flow
+
 1. Generate component/service with CLI
 2. Implement with proper TypeScript types
 3. Add OnPush change detection
@@ -455,8 +473,10 @@ export const authGuard: CanActivateFn = (route, state) => {
 6. Check for memory leaks
 
 {{#if prpConfig}}
+
 ### PRP Workflow
+
 - Check `/PRPs/` directory for detailed implementation prompts
 - Follow validation loops defined in PRPs
 - Use ai_docs/ for Angular-specific documentation
-{{/if}}
+  {{/if}}

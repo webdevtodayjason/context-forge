@@ -1,3 +1,21 @@
+export type SupportedIDE =
+  | 'claude'
+  | 'cursor'
+  | 'roo'
+  | 'cline'
+  | 'windsurf'
+  | 'copilot'
+  | 'gemini';
+
+export interface IDEInfo {
+  id: SupportedIDE;
+  name: string;
+  description: string;
+  configFiles: string[];
+  supportsValidation: boolean;
+  supportsPRP: boolean;
+}
+
 export interface ProjectConfig {
   // Basic project info
   projectName: string;
@@ -29,6 +47,9 @@ export interface ProjectConfig {
   timeline: 'mvp' | 'standard' | 'enterprise';
   teamSize: 'solo' | 'small' | 'medium' | 'large';
   deployment: string;
+
+  // Target IDE(s)
+  targetIDEs: SupportedIDE[];
 
   // Extras
   extras: {

@@ -3,17 +3,21 @@
 This file provides comprehensive guidance to Claude Code when working with this React application with TypeScript.
 
 ## Project Overview
+
 {{description}}
 
 ## Core Development Philosophy
 
 ### KISS (Keep It Simple, Stupid)
+
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible.
 
 ### YAGNI (You Aren't Gonna Need It)
+
 Avoid building functionality on speculation. Implement features only when they are needed.
 
 ### Design Principles
+
 - **Component Composition**: Build with small, reusable components
 - **Single Responsibility**: Each component does one thing well
 - **Props over State**: Prefer stateless components
@@ -22,6 +26,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🧱 Code Structure & Modularity
 
 ### File and Component Limits
+
 - **Never create a file longer than 300 lines**
 - **Components should be under 150 lines**
 - **Custom hooks should be under 50 lines**
@@ -30,6 +35,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🚀 React & TypeScript Best Practices
 
 ### TypeScript Integration (MANDATORY)
+
 - **MUST use `ReactElement` or `ReactNode`** for return types
 - **MUST define props interfaces** for all components
 - **NEVER use `any` type**
@@ -44,11 +50,11 @@ interface ButtonProps {
   disabled?: boolean;
 }
 
-export function Button({ 
-  variant, 
-  onClick, 
-  children, 
-  disabled = false 
+export function Button({
+  variant,
+  onClick,
+  children,
+  disabled = false
 }: ButtonProps): ReactElement {
   return (
     <button
@@ -71,6 +77,7 @@ export function Button({
 ## 🎣 React Hooks Rules
 
 ### Custom Hooks Pattern
+
 ```typescript
 // hooks/useUser.ts
 import { useState, useEffect } from 'react';
@@ -111,6 +118,7 @@ export function useUser(userId: string) {
 ## 🛡️ Data Validation
 
 ### Form Validation with React Hook Form + Zod
+
 ```typescript
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -147,6 +155,7 @@ export function LoginForm(): ReactElement {
 ## 🧪 Testing Strategy
 
 ### Requirements
+
 - **MINIMUM 80% code coverage**
 - **MUST use React Testing Library**
 - **MUST test user interactions**
@@ -164,7 +173,7 @@ describe('Button', () => {
         Click me
       </Button>
     );
-    
+
     fireEvent.click(screen.getByText('Click me'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
@@ -174,6 +183,7 @@ describe('Button', () => {
 ## 🔄 State Management
 
 ### State Management Hierarchy
+
 1. **Local State**: useState for component state
 2. **Lifted State**: Lift to parent when shared
 3. **Context**: For cross-cutting concerns
@@ -181,6 +191,7 @@ describe('Button', () => {
 5. **External Store**: Zustand/Redux for complex global state
 
 ### Context Pattern
+
 ```typescript
 import { createContext, useContext, ReactNode } from 'react';
 
@@ -213,6 +224,7 @@ export function useAuth() {
 ## 💅 Code Style & Quality
 
 ### ESLint Configuration
+
 ```javascript
 module.exports = {
   extends: [
@@ -265,6 +277,7 @@ module.exports = {
 ## Performance Guidelines
 
 ### Optimization Techniques
+
 - Use React.memo for expensive components
 - Use useMemo for expensive computations
 - Use useCallback for stable function references
@@ -293,11 +306,13 @@ const ExpensiveComponent = memo(({ data }: Props) => {
 ## Workflow Rules
 
 ### Before Starting Any Task
+
 - Consult `/Docs/Implementation.md` for current stage and available tasks
 - Check task dependencies and prerequisites
 - Verify scope understanding
 
 ### Component Development Flow
+
 1. Define TypeScript interfaces
 2. Create component structure
 3. Implement functionality
@@ -306,8 +321,10 @@ const ExpensiveComponent = memo(({ data }: Props) => {
 6. Document with JSDoc if complex
 
 {{#if prpConfig}}
+
 ### PRP Workflow
+
 - Check `/PRPs/` directory for detailed implementation prompts
 - Follow validation loops defined in PRPs
 - Use ai_docs/ for additional context when needed
-{{/if}}
+  {{/if}}

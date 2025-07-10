@@ -3,17 +3,21 @@
 This file provides comprehensive guidance to Claude Code when working with this Spring Boot application with Java.
 
 ## Project Overview
+
 {{description}}
 
 ## Core Development Philosophy
 
 ### KISS (Keep It Simple, Stupid)
+
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible.
 
 ### YAGNI (You Aren't Gonna Need It)
+
 Avoid building functionality on speculation. Implement features only when they are needed.
 
 ### Design Principles
+
 - **Dependency Injection**: Use Spring's IoC container effectively
 - **Convention over Configuration**: Follow Spring Boot conventions
 - **Layered Architecture**: Separate concerns (Controller, Service, Repository)
@@ -22,6 +26,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🧱 Code Structure & Modularity
 
 ### File and Class Limits
+
 - **Never create a file longer than 300 lines**
 - **Classes should have single responsibility**
 - **Methods should be under 30 lines**
@@ -30,6 +35,7 @@ Avoid building functionality on speculation. Implement features only when they a
 ## 🚀 Spring Boot & Java Best Practices
 
 ### Annotations and Structure (MANDATORY)
+
 - **MUST use proper Spring annotations**
 - **MUST follow REST conventions**
 - **MUST use constructor injection**
@@ -84,6 +90,7 @@ public class UserController {
 ```
 
 ### Typical Spring Boot Structure
+
 ```
 src/
 ├── main/
@@ -110,6 +117,7 @@ src/
 ## 🛡️ Data Validation
 
 ### Bean Validation with DTOs
+
 ```java
 package com.{{projectName}}.dto;
 
@@ -118,21 +126,21 @@ import lombok.Data;
 
 @Data
 public class UserCreateDto {
-    
+
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
     private String email;
-    
+
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$", 
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",
              message = "Password must contain at least one uppercase, lowercase, and digit")
     private String password;
-    
+
     @NotBlank(message = "Name is required")
     @Size(max = 255)
     private String name;
-    
+
     @Min(value = 18, message = "Age must be at least 18")
     @Max(value = 120, message = "Age must be less than 120")
     private Integer age;
@@ -142,6 +150,7 @@ public class UserCreateDto {
 ## 🧪 Testing Strategy
 
 ### Requirements
+
 - **MINIMUM 80% code coverage**
 - **MUST use JUnit 5 and Mockito**
 - **MUST test all layers**
@@ -205,6 +214,7 @@ class UserControllerTest {
 ## 🔄 Service Layer Pattern
 
 ### Business Logic Implementation
+
 ```java
 package com.{{projectName}}.service;
 
@@ -235,17 +245,17 @@ public class UserService {
     @Transactional
     public UserResponseDto createUser(UserCreateDto createDto) {
         log.debug("Creating new user with email: {}", createDto.getEmail());
-        
+
         if (userRepository.existsByEmail(createDto.getEmail())) {
             throw new DuplicateResourceException("User with email already exists");
         }
 
         User user = userMapper.toEntity(createDto);
         user.setPassword(passwordEncoder.encode(createDto.getPassword()));
-        
+
         User savedUser = userRepository.save(user);
         log.info("Created user with id: {}", savedUser.getId());
-        
+
         return userMapper.toDto(savedUser);
     }
 
@@ -264,6 +274,7 @@ public class UserService {
 ## 🔐 Security Configuration
 
 ### Spring Security Setup
+
 ```java
 package com.{{projectName}}.config;
 
@@ -286,7 +297,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> 
+            .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(authz -> authz
@@ -307,6 +318,7 @@ public class SecurityConfig {
 ## 💅 Code Style & Quality
 
 ### Checkstyle Configuration
+
 ```xml
 <!-- checkstyle.xml -->
 <?xml version="1.0"?>
@@ -368,6 +380,7 @@ mvn spotbugs:check              # Static analysis
 ## 🗄️ Database & JPA
 
 ### Entity and Repository Pattern
+
 ```java
 package com.{{projectName}}.entity;
 
@@ -421,14 +434,14 @@ public class User {
 // Repository with custom queries
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    
+
     Optional<User> findByEmail(String email);
-    
+
     boolean existsByEmail(String email);
-    
+
     @Query("SELECT u FROM User u WHERE u.role = :role")
     Page<User> findByRole(@Param("role") UserRole role, Pageable pageable);
-    
+
     @Modifying
     @Query("UPDATE User u SET u.lastLoginAt = :lastLoginAt WHERE u.id = :id")
     void updateLastLogin(@Param("id") Long id, @Param("lastLoginAt") LocalDateTime lastLoginAt);
@@ -458,6 +471,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 ## Exception Handling
 
 ### Global Exception Handler
+
 ```java
 @RestControllerAdvice
 @Slf4j
@@ -482,7 +496,7 @@ public class GlobalExceptionHandler {
                     FieldError::getField,
                     FieldError::getDefaultMessage
                 ));
-        
+
         ErrorResponse error = ErrorResponse.builder()
                 .message("Validation failed")
                 .details(errors)
@@ -496,11 +510,13 @@ public class GlobalExceptionHandler {
 ## Workflow Rules
 
 ### Before Starting Any Task
+
 - Consult `/Docs/Implementation.md` for current stage and available tasks
 - Check Spring Boot version compatibility
 - Review existing patterns in codebase
 
 ### Spring Boot Development Flow
+
 1. Define entity with proper JPA annotations
 2. Create repository interface
 3. Implement service layer with business logic
@@ -510,8 +526,10 @@ public class GlobalExceptionHandler {
 7. Add database migrations
 
 {{#if prpConfig}}
+
 ### PRP Workflow
+
 - Check `/PRPs/` directory for detailed implementation prompts
 - Follow validation loops defined in PRPs
 - Use ai_docs/ for Spring Boot documentation
-{{/if}}
+  {{/if}}
