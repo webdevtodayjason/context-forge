@@ -59,7 +59,7 @@ Context Forge is a powerful CLI tool that bridges the gap between project requir
 <td align="center"><img src="https://img.shields.io/badge/Windsurf-IDE-cyan?style=flat-square" /><br><b><a href="./docs/ide-configs/windsurf/">Windsurf</a></b><br><em>PRP + Cascade AI</em></td>
 </tr>
 <tr>
-<td align="center"><img src="https://img.shields.io/badge/Cline-Extension-green?style=flat-square" /><br><b><a href="./docs/ide-configs/cline/">Cline</a></b><br><em>Context management</em></td>
+<td align="center"><img src="https://img.shields.io/badge/Cline-Extension-green?style=flat-square" /><br><b><a href="./docs/ide-configs/cline/">Cline</a></b><br><em>PRP + Context mgmt</em></td>
 <td align="center"><img src="https://img.shields.io/badge/Roo%20Code-Extension-purple?style=flat-square" /><br><b><a href="./docs/ide-configs/roo/">Roo Code</a></b><br><em>Hierarchical rules</em></td>
 <td align="center"><img src="https://img.shields.io/badge/Gemini-Google-orange?style=flat-square&logo=google" /><br><b><a href="./docs/ide-configs/gemini/">Gemini</a></b><br><em>CLI & Code Assist</em></td>
 <td align="center"><img src="https://img.shields.io/badge/GitHub%20Copilot-black?style=flat-square&logo=github" /><br><b><a href="./docs/ide-configs/copilot/">GitHub Copilot</a></b><br><em>Custom instructions</em></td>
@@ -75,7 +75,7 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - **[🤖 Claude Code Guide](./docs/ide-configs/claude/)** - Full PRP support, validation system, tech-stack templates
 - **[🔵 Cursor IDE Guide](./docs/ide-configs/cursor/)** - PRP support, MDC format, hierarchical rules
 - **[🟩 Windsurf Guide](./docs/ide-configs/windsurf/)** - PRP support, Cascade AI integration, workflows
-- **[🟢 Cline Guide](./docs/ide-configs/cline/)** - Context management, code patterns, advanced commands
+- **[🟢 Cline Guide](./docs/ide-configs/cline/)** - PRP support, context management, code patterns, advanced commands
 - **[🟣 Roo Code Guide](./docs/ide-configs/roo/)** - Workspace rules, YAML configuration, team settings
 - **[🟠 Gemini Guide](./docs/ide-configs/gemini/)** - Hierarchical context, CLI commands, Code Assist integration
 - **[⚫ GitHub Copilot Guide](./docs/ide-configs/copilot/)** - Custom instructions, VS Code settings, language-specific rules
@@ -95,7 +95,7 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 
 ### Advanced Features
 
-- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude, Cursor & Windsurf)
+- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude, Cursor, Windsurf & Cline)
 - ✅ **Validation System** - Built-in code quality checks and gates
 - 🎨 **Tech-Stack Specific Templates** - Optimized CLAUDE.md for each framework
 - 📊 **Comprehensive Reporting** - Validation reports and progress tracking
@@ -358,11 +358,16 @@ project-folder/
 #### Cline
 ```
 project-folder/
-├── .clinerules               # Main Cline configuration
-└── .clinerules/
+└── .clinerules/              # Configuration directory
+    ├── README.md            # Main configuration
     ├── context.md           # Project context
     ├── rules.md             # Development rules
-    └── patterns.md          # Code patterns
+    ├── patterns.md          # Code patterns
+    ├── prp-overview.md      # PRP implementation overview
+    ├── prp-stage-1.md       # Foundation setup tasks
+    ├── prp-stage-2.md       # Core feature implementation
+    ├── prp-stage-3.md       # Advanced features & polish
+    └── prp-validation.md    # Validation gates & checks
 ```
 
 #### Gemini

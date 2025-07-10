@@ -57,7 +57,7 @@ export const IDE_INFO: Record<SupportedIDE, IDEInfo> = {
     description: 'AI pair programmer from GitHub',
     configFiles: ['.github/copilot-instructions.md', '.vscode/settings.json'],
     supportsValidation: false,
-    supportsPRP: false,
+    supportsPRP: true,
   },
   gemini: {
     id: 'gemini',

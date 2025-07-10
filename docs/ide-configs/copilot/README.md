@@ -1,6 +1,6 @@
 # GitHub Copilot Configuration
 
-GitHub Copilot is an AI pair programmer that helps you write code faster and with less work. Context Forge generates custom instructions and settings to optimize Copilot for your specific project.
+GitHub Copilot is an AI pair programmer that helps you write code faster and with less work. Context Forge now generates custom instructions with PRP (Product Requirement Prompt) support through prompt files, providing structured implementation guidance.
 
 ## Generated File Structure
 
@@ -9,7 +9,13 @@ project-root/
 ├── .github/
 │   ├── copilot-instructions.md    # Custom instructions for Copilot
 │   ├── api.instructions.md         # API-specific instructions
-│   └── frontend.instructions.md    # Frontend-specific instructions
+│   ├── frontend.instructions.md    # Frontend-specific instructions
+│   └── prompts/                   # PRP prompt files (if features defined)
+│       ├── prp-overview.prompt.md # PRP implementation overview
+│       ├── prp-stage-1.prompt.md  # Foundation setup
+│       ├── prp-stage-2.prompt.md  # Core features
+│       ├── prp-stage-3.prompt.md  # Advanced features
+│       └── prp-validation.prompt.md # Validation gates
 └── .vscode/
     └── settings.json              # VS Code settings with Copilot config
 ```
@@ -327,6 +333,130 @@ export function ProductCard({ product, onAddToCart, isLoading = false }: Product
 - Use React Testing Library
 ```
 
+## Example: PRP Prompt Files
+
+### .github/prompts/prp-overview.prompt.md
+```markdown
+# PRP Implementation Overview: E-Commerce Platform
+
+## What is PRP?
+
+Product Requirement Prompts (PRP) provide a structured approach to implementing features with clear validation gates between stages. This methodology helps GitHub Copilot understand your project's implementation phases and success criteria.
+
+## How to Use PRP Prompts with Copilot
+
+These prompt files are designed to be used as slash commands in VS Code:
+- Type `/prp-overview` to get this overview
+- Type `/prp-stage-1` to start foundation setup
+- Type `/prp-stage-2` for core features implementation
+- Type `/prp-stage-3` for advanced features
+- Type `/prp-validation` to check validation gates
+
+## Implementation Stages
+
+### 📋 Stage 1: Foundation (/prp-stage-1)
+- Project setup and configuration
+- Core infrastructure
+- Basic models and schemas
+- Database setup
+
+### 🚀 Stage 2: Core Features (/prp-stage-2)
+- User Authentication: JWT-based authentication
+- Product Catalog: Product listings with search
+- Shopping Cart: Persistent cart storage
+
+### ✨ Stage 3: Advanced Features (/prp-stage-3)
+- AI Product Recommendations: ML-powered suggestions
+- Analytics Dashboard: Business intelligence
+- Advanced Search: Elasticsearch integration
+
+### ✅ Validation Gates (/prp-validation)
+- Each stage has validation requirements
+- Must pass before proceeding to next stage
+- Automated testing and quality checks
+
+## Working with Copilot
+
+When implementing PRP tasks:
+1. Use the slash commands to access specific stages
+2. Ask Copilot to help implement tasks from the checklist
+3. Use inline chat for code generation and refinement
+4. Review all generated code before accepting
+```
+
+### .github/prompts/prp-stage-2.prompt.md
+```markdown
+# PRP Stage 2: Core Features
+
+## Objective
+Implement all must-have features with proper testing and documentation.
+
+## How to Use This Prompt
+Use `/prp-stage-2` to implement core features with Copilot's assistance.
+
+## Features to Implement
+
+### User Authentication
+**Description**: JWT-based authentication
+**Complexity**: medium
+
+#### Tasks:
+- [ ] Create data models/schemas
+- [ ] Implement business logic
+- [ ] Create API endpoints
+- [ ] Add validation
+- [ ] Write unit tests
+- [ ] Create UI components
+- [ ] Implement state management
+- [ ] Connect to API
+- [ ] Add error handling
+- [ ] Write component tests
+
+#### Copilot Implementation:
+Ask Copilot to:
+- "Create User Authentication with JWT-based authentication"
+- "Add tests for User Authentication"
+- "Implement validation for User Authentication"
+
+### Product Catalog
+**Description**: Product listings with search
+**Complexity**: complex
+
+#### Tasks:
+- [ ] Create product models
+- [ ] Implement search functionality
+- [ ] Add filtering and sorting
+- [ ] Create product list components
+- [ ] Implement pagination
+- [ ] Add product detail views
+
+#### Copilot Assistance:
+- Ask: "Implement product catalog with search functionality"
+- Ask: "Add pagination to product listing"
+- Ask: "Create tests for product catalog"
+
+## Validation Requirements
+
+Run these commands before proceeding:
+
+1. **All tests pass with coverage**
+   ```bash
+   npm run test:coverage
+   ```
+
+2. **Build succeeds**
+   ```bash
+   npm run build
+   ```
+
+## Success Criteria
+
+- [ ] All must-have features are working
+- [ ] Test coverage > 80%
+- [ ] All features are documented
+- [ ] Code review completed
+```
+
 ## Usage with GitHub Copilot
 
 1. Generate the configuration:
@@ -338,6 +468,7 @@ export function ProductCard({ product, onAddToCart, isLoading = false }: Product
 
 3. Copilot will automatically:
    - Read instruction files from `.github/`
+   - Load prompt files from `.github/prompts/`
    - Apply VS Code settings
    - Use project context for suggestions
 
@@ -345,6 +476,12 @@ export function ProductCard({ product, onAddToCart, isLoading = false }: Product
    - Copilot Chat will reference instruction files
    - Inline suggestions follow project patterns
    - Code generation matches your standards
+
+5. Using PRP prompts (VS Code only):
+   - Type `/` in Copilot Chat to see available prompts
+   - Use `/prp-overview` to understand implementation stages
+   - Use `/prp-stage-1`, `/prp-stage-2`, etc. for specific stages
+   - Use `/prp-validation` to check progress
 
 ## Best Practices
 
@@ -384,6 +521,13 @@ Copilot uses:
 - Project structure
 
 ## Advanced Configuration
+
+### Prompt Files (Public Preview)
+Create reusable prompts in `.github/prompts/`:
+- Must use `.prompt.md` extension
+- Available as slash commands in VS Code
+- Can include metadata in front matter
+- Reference other markdown files
 
 ### Per-Language Instructions
 Create language-specific files:
