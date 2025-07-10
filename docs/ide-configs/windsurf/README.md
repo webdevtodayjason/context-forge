@@ -229,6 +229,57 @@ success_message: "All checks passed! Ready to commit."
 failure_message: "Checks failed. Please fix issues before committing."
 ```
 
+## Example: PRP Files
+
+### prp-overview.md
+```markdown
+# PRP Implementation Overview: E-Commerce Platform
+
+## What is PRP?
+Product Requirement Prompts provide a structured approach to implementing features...
+
+## Implementation Stages
+- 📋 Stage 1: Foundation (see prp-stage-1.md)
+- 🚀 Stage 2: Core Features (see prp-stage-2.md)
+- ✨ Stage 3: Advanced Features (see prp-stage-3.md)
+- ✅ Validation Gates (see prp-validation.md)
+
+## Cascade AI Commands for PRP
+- `cascade:generate "implement task from stage 1"` - Generate implementation
+- `cascade:test "validate stage 1 completion"` - Test implementation
+- `cascade:review "check stage 1 requirements"` - Review progress
+```
+
+### prp-stage-2.md
+```markdown
+# PRP Stage 2: Core Features
+
+## Features to Implement
+
+### User Authentication
+**Description**: JWT-based authentication with social login
+**Complexity**: medium
+
+#### Tasks:
+- [ ] Create data models/schemas
+- [ ] Implement business logic
+- [ ] Create API endpoints
+- [ ] Add validation
+- [ ] Write unit tests
+
+#### Cascade AI Commands:
+```
+cascade:generate "implement User Authentication feature"
+cascade:test "create tests for User Authentication"
+cascade:review "validate User Authentication implementation"
+```
+
+#### Acceptance Criteria:
+- [ ] Users can register with email/password
+- [ ] Users can login and receive JWT token
+- [ ] Protected routes require authentication
+```
+
 ## Usage with Windsurf
 
 1. Generate the configuration:

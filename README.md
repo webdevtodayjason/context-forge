@@ -56,7 +56,7 @@ Context Forge is a powerful CLI tool that bridges the gap between project requir
 <tr>
 <td align="center"><img src="https://img.shields.io/badge/Claude%20Code-Anthropic-black?style=flat-square&logo=anthropic" /><br><b><a href="./docs/ide-configs/claude/">Claude Code</a></b><br><em>Full PRP support</em></td>
 <td align="center"><img src="https://img.shields.io/badge/Cursor-IDE-blue?style=flat-square" /><br><b><a href="./docs/ide-configs/cursor/">Cursor IDE</a></b><br><em>PRP + MDC format</em></td>
-<td align="center"><img src="https://img.shields.io/badge/Windsurf-IDE-cyan?style=flat-square" /><br><b><a href="./docs/ide-configs/windsurf/">Windsurf</a></b><br><em>Cascade AI</em></td>
+<td align="center"><img src="https://img.shields.io/badge/Windsurf-IDE-cyan?style=flat-square" /><br><b><a href="./docs/ide-configs/windsurf/">Windsurf</a></b><br><em>PRP + Cascade AI</em></td>
 </tr>
 <tr>
 <td align="center"><img src="https://img.shields.io/badge/Cline-Extension-green?style=flat-square" /><br><b><a href="./docs/ide-configs/cline/">Cline</a></b><br><em>Context management</em></td>
@@ -74,7 +74,7 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 
 - **[🤖 Claude Code Guide](./docs/ide-configs/claude/)** - Full PRP support, validation system, tech-stack templates
 - **[🔵 Cursor IDE Guide](./docs/ide-configs/cursor/)** - PRP support, MDC format, hierarchical rules
-- **[🟩 Windsurf Guide](./docs/ide-configs/windsurf/)** - Cascade AI integration, workflows, predictive coding
+- **[🟩 Windsurf Guide](./docs/ide-configs/windsurf/)** - PRP support, Cascade AI integration, workflows
 - **[🟢 Cline Guide](./docs/ide-configs/cline/)** - Context management, code patterns, advanced commands
 - **[🟣 Roo Code Guide](./docs/ide-configs/roo/)** - Workspace rules, YAML configuration, team settings
 - **[🟠 Gemini Guide](./docs/ide-configs/gemini/)** - Hierarchical context, CLI commands, Code Assist integration
@@ -95,7 +95,7 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 
 ### Advanced Features
 
-- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude & Cursor)
+- 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude, Cursor & Windsurf)
 - ✅ **Validation System** - Built-in code quality checks and gates
 - 🎨 **Tech-Stack Specific Templates** - Optimized CLAUDE.md for each framework
 - 📊 **Comprehensive Reporting** - Validation reports and progress tracking
