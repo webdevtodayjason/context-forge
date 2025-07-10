@@ -1,19 +1,25 @@
 # Cline Configuration
 
-Cline (formerly Claude Dev) is a VS Code extension for AI pair programming with advanced context management capabilities.
+Cline (formerly Claude Dev) is a VS Code extension for AI pair programming with advanced context management capabilities. Context Forge now generates PRP (Product Requirement Prompt) support for Cline, providing structured implementation guidance.
 
 ## Generated File Structure
 
 ```
 project-root/
-├── .clinerules               # Main configuration file
-└── .clinerules/
+└── .clinerules/              # Configuration directory
+    ├── README.md            # Main configuration overview
     ├── context.md           # Project context and architecture
     ├── rules.md             # Development rules and standards
-    └── patterns.md          # Code patterns and examples
+    ├── patterns.md          # Code patterns and examples
+    └── PRP files (if features defined):
+        ├── prp-overview.md  # PRP implementation overview
+        ├── prp-stage-1.md   # Foundation setup
+        ├── prp-stage-2.md   # Core features
+        ├── prp-stage-3.md   # Advanced features
+        └── prp-validation.md # Validation gates
 ```
 
-## Example: .clinerules
+## Example: .clinerules/README.md
 
 ```markdown
 # Cline Configuration
@@ -322,6 +328,156 @@ export const logger = {
 \`\`\`
 ```
 
+## Example: PRP Files
+
+### prp-overview.md
+```markdown
+# PRP Implementation Overview: E-Commerce Platform
+
+## What is PRP?
+
+Product Requirement Prompts (PRP) provide a structured approach to implementing features with clear validation gates between stages. This methodology helps Cline understand your project's implementation phases and success criteria.
+
+## Implementation Stages
+
+### 📋 Stage 1: Foundation (see prp-stage-1.md)
+- Project setup and configuration
+- Core infrastructure
+- Basic models and schemas
+- Database setup
+
+### 🚀 Stage 2: Core Features (see prp-stage-2.md)
+- User Authentication: JWT-based auth with social login
+- Product Catalog: Dynamic listings with advanced search
+- Shopping Cart: Persistent storage with real-time updates
+
+### ✨ Stage 3: Advanced Features (see prp-stage-3.md)
+- AI Recommendations: Personalized product suggestions
+- Order Management: Complete order lifecycle
+- Analytics Dashboard: Business intelligence features
+
+### ✅ Validation Gates (see prp-validation.md)
+- Each stage has validation requirements
+- Must pass before proceeding to next stage
+- Automated testing and quality checks
+
+## How to Use This PRP with Cline
+
+1. Start with **prp-stage-1.md**
+2. Complete all tasks in the checklist
+3. Run validation commands from **prp-validation.md**
+4. Only proceed to next stage when validation passes
+5. Use Cline to help implement each task
+
+### Working with Cline
+
+When implementing PRP tasks:
+- Reference the specific stage file for current work
+- Use task checklists to track progress
+- Ask Cline to validate completion of each task
+- Review generated code before accepting
+
+## Success Criteria
+
+- All must-have features implemented and tested
+- Code coverage meets requirements (>80%)
+- All validation gates passed
+- Documentation complete
+- Security best practices followed
+
+## Cline Configuration
+
+These PRP files are automatically loaded by Cline from the `.clinerules/` directory. They provide:
+- Clear implementation phases
+- Specific task breakdowns
+- Validation requirements
+- Success criteria for each stage
+```
+
+### prp-stage-2.md
+```markdown
+# PRP Stage 2: Core Features
+
+## Objective
+Implement all must-have features with proper testing and documentation.
+
+## Features to Implement
+
+### User Authentication
+**Description**: JWT-based authentication with social login
+**Complexity**: medium
+
+#### Tasks:
+- [ ] Create data models/schemas
+- [ ] Implement business logic
+- [ ] Create API endpoints
+- [ ] Add validation
+- [ ] Write unit tests
+- [ ] Create UI components
+- [ ] Implement state management
+- [ ] Connect to API
+- [ ] Add error handling
+- [ ] Write component tests
+
+#### Acceptance Criteria:
+- [ ] Users can register with email/password
+- [ ] Users can login and receive JWT token
+- [ ] Protected routes require authentication
+- [ ] Password reset functionality works
+
+#### Cline Implementation Notes:
+- Reference patterns.md for code examples
+- Follow the project structure from Stage 1
+- Ensure all edge cases are handled
+- Write tests alongside implementation
+
+### Product Catalog
+**Description**: Dynamic product listings with search and filtering
+**Complexity**: complex
+
+#### Tasks:
+- [ ] Create product models
+- [ ] Implement search functionality
+- [ ] Add filtering and sorting
+- [ ] Create product list components
+- [ ] Implement pagination
+- [ ] Add product detail views
+- [ ] Optimize database queries
+- [ ] Add caching layer
+
+#### Cline Commands:
+- Ask: "Implement the Product model based on patterns.md"
+- Ask: "Create search functionality using Elasticsearch"
+- Ask: "Add tests for product catalog features"
+
+## Validation Requirements
+
+Run these commands before proceeding:
+
+1. **All tests pass with coverage**
+   \`\`\`bash
+   npm run test:coverage
+   \`\`\`
+
+2. **Build succeeds**
+   \`\`\`bash
+   npm run build
+   \`\`\`
+
+3. **No security vulnerabilities**
+   \`\`\`bash
+   npm audit
+   \`\`\`
+
+## Success Criteria
+
+- [ ] All must-have features are working
+- [ ] Test coverage > 80%
+- [ ] All features are documented
+- [ ] Code review completed
+- [ ] Performance benchmarks met
+```
+
 ## Usage with Cline
 
 1. Generate the configuration:
@@ -331,16 +487,30 @@ export const logger = {
 
 2. Install Cline extension in VS Code
 
-3. Open your project - Cline will use:
-   - `.clinerules` for main configuration
-   - `context.md` for project understanding
-   - `rules.md` for coding standards
-   - `patterns.md` for examples
+3. Open your project - Cline will automatically load all files from:
+   - `.clinerules/README.md` for main configuration
+   - `.clinerules/context.md` for project understanding
+   - `.clinerules/rules.md` for coding standards
+   - `.clinerules/patterns.md` for code examples
+   - `.clinerules/prp-*.md` for structured implementation (if features defined)
 
-4. Use Cline commands:
-   - Open Cline chat panel
-   - Reference context files
-   - Get AI assistance with full context
+4. Use Cline for implementation:
+   - Open Cline chat panel (Ctrl+Shift+P → "Cline: Open Chat")
+   - Reference PRP stages for guided development
+   - Ask Cline to help with specific tasks from checklists
+   - Use validation commands to verify progress
+
+5. PRP Workflow with Cline:
+   ```
+   # Start with Stage 1
+   "Help me implement Stage 1 tasks from prp-stage-1.md"
+   
+   # Validate progress
+   "Run the validation commands from prp-validation.md"
+   
+   # Move to next stage
+   "Let's start Stage 2 from prp-stage-2.md"
+   ```
 
 ## Best Practices
 
@@ -361,6 +531,27 @@ export const logger = {
 - `/refactor` - Suggest improvements
 - `/test` - Generate tests
 - `/fix` - Debug issues
+
+### PRP Integration
+
+Cline's unique approach to PRP:
+- **Automatic Loading**: All markdown files in `.clinerules/` are combined
+- **Context Awareness**: PRP stages reference your specific project setup
+- **Task Tracking**: Use markdown checkboxes to track progress
+- **Validation Support**: Run commands directly from chat
+- **Incremental Development**: Work through stages methodically
+
+Example PRP conversation:
+```
+You: "I need to implement user authentication from Stage 2"
+Cline: "I'll help you implement user authentication. Looking at prp-stage-2.md, 
+       I can see we need to create JWT-based auth with social login. 
+       Let me start with the data models..."
+
+You: "Can you validate our Stage 1 implementation?"
+Cline: "I'll run the validation commands from prp-validation.md to check 
+       if we're ready for Stage 2..."
+```
 
 ### Settings
 ```json
