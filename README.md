@@ -20,16 +20,17 @@
 </p>
 
 <div align="center">
-  <h3>🎉 NEW: Multi-IDE Support!</h3>
-  <p><strong>Now supporting 7+ AI-powered IDEs and assistants!</strong></p>
+  <h3>🎉 NEW: PRP Support for 6 AI IDEs!</h3>
+  <p><strong>Product Requirement Prompts (PRP) now available for Claude, Cursor, Windsurf, Cline, Copilot & Gemini!</strong></p>
   <p>
-    <img src="https://img.shields.io/badge/NEW-Cursor%20IDE-blue?style=for-the-badge" alt="Cursor IDE" />
-    <img src="https://img.shields.io/badge/NEW-Windsurf-cyan?style=for-the-badge" alt="Windsurf" />
-    <img src="https://img.shields.io/badge/NEW-Cline-green?style=for-the-badge" alt="Cline" />
-    <img src="https://img.shields.io/badge/NEW-Roo%20Code-purple?style=for-the-badge" alt="Roo Code" />
-    <img src="https://img.shields.io/badge/NEW-Gemini-orange?style=for-the-badge" alt="Gemini" />
+    <img src="https://img.shields.io/badge/PRP-Claude%20Code-red?style=for-the-badge" alt="Claude Code" />
+    <img src="https://img.shields.io/badge/PRP-Cursor%20IDE-blue?style=for-the-badge" alt="Cursor IDE" />
+    <img src="https://img.shields.io/badge/PRP-Windsurf-cyan?style=for-the-badge" alt="Windsurf" />
+    <img src="https://img.shields.io/badge/PRP-Cline-green?style=for-the-badge" alt="Cline" />
+    <img src="https://img.shields.io/badge/PRP-Copilot-black?style=for-the-badge" alt="GitHub Copilot" />
+    <img src="https://img.shields.io/badge/PRP-Gemini-orange?style=for-the-badge" alt="Gemini" />
   </p>
-  <p><em>Generate IDE-specific configurations for your favorite AI coding assistant with a single command!</em></p>
+  <p><em>Structured feature implementation with validation gates across all major AI coding assistants!</em></p>
 </div>
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Credits](#-credits)
@@ -48,6 +49,7 @@ Context Forge is a powerful CLI tool that bridges the gap between project requir
 **⚡ Zero Configuration** - Intelligent defaults for each IDE  
 **🎯 One Command** - Generate configs for multiple IDEs simultaneously  
 **🔄 Format Conversion** - Switch between IDEs without starting over  
+**🔗 Claude Hooks Integration** - Seamless context preservation during compaction
 **📦 No Lock-in** - Your project, your choice of AI assistant
 
 ### 🤖 Supported AI IDEs & Assistants
@@ -100,6 +102,28 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - 🎨 **Tech-Stack Specific Templates** - Optimized CLAUDE.md for each framework
 - 📊 **Comprehensive Reporting** - Validation reports and progress tracking
 - 🔧 **Extensible Architecture** - Easy to add new tech stacks and features
+
+## 🔗 Claude Hooks Manager Integration
+
+Context Forge now integrates seamlessly with [Claude Hooks Manager](https://github.com/webdevtodayjason/claude-hooks) to solve one of the most frustrating challenges in agentic development: **context loss during conversation compaction**.
+
+### The PreCompact Hook Advantage
+
+With Claude Code v1.0.48's new [PreCompact hook](https://docs.anthropic.com/en/docs/claude-code/hooks), Context Forge's PRP files can be automatically re-read when Claude needs to compact the conversation. This means:
+
+- 🧠 **Persistent Context** - Critical project structure and PRP stages survive compaction
+- 🎯 **Maintained Focus** - Claude retains understanding of current implementation stage
+- 📋 **Continuous Planning** - PRP validation gates and feature tracking remain active
+- 🔄 **Seamless Recovery** - No manual re-explanation of project context needed
+
+### How It Works
+
+1. **Generate PRP files** with Context Forge for your AI IDE
+2. **Configure Claude Hooks Manager** to watch your PRP directory
+3. **PreCompact hook triggers** when conversation needs compaction
+4. **PRP files are re-injected** maintaining project continuity
+
+This integration is especially powerful for long-running development sessions where context preservation is critical for maintaining code quality and architectural consistency.
 
 ## 📦 Installation
 

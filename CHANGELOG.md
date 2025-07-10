@@ -2,6 +2,73 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.2] - 2025-01-10
+
+### 🚀 Major Version Release
+
+This major version release solidifies Context Forge as the premier universal AI IDE configuration tool with comprehensive PRP support.
+
+### ✨ Highlights
+
+- **Production-Ready PRP**: Battle-tested Product Requirement Prompt implementation across 6 major AI IDEs
+- **Claude Hooks Integration**: Seamless context preservation with PreCompact hook support
+- **Enterprise-Grade**: Ready for large-scale development teams and complex projects
+- **Universal Compatibility**: Proven support for Claude, Cursor, Windsurf, Cline, Copilot, and Gemini
+
+### 🔧 Stability Improvements
+
+- Enhanced error handling across all IDE adapters
+- Improved file generation reliability
+- Optimized PRP validation gates
+- Refined documentation and examples
+
+### 📚 Documentation
+
+- Production deployment guidelines
+- Enterprise usage patterns
+- Team collaboration workflows
+- Performance optimization tips
+
+## [0.3.0] - 2025-01-10
+
+### 🚀 Major Feature: PRP Support for 6 AI IDEs
+
+This release adds comprehensive Product Requirement Prompt (PRP) support across 6 major AI coding assistants, enabling structured feature implementation with validation gates.
+
+### ✨ New Features
+
+- **PRP Implementation for Multiple IDEs**:
+  - **Cursor IDE**: PRP files in `.cursor/rules/` using MDC format
+  - **Windsurf IDE**: Staged implementation with character limit compliance
+  - **Cline**: Combined markdown approach in `.clinerules/` directory
+  - **GitHub Copilot**: Slash command prompts in `.github/prompts/*.prompt.md`
+  - **Gemini**: CLI-integrated PRP with `.gemini/prp/` structure and config.yaml
+
+- **Structured Implementation Stages**:
+  - Stage 1: Foundation setup and infrastructure
+  - Stage 2: Core features (must-have functionality)
+  - Stage 3: Advanced features (should-have/nice-to-have)
+  - Validation gates between each stage
+
+- **Claude Hooks Manager Integration**:
+  - Seamless integration with PreCompact hook (Claude Code v1.0.48+)
+  - Automatic PRP file re-injection during conversation compaction
+  - Persistent context preservation for long-running development sessions
+
+### 🔧 Technical Improvements
+
+- Added PRP generation methods to all supported IDE adapters
+- Implemented IDE-specific PRP file structures and naming conventions
+- Enhanced feature tracking and validation gate systems
+- Improved documentation with PRP workflow examples
+
+### 📚 Documentation
+
+- Updated all IDE-specific documentation with PRP examples
+- Added PRP workflow guides for each supported IDE
+- Included Claude Hooks Manager integration guide
+- Enhanced README with PRP feature highlights
+
 ## [0.2.1] - 2025-01-10
 
 ### 🔧 Improvements
