@@ -1,0 +1,37 @@
+{
+  "projectName": "Test Copilot PRP",
+  "projectType": "fullstack",
+  "description": "Test project for Copilot PRP generation",
+  "techStack": {
+    "frontend": "react",
+    "backend": "express",
+    "database": "mongodb"
+  },
+  "features": [
+    {
+      "id": "auth",
+      "name": "User Authentication",
+      "description": "OAuth-based authentication",
+      "priority": "must-have",
+      "complexity": "medium"
+    },
+    {
+      "id": "dashboard",
+      "name": "Admin Dashboard",
+      "description": "Analytics and management interface",
+      "priority": "must-have",
+      "complexity": "complex"
+    },
+    {
+      "id": "notifications",
+      "name": "Real-time Notifications",
+      "description": "WebSocket-based notifications",
+      "priority": "should-have",
+      "complexity": "medium"
+    }
+  ],
+  "extras": {
+    "validation": false,
+    "docker": false
+  }
+}

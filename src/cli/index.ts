@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init';
+import { analyzeCommand } from './commands/analyze';
 import { validateCommand } from '../commands/validate';
 import { version } from '../../package.json';
 
@@ -16,6 +17,7 @@ program
 
 // Add commands
 program.addCommand(initCommand);
+program.addCommand(analyzeCommand);
 program.addCommand(validateCommand);
 
 // Error handling wrapper

@@ -25,7 +25,7 @@ export const IDE_INFO: Record<SupportedIDE, IDEInfo> = {
     description: 'AI-powered IDE built on VS Code',
     configFiles: ['.cursorrules', '.cursor/rules/'],
     supportsValidation: true,
-    supportsPRP: false,
+    supportsPRP: true,
   },
   roo: {
     id: 'roo',
@@ -39,9 +39,9 @@ export const IDE_INFO: Record<SupportedIDE, IDEInfo> = {
     id: 'cline',
     name: 'Cline',
     description: 'VS Code extension for AI pair programming (formerly Claude Dev)',
-    configFiles: ['.clinerules', '.clinerules/'],
+    configFiles: ['.clinerules/'],
     supportsValidation: true,
-    supportsPRP: false,
+    supportsPRP: true,
   },
   windsurf: {
     id: 'windsurf',
@@ -49,7 +49,7 @@ export const IDE_INFO: Record<SupportedIDE, IDEInfo> = {
     description: 'AI-powered IDE with Cascade AI integration',
     configFiles: ['.windsurfrules.md', '.codeiumignore', 'global_rules.md'],
     supportsValidation: true,
-    supportsPRP: false,
+    supportsPRP: true,
   },
   copilot: {
     id: 'copilot',
@@ -57,7 +57,7 @@ export const IDE_INFO: Record<SupportedIDE, IDEInfo> = {
     description: 'AI pair programmer from GitHub',
     configFiles: ['.github/copilot-instructions.md', '.vscode/settings.json'],
     supportsValidation: false,
-    supportsPRP: false,
+    supportsPRP: true,
   },
   gemini: {
     id: 'gemini',
@@ -65,7 +65,7 @@ export const IDE_INFO: Record<SupportedIDE, IDEInfo> = {
     description: "Google's Gemini AI tools (CLI and Code Assist)",
     configFiles: ['GEMINI.md', '.gemini/'],
     supportsValidation: true,
-    supportsPRP: false,
+    supportsPRP: true,
   },
 };
 

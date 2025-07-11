@@ -1,4 +1,5 @@
 import { IDEAdapter, GeneratedFile } from './base';
+import { Feature } from '../types';
 import path from 'path';
 
 export class CopilotAdapter extends IDEAdapter {
@@ -19,7 +20,7 @@ export class CopilotAdapter extends IDEAdapter {
   }
 
   get supportsPRP(): boolean {
-    return false;
+    return true; // Copilot now supports PRP through .github/prompts/ directory
   }
 
   async generateFiles(outputPath: string): Promise<GeneratedFile[]> {
@@ -51,6 +52,42 @@ export class CopilotAdapter extends IDEAdapter {
       content: this.generateFrontendInstructions(),
       description: 'Frontend-specific instructions',
     });
+
+    // Generate PRP prompt files if features are defined
+    if (this.config.features && this.config.features.length > 0) {
+      // PRP Overview prompt
+      files.push({
+        path: path.join(outputPath, '.github', 'prompts', 'prp-overview.prompt.md'),
+        content: this.generatePRPOverview(),
+        description: 'PRP implementation overview prompt',
+      });
+
+      // Stage-specific PRP prompts
+      files.push({
+        path: path.join(outputPath, '.github', 'prompts', 'prp-stage-1.prompt.md'),
+        content: this.generatePRPStage1(),
+        description: 'PRP Stage 1: Foundation prompt',
+      });
+
+      files.push({
+        path: path.join(outputPath, '.github', 'prompts', 'prp-stage-2.prompt.md'),
+        content: this.generatePRPStage2(),
+        description: 'PRP Stage 2: Core Features prompt',
+      });
+
+      files.push({
+        path: path.join(outputPath, '.github', 'prompts', 'prp-stage-3.prompt.md'),
+        content: this.generatePRPStage3(),
+        description: 'PRP Stage 3: Advanced Features prompt',
+      });
+
+      // Validation prompt
+      files.push({
+        path: path.join(outputPath, '.github', 'prompts', 'prp-validation.prompt.md'),
+        content: this.generatePRPValidation(),
+        description: 'PRP validation gates prompt',
+      });
+    }
 
     return files;
   }
@@ -623,5 +660,701 @@ defineEmits<{
       return 'Jasmine/Karma';
     }
     return 'appropriate testing framework';
+  }
+
+  private generatePRPOverview(): string {
+    const { projectName, features } = this.config;
+    const mustHaveFeatures = features.filter((f) => f.priority === 'must-have');
+    const shouldHaveFeatures = features.filter((f) => f.priority === 'should-have');
+    const niceToHaveFeatures = features.filter((f) => f.priority === 'nice-to-have');
+
+    return `# PRP Implementation Overview: ${projectName}
+
+## What is PRP?
+
+Product Requirement Prompts (PRP) provide a structured approach to implementing features with clear validation gates between stages. This methodology helps GitHub Copilot understand your project's implementation phases and success criteria.
+
+## How to Use PRP Prompts with Copilot
+
+These prompt files are designed to be used as slash commands in VS Code:
+- Type \`/prp-overview\` to get this overview
+- Type \`/prp-stage-1\` to start foundation setup
+- Type \`/prp-stage-2\` for core features implementation
+- Type \`/prp-stage-3\` for advanced features
+- Type \`/prp-validation\` to check validation gates
+
+## Implementation Stages
+
+### 📋 Stage 1: Foundation (/prp-stage-1)
+- Project setup and configuration
+- Core infrastructure
+- Basic models and schemas
+- Database setup
+
+### 🚀 Stage 2: Core Features (/prp-stage-2)
+${mustHaveFeatures.map((f) => `- ${f.name}: ${f.description}`).join('\n')}
+
+### ✨ Stage 3: Advanced Features (/prp-stage-3)
+${shouldHaveFeatures.map((f) => `- ${f.name}: ${f.description}`).join('\n')}
+${
+  niceToHaveFeatures.length > 0
+    ? '\n**Nice-to-have features:**\n' +
+      niceToHaveFeatures.map((f) => `- ${f.name}: ${f.description}`).join('\n')
+    : ''
+}
+
+### ✅ Validation Gates (/prp-validation)
+- Each stage has validation requirements
+- Must pass before proceeding to next stage
+- Automated testing and quality checks
+
+## Working with Copilot
+
+When implementing PRP tasks:
+1. Use the slash commands to access specific stages
+2. Ask Copilot to help implement tasks from the checklist
+3. Use inline chat for code generation and refinement
+4. Review all generated code before accepting
+
+## Success Criteria
+
+- All must-have features implemented and tested
+- Code coverage meets requirements (>80%)
+- All validation gates passed
+- Documentation complete
+- Security best practices followed
+
+## Tips for Using PRP with Copilot
+
+- Reference the current stage in your prompts
+- Ask Copilot to validate your implementation
+- Use the validation prompt to check progress
+- Keep custom instructions updated as you progress
+`;
+  }
+
+  private generatePRPStage1(): string {
+    const { techStack } = this.config;
+
+    return `# PRP Stage 1: Foundation
+
+## Objective
+Set up the project foundation with proper structure, configuration, and core infrastructure.
+
+## How to Use This Prompt
+Use \`/prp-stage-1\` to access this stage's tasks and implementation guidance.
+
+## Tasks Checklist
+
+### Project Setup
+- [ ] Initialize project structure
+- [ ] Set up version control (.gitignore)
+- [ ] Configure development environment
+- [ ] Install core dependencies
+- [ ] Set up linting and formatting
+
+### Infrastructure
+${
+  techStack.frontend
+    ? `- [ ] Set up ${techStack.frontend} with TypeScript
+- [ ] Configure build tools
+- [ ] Set up development server`
+    : ''
+}
+${
+  techStack.backend
+    ? `- [ ] Initialize ${techStack.backend} project
+- [ ] Set up API structure
+- [ ] Configure middleware`
+    : ''
+}
+${
+  techStack.database
+    ? `- [ ] Set up ${techStack.database} connection
+- [ ] Create database schema
+- [ ] Set up migrations`
+    : ''
+}
+
+### Core Configuration
+- [ ] Environment variables setup
+- [ ] Configuration management
+- [ ] Logging setup
+- [ ] Error handling structure
+
+### Testing Foundation
+- [ ] Set up testing framework
+- [ ] Create test structure
+- [ ] Write first unit test
+- [ ] Configure test coverage
+
+## Copilot Assistance
+
+Ask Copilot to help with:
+- "Set up ${techStack.frontend || techStack.backend} project structure"
+- "Create database connection for ${techStack.database}"
+- "Configure testing framework"
+- "Set up environment variables"
+
+## Validation Requirements
+
+Before proceeding to Stage 2, ensure:
+
+1. **Project runs locally**
+   \`\`\`bash
+   npm run dev  # or equivalent
+   \`\`\`
+
+2. **Tests pass**
+   \`\`\`bash
+   npm test
+   \`\`\`
+
+3. **Linting passes**
+   \`\`\`bash
+   npm run lint
+   \`\`\`
+
+## Success Criteria
+
+- [ ] Development environment is fully functional
+- [ ] All developers can run the project locally
+- [ ] Basic CI/CD pipeline is configured
+- [ ] Project structure follows best practices
+- [ ] Documentation is started (README.md)
+
+## Common Gotchas
+
+${this.generateStage1Gotchas()}
+
+## Next Steps
+
+Once all validation passes, use \`/prp-stage-2\` for core feature implementation.
+`;
+  }
+
+  private generatePRPStage2(): string {
+    const { features, techStack } = this.config;
+    const mustHaveFeatures = features.filter((f) => f.priority === 'must-have');
+
+    return `# PRP Stage 2: Core Features
+
+## Objective
+Implement all must-have features with proper testing and documentation.
+
+## How to Use This Prompt
+Use \`/prp-stage-2\` to implement core features with Copilot's assistance.
+
+## Features to Implement
+
+${mustHaveFeatures
+  .map(
+    (feature) => `### ${feature.name}
+**Description**: ${feature.description}
+**Complexity**: ${feature.complexity}
+
+#### Tasks:
+${this.generateFeatureTasks(feature, techStack)}
+
+#### Acceptance Criteria:
+${this.generateAcceptanceCriteria(feature)}
+
+#### Copilot Implementation:
+Ask Copilot to:
+- "Create ${feature.name} with ${feature.description}"
+- "Add tests for ${feature.name}"
+- "Implement validation for ${feature.name}"
+`
+  )
+  .join('\n')}
+
+## Integration Requirements
+
+### API Integration
+- [ ] All endpoints documented
+- [ ] Error responses standardized
+- [ ] Authentication implemented (if required)
+- [ ] Rate limiting configured
+
+### Frontend Integration
+- [ ] All UI components functional
+- [ ] Forms validated
+- [ ] Error states handled
+- [ ] Loading states implemented
+
+### Testing Requirements
+- [ ] Unit tests for all features
+- [ ] Integration tests for critical paths
+- [ ] E2E tests for user journeys
+- [ ] Performance tests for key operations
+
+## Copilot Workflow
+
+For each feature:
+1. Ask Copilot to generate the initial implementation
+2. Review and refine the generated code
+3. Ask for test generation
+4. Use inline chat for improvements
+5. Request documentation updates
+
+## Validation Requirements
+
+Run these commands before proceeding:
+
+1. **All tests pass with coverage**
+   \`\`\`bash
+   npm run test:coverage
+   \`\`\`
+
+2. **Build succeeds**
+   \`\`\`bash
+   npm run build
+   \`\`\`
+
+3. **No security vulnerabilities**
+   \`\`\`bash
+   npm audit
+   \`\`\`
+
+## Success Criteria
+
+- [ ] All must-have features are working
+- [ ] Test coverage > 80%
+- [ ] All features are documented
+- [ ] Code review completed
+- [ ] Performance benchmarks met
+
+## Next Steps
+
+Once validation passes, use \`/prp-stage-3\` for advanced features.
+`;
+  }
+
+  private generatePRPStage3(): string {
+    const { features } = this.config;
+    const shouldHaveFeatures = features.filter((f) => f.priority === 'should-have');
+    const niceToHaveFeatures = features.filter((f) => f.priority === 'nice-to-have');
+
+    return `# PRP Stage 3: Advanced Features & Polish
+
+## Objective
+Implement should-have features and optimize the application for production.
+
+## How to Use This Prompt
+Use \`/prp-stage-3\` to implement advanced features and optimizations.
+
+## Features to Implement
+
+${
+  shouldHaveFeatures.length > 0
+    ? `### Should-Have Features
+${shouldHaveFeatures
+  .map(
+    (feature) => `
+#### ${feature.name}
+**Description**: ${feature.description}
+**Complexity**: ${feature.complexity}
+
+Tasks:
+${this.generateFeatureTasks(feature, this.config.techStack)}
+
+Copilot Assistance:
+- Ask: "Implement ${feature.name} feature"
+- Ask: "Add performance optimizations for ${feature.name}"
+- Ask: "Create tests for ${feature.name}"
+`
+  )
+  .join('\n')}`
+    : ''
+}
+
+${
+  niceToHaveFeatures.length > 0
+    ? `### Nice-to-Have Features (if time permits)
+${niceToHaveFeatures
+  .map(
+    (feature) => `
+#### ${feature.name}
+**Description**: ${feature.description}
+**Complexity**: ${feature.complexity}
+`
+  )
+  .join('\n')}`
+    : ''
+}
+
+## Optimization Tasks
+
+### Performance
+- [ ] Implement caching strategy
+- [ ] Optimize database queries
+- [ ] Add lazy loading
+- [ ] Minimize bundle size
+- [ ] Implement CDN strategy
+
+### Security
+- [ ] Security audit
+- [ ] Penetration testing
+- [ ] OWASP compliance check
+- [ ] SSL/TLS configuration
+- [ ] Rate limiting optimization
+
+### User Experience
+- [ ] Accessibility audit (WCAG 2.1)
+- [ ] Mobile responsiveness
+- [ ] Progressive enhancement
+- [ ] Error recovery flows
+- [ ] User feedback mechanisms
+
+### Monitoring & Analytics
+- [ ] Set up monitoring
+- [ ] Configure alerts
+- [ ] Implement analytics
+- [ ] Set up error tracking
+- [ ] Performance monitoring
+
+## Copilot Optimization Assistance
+
+Ask Copilot to help with:
+- "Optimize database queries for performance"
+- "Add caching layer to API endpoints"
+- "Implement accessibility improvements"
+- "Add performance monitoring"
+- "Create production deployment configuration"
+
+## Production Readiness
+
+### Deployment
+- [ ] Production build optimization
+- [ ] Environment configuration
+- [ ] CI/CD pipeline complete
+- [ ] Rollback procedures
+- [ ] Blue-green deployment
+
+### Documentation
+- [ ] API documentation complete
+- [ ] User documentation
+- [ ] Developer onboarding guide
+- [ ] Troubleshooting guide
+- [ ] Architecture decisions recorded
+
+## Validation Requirements
+
+1. **Performance benchmarks**
+   \`\`\`bash
+   npm run benchmark
+   \`\`\`
+
+2. **Security scan**
+   \`\`\`bash
+   npm run security:scan
+   \`\`\`
+
+3. **Lighthouse audit** (if web app)
+   - Performance > 90
+   - Accessibility > 95
+   - Best Practices > 95
+   - SEO > 90
+
+## Success Criteria
+
+- [ ] All should-have features implemented
+- [ ] Performance targets met
+- [ ] Security audit passed
+- [ ] Documentation complete
+- [ ] Ready for production deployment
+
+## Congratulations! 🎉
+
+Your project is now ready for production. Use Copilot to:
+- Monitor performance metrics
+- Implement user feedback
+- Plan iterative improvements
+- Keep dependencies updated
+`;
+  }
+
+  private generatePRPValidation(): string {
+    const { techStack } = this.config;
+
+    return `# PRP Validation Gates
+
+## Overview
+
+Each stage must pass validation before proceeding. This prompt helps you verify requirements with Copilot's assistance.
+
+## How to Use This Prompt
+Use \`/prp-validation\` to check your progress and validate each stage.
+
+## Stage 1 Validation
+
+### Commands to Run
+${this.generateValidationCommands(techStack, 1)}
+
+### Checklist
+- [ ] Project runs without errors
+- [ ] Basic tests pass
+- [ ] Linting configured and passing
+- [ ] Git repository initialized
+- [ ] README.md created
+
+### Copilot Verification
+Ask Copilot to:
+- "Check if all Stage 1 requirements are met"
+- "Verify project structure is correct"
+- "Validate environment setup"
+- "Review configuration files"
+
+### Common Issues
+- Missing environment variables
+- Incorrect Node/Python version
+- Database connection failures
+- Missing dependencies
+
+## Stage 2 Validation
+
+### Commands to Run
+${this.generateValidationCommands(techStack, 2)}
+
+### Checklist
+- [ ] All must-have features working
+- [ ] Test coverage > 80%
+- [ ] No critical security issues
+- [ ] API documentation complete
+- [ ] Integration tests passing
+
+### Performance Targets
+- API response time < 200ms
+- Frontend load time < 3s
+- Database queries optimized
+- Memory usage stable
+
+### Copilot Testing Assistance
+Ask Copilot to:
+- "Generate comprehensive tests for all features"
+- "Check test coverage and suggest improvements"
+- "Validate API endpoints"
+- "Review security implementation"
+
+## Stage 3 Validation
+
+### Commands to Run
+${this.generateValidationCommands(techStack, 3)}
+
+### Checklist
+- [ ] Production build successful
+- [ ] All tests passing
+- [ ] Security audit clean
+- [ ] Performance benchmarks met
+- [ ] Documentation complete
+
+### Production Readiness
+- Load testing completed
+- Monitoring configured
+- Backup procedures tested
+- Rollback plan documented
+
+## Automated Validation Script
+
+Ask Copilot to create a validation script:
+
+\`\`\`bash
+#!/bin/bash
+set -e
+
+echo "🔍 Running validation..."
+
+# Stage-specific validation
+case "$1" in
+  "stage1")
+    ${this.generateStageValidationScript(1)}
+    ;;
+  "stage2")
+    ${this.generateStageValidationScript(2)}
+    ;;
+  "stage3")
+    ${this.generateStageValidationScript(3)}
+    ;;
+  *)
+    echo "Usage: ./validate.sh [stage1|stage2|stage3]"
+    exit 1
+    ;;
+esac
+
+echo "✅ Validation passed!"
+\`\`\`
+
+## Continuous Validation
+
+### Git Hooks
+Ask Copilot to set up pre-commit hooks:
+- "Create pre-commit hook for linting"
+- "Add test runner to pre-push hook"
+- "Set up commit message validation"
+
+### CI/CD Integration
+Ask Copilot to create CI workflows:
+- "Create GitHub Actions workflow for validation"
+- "Add automated testing to CI pipeline"
+- "Set up deployment automation"
+
+## Troubleshooting with Copilot
+
+When validation fails:
+1. Copy the error message
+2. Ask Copilot: "How to fix [error message]"
+3. Use inline chat for quick fixes
+4. Request step-by-step debugging help
+
+## Getting Help
+
+Use Copilot to:
+- Debug validation failures
+- Interpret error messages
+- Suggest fixes for common issues
+- Review configuration problems
+`;
+  }
+
+  private generateStage1Gotchas(): string {
+    const { techStack } = this.config;
+    const gotchas = [];
+
+    if (techStack.frontend === 'nextjs') {
+      gotchas.push('- Next.js 15 requires Node.js 18.17 or later');
+      gotchas.push('- App Router is the default (not Pages Router)');
+    }
+    if (techStack.backend === 'fastapi') {
+      gotchas.push('- Python 3.8+ required for FastAPI');
+      gotchas.push('- Use virtual environment for dependencies');
+    }
+    if (techStack.database === 'postgresql') {
+      gotchas.push('- PostgreSQL must be running locally or via Docker');
+      gotchas.push('- Create database before running migrations');
+    }
+
+    return gotchas.join('\n');
+  }
+
+  private generateFeatureTasks(feature: Feature, techStack: any): string {
+    const tasks = [];
+
+    // Backend tasks
+    if (techStack.backend) {
+      tasks.push('- [ ] Create data models/schemas');
+      tasks.push('- [ ] Implement business logic');
+      tasks.push('- [ ] Create API endpoints');
+      tasks.push('- [ ] Add validation');
+      tasks.push('- [ ] Write unit tests');
+    }
+
+    // Frontend tasks
+    if (techStack.frontend) {
+      tasks.push('- [ ] Create UI components');
+      tasks.push('- [ ] Implement state management');
+      tasks.push('- [ ] Connect to API');
+      tasks.push('- [ ] Add error handling');
+      tasks.push('- [ ] Write component tests');
+    }
+
+    // Feature-specific tasks
+    if (feature.subtasks) {
+      feature.subtasks.forEach((task) => {
+        tasks.push(`- [ ] ${task}`);
+      });
+    }
+
+    return tasks.join('\n');
+  }
+
+  private generateAcceptanceCriteria(feature: Feature): string {
+    const criteria = [];
+
+    if (feature.id === 'auth') {
+      criteria.push('- [ ] Users can register with email/password');
+      criteria.push('- [ ] Users can login and receive JWT token');
+      criteria.push('- [ ] Protected routes require authentication');
+      criteria.push('- [ ] Password reset functionality works');
+    } else if (feature.id === 'crud') {
+      criteria.push('- [ ] Create operation works with validation');
+      criteria.push('- [ ] Read operations support filtering/pagination');
+      criteria.push('- [ ] Update operation handles partial updates');
+      criteria.push('- [ ] Delete operation has confirmation');
+    } else {
+      criteria.push(`- [ ] ${feature.name} is fully functional`);
+      criteria.push('- [ ] All edge cases handled');
+      criteria.push('- [ ] Performance meets requirements');
+      criteria.push('- [ ] Accessible to all users');
+    }
+
+    return criteria.join('\n');
+  }
+
+  private generateValidationCommands(techStack: any, stage: number): string {
+    const commands = [];
+
+    commands.push('```bash');
+
+    if (stage >= 1) {
+      commands.push('# Run the application');
+      commands.push('npm run dev');
+      commands.push('');
+      commands.push('# Run tests');
+      commands.push('npm test');
+      commands.push('');
+      commands.push('# Check linting');
+      commands.push('npm run lint');
+    }
+
+    if (stage >= 2) {
+      commands.push('');
+      commands.push('# Test coverage');
+      commands.push('npm run test:coverage');
+      commands.push('');
+      commands.push('# Build check');
+      commands.push('npm run build');
+      commands.push('');
+      commands.push('# Security audit');
+      commands.push('npm audit');
+    }
+
+    if (stage >= 3) {
+      commands.push('');
+      commands.push('# Performance test');
+      commands.push('npm run test:performance');
+      commands.push('');
+      commands.push('# E2E tests');
+      commands.push('npm run test:e2e');
+      commands.push('');
+      commands.push('# Production build');
+      commands.push('npm run build:prod');
+    }
+
+    commands.push('```');
+
+    return commands.join('\n');
+  }
+
+  private generateStageValidationScript(stage: number): string {
+    const commands = [];
+
+    if (stage >= 1) {
+      commands.push('npm run lint');
+      commands.push('npm test');
+    }
+
+    if (stage >= 2) {
+      commands.push('npm run test:coverage');
+      commands.push('npm run build');
+      commands.push('npm audit --audit-level=high');
+    }
+
+    if (stage >= 3) {
+      commands.push('npm run test:e2e');
+      commands.push('npm run build:prod');
+      commands.push('npm run lighthouse');
+    }
+
+    return commands.join('\n    ');
   }
 }

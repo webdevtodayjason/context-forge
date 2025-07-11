@@ -10,25 +10,27 @@ import { ProjectConfig, SupportedIDE } from '../../types';
 import { getSupportedIDEs } from '../../adapters';
 
 export const initCommand = new Command('init')
-  .description('Initialize context engineering documentation for your project')
+  .description('Initialize AI IDE configurations and documentation for your project')
   .option('-o, --output <path>', 'output directory for generated files', '.')
   .option('-p, --preset <preset>', 'use a preset configuration')
   .option('-c, --config <path>', 'path to configuration file')
-  .option('-i, --ide <ide>', 'target IDE (claude, cursor, roo, cline, gemini)', (value) => {
-    const validIDEs = getSupportedIDEs();
-    const ides = value.split(',').map((ide) => ide.trim());
-    for (const ide of ides) {
-      if (!validIDEs.includes(ide as SupportedIDE)) {
-        throw new Error(`Invalid IDE: ${ide}. Valid options: ${validIDEs.join(', ')}`);
+  .option(
+    '-i, --ide <ide>',
+    'target IDE (claude, cursor, windsurf, cline, roo, gemini, copilot)',
+    (value) => {
+      const validIDEs = getSupportedIDEs();
+      const ides = value.split(',').map((ide) => ide.trim());
+      for (const ide of ides) {
+        if (!validIDEs.includes(ide as SupportedIDE)) {
+          throw new Error(`Invalid IDE: ${ide}. Valid options: ${validIDEs.join(', ')}`);
+        }
       }
+      return ides as SupportedIDE[];
     }
-    return ides as SupportedIDE[];
-  })
+  )
   .action(async (options) => {
     console.log(chalk.blue.bold('\n🚀 Welcome to Context Forge!\n'));
-    console.log(
-      chalk.gray("Let's set up context engineering documentation for your Claude Code project.\n")
-    );
+    console.log(chalk.gray("Let's set up AI-optimized documentation for your project.\n"));
 
     const spinner = ora();
 

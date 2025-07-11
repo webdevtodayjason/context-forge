@@ -1,7 +1,7 @@
 {
   "name": "context-forge",
-  "version": "0.2.0",
-  "description": "Universal AI IDE configuration generator - Creates optimized configs for Claude Code, Cursor, Windsurf, Cline, Copilot, and more",
+  "version": "3.1.2",
+  "description": "Universal AI IDE configuration generator - Optimized setups for Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini, and more",
   "main": "dist/index.js",
   "bin": {
     "context-forge": "./bin/context-forge.js"

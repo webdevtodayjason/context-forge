@@ -19,7 +19,7 @@ export class GeminiAdapter extends IDEAdapter {
   }
 
   get supportsPRP(): boolean {
-    return false;
+    return true;
   }
 
   async generateFiles(outputPath: string): Promise<GeneratedFile[]> {
@@ -52,6 +52,46 @@ export class GeminiAdapter extends IDEAdapter {
       content: this.generateGuidelines(),
       description: 'Development guidelines',
     });
+
+    // Generate PRP files if features are defined
+    if (this.config.features && this.config.features.length > 0) {
+      files.push({
+        path: path.join(outputPath, '.gemini', 'prp', 'overview.md'),
+        content: this.generatePRPOverview(),
+        description: 'PRP implementation overview',
+      });
+
+      files.push({
+        path: path.join(outputPath, '.gemini', 'prp', 'stage-1-foundation.md'),
+        content: this.generatePRPStage1(),
+        description: 'PRP Stage 1: Foundation setup',
+      });
+
+      files.push({
+        path: path.join(outputPath, '.gemini', 'prp', 'stage-2-core.md'),
+        content: this.generatePRPStage2(),
+        description: 'PRP Stage 2: Core features',
+      });
+
+      files.push({
+        path: path.join(outputPath, '.gemini', 'prp', 'stage-3-advanced.md'),
+        content: this.generatePRPStage3(),
+        description: 'PRP Stage 3: Advanced features',
+      });
+
+      files.push({
+        path: path.join(outputPath, '.gemini', 'prp', 'validation.md'),
+        content: this.generatePRPValidation(),
+        description: 'PRP validation gates',
+      });
+
+      // Update .gemini/config.yaml with PRP settings
+      files.push({
+        path: path.join(outputPath, '.gemini', 'config.yaml'),
+        content: this.generateConfigYaml(),
+        description: 'Gemini configuration with PRP settings',
+      });
+    }
 
     return files;
   }
@@ -626,5 +666,639 @@ ${securityGuidelines}
     if (techStack.backend === 'fastapi') return 'Alembic';
     if (techStack.backend === 'django') return 'Django Migrations';
     return 'Manual migrations';
+  }
+
+  // PRP Generation Methods
+  private generatePRPOverview(): string {
+    const { projectName, features } = this.config;
+    const mustHaveFeatures = features.filter((f) => f.priority === 'must-have');
+    const shouldHaveFeatures = features.filter((f) => f.priority === 'should-have');
+
+    return `# PRP Implementation Overview: ${projectName}
+
+## What is PRP?
+
+Product Requirement Prompts (PRP) provide a structured approach to implementing features with clear validation gates between stages. This methodology helps Gemini understand your project's implementation phases and success criteria.
+
+## How to Use PRP with Gemini
+
+### CLI Commands
+\`\`\`bash
+# View current PRP stage
+gemini prp status
+
+# Generate code for specific stage
+gemini generate --prp-stage 1
+
+# Validate current stage completion
+gemini prp validate
+\`\`\`
+
+### Context Integration
+Gemini automatically loads PRP files from \`.gemini/prp/\` when generating code. Reference these stages in your prompts:
+- "Following PRP stage 1 guidelines..."
+- "Implement the User Authentication feature from stage 2"
+- "Validate stage 2 completion criteria"
+
+## Implementation Stages
+
+### 📋 Stage 1: Foundation
+- Project setup and configuration
+- Core infrastructure
+- Basic models and schemas
+- Database setup
+
+### 🚀 Stage 2: Core Features
+${mustHaveFeatures.map((f) => `- ${f.name}: ${f.description}`).join('\n')}
+
+### ✨ Stage 3: Advanced Features
+${shouldHaveFeatures.map((f) => `- ${f.name}: ${f.description}`).join('\n')}
+
+### ✅ Validation Gates
+- Each stage has validation requirements
+- Must pass before proceeding to next stage
+- Automated testing and quality checks
+
+## Success Criteria
+
+- All must-have features implemented and tested
+- Code coverage meets requirements (>80%)
+- All validation gates passed
+- Documentation complete
+- Security best practices followed
+
+## Tips for Using PRP with Gemini
+
+- Keep PRP files in \`.gemini/prp/\` directory
+- Reference current stage in your prompts
+- Use \`gemini prp validate\` before moving stages
+- Update config.yaml as you progress
+- Commit after each stage completion
+`;
+  }
+
+  private generatePRPStage1(): string {
+    const { techStack } = this.config;
+
+    return `# PRP Stage 1: Foundation
+
+## Objective
+Set up the project foundation with proper structure, configuration, and core infrastructure.
+
+## Tasks Checklist
+
+### Project Setup
+- [ ] Initialize ${techStack.frontend || 'frontend'} project
+- [ ] Set up ${techStack.backend || 'backend'} server
+- [ ] Configure ${techStack.database || 'database'}
+- [ ] Set up development environment
+- [ ] Configure linting and formatting
+
+### Core Infrastructure
+- [ ] Set up project structure
+- [ ] Configure environment variables
+- [ ] Set up error handling
+- [ ] Configure logging
+- [ ] Set up testing framework
+
+### Database Setup
+${
+  techStack.database
+    ? `- [ ] Design database schema
+- [ ] Set up migrations
+- [ ] Create base models
+- [ ] Set up connection pooling
+- [ ] Configure backups`
+    : '- [ ] Configure data storage solution'
+}
+
+### Development Tools
+- [ ] Configure Gemini CLI
+- [ ] Set up Git hooks
+- [ ] Configure CI/CD pipeline
+- [ ] Set up monitoring
+- [ ] Configure debugging tools
+
+## Gemini Commands
+
+\`\`\`bash
+# Generate project structure
+gemini generate structure --stage 1
+
+# Create base models
+gemini generate models --from-schema
+
+# Set up database
+gemini db setup
+\`\`\`
+
+## Validation Requirements
+
+Run these commands before proceeding to Stage 2:
+
+\`\`\`bash
+# Check project setup
+gemini prp validate --stage 1
+
+# Run initial tests
+npm test
+
+# Check database connection
+gemini db test
+\`\`\`
+
+## Success Criteria
+
+- [ ] Project builds without errors
+- [ ] All dependencies installed
+- [ ] Database connection established
+- [ ] Base tests passing
+- [ ] Development environment functional
+
+## Next Steps
+
+Once validation passes, proceed to Stage 2 for core feature implementation.
+`;
+  }
+
+  private generatePRPStage2(): string {
+    const mustHaveFeatures = this.config.features.filter((f) => f.priority === 'must-have');
+
+    return `# PRP Stage 2: Core Features
+
+## Objective
+Implement all must-have features with proper testing and documentation.
+
+## Features to Implement
+
+${mustHaveFeatures
+  .map(
+    (feature) => `### ${feature.name}
+**Description**: ${feature.description}
+**Complexity**: ${feature.complexity}
+
+#### Tasks:
+- [ ] Create data models/schemas
+- [ ] Implement business logic
+- [ ] Create API endpoints
+- [ ] Add validation
+- [ ] Write unit tests
+- [ ] Create UI components
+- [ ] Implement state management
+- [ ] Connect to API
+- [ ] Add error handling
+- [ ] Write component tests
+
+#### Acceptance Criteria:
+${this.generateAcceptanceCriteria(feature)}
+
+#### Gemini Implementation:
+\`\`\`bash
+# Generate feature scaffolding
+gemini generate feature ${feature.id}
+
+# Generate tests
+gemini generate tests ${feature.id}
+
+# Validate implementation
+gemini validate feature ${feature.id}
+\`\`\`
+`
+  )
+  .join('\n')}
+
+## Integration Requirements
+
+### API Integration
+- [ ] All endpoints documented
+- [ ] Error responses standardized
+- [ ] Authentication implemented (if required)
+- [ ] Rate limiting configured
+
+### Frontend Integration
+- [ ] All UI components functional
+- [ ] Forms validated
+- [ ] Error states handled
+- [ ] Loading states implemented
+
+### Testing Requirements
+- [ ] Unit tests for all features
+- [ ] Integration tests for critical paths
+- [ ] E2E tests for user journeys
+- [ ] Performance tests for key operations
+
+## Gemini Workflow
+
+For each feature:
+1. \`gemini generate feature [feature-id]\`
+2. Implement custom logic
+3. \`gemini generate tests [feature-id]\`
+4. \`gemini validate feature [feature-id]\`
+5. Commit with conventional message
+
+## Validation Requirements
+
+Run these commands before proceeding:
+
+1. **All tests pass with coverage**
+   \`\`\`bash
+   npm run test:coverage
+   \`\`\`
+
+2. **Build succeeds**
+   \`\`\`bash
+   npm run build
+   \`\`\`
+
+3. **Gemini validation passes**
+   \`\`\`bash
+   gemini prp validate --stage 2
+   \`\`\`
+
+## Success Criteria
+
+- [ ] All must-have features are working
+- [ ] Test coverage > 80%
+- [ ] All features are documented
+- [ ] Code review completed
+- [ ] Performance benchmarks met
+
+## Next Steps
+
+Once validation passes, proceed to Stage 3 for advanced features.
+`;
+  }
+
+  private generatePRPStage3(): string {
+    const shouldHaveFeatures = this.config.features.filter((f) => f.priority === 'should-have');
+    const niceToHaveFeatures = this.config.features.filter((f) => f.priority === 'nice-to-have');
+
+    if (shouldHaveFeatures.length === 0 && niceToHaveFeatures.length === 0) {
+      return `# PRP Stage 3: Advanced Features
+
+## Objective
+This stage is reserved for future advanced features and optimizations.
+
+## Potential Enhancements
+
+### Performance Optimization
+- [ ] Implement caching strategies
+- [ ] Optimize database queries
+- [ ] Add CDN support
+- [ ] Implement lazy loading
+
+### Advanced Security
+- [ ] Add two-factor authentication
+- [ ] Implement audit logging
+- [ ] Add data encryption at rest
+- [ ] Set up intrusion detection
+
+### Scalability Features
+- [ ] Add horizontal scaling support
+- [ ] Implement message queuing
+- [ ] Add microservices support
+- [ ] Set up load balancing
+
+## Gemini Commands
+
+\`\`\`bash
+# Analyze performance
+gemini analyze performance
+
+# Generate optimization suggestions
+gemini suggest optimizations
+
+# Validate security
+gemini security audit
+\`\`\`
+
+## Success Criteria
+
+- [ ] All optimizations tested
+- [ ] Performance improved by 20%+
+- [ ] Security audit passed
+- [ ] Scalability tested
+`;
+    }
+
+    return `# PRP Stage 3: Advanced Features
+
+## Objective
+Implement should-have and nice-to-have features to enhance the application.
+
+## Features to Implement
+
+${
+  shouldHaveFeatures.length > 0
+    ? `### Should-Have Features
+${shouldHaveFeatures
+  .map(
+    (feature) => `
+#### ${feature.name}
+**Description**: ${feature.description}
+**Complexity**: ${feature.complexity}
+
+**Tasks**:
+- [ ] Design feature architecture
+- [ ] Implement core functionality
+- [ ] Add tests
+- [ ] Update documentation
+- [ ] Performance optimization
+
+**Gemini Commands**:
+\`\`\`bash
+gemini generate feature ${feature.id} --advanced
+gemini optimize ${feature.id}
+\`\`\`
+`
+  )
+  .join('\n')}`
+    : ''
+}
+
+${
+  niceToHaveFeatures.length > 0
+    ? `### Nice-to-Have Features
+${niceToHaveFeatures.map((feature) => `- **${feature.name}**: ${feature.description}`).join('\n')}`
+    : ''
+}
+
+## Enhancement Areas
+
+### Performance Optimization
+- [ ] Implement advanced caching
+- [ ] Optimize bundle size
+- [ ] Add progressive web app features
+- [ ] Implement service workers
+
+### User Experience
+- [ ] Add animations and transitions
+- [ ] Implement dark mode
+- [ ] Add keyboard shortcuts
+- [ ] Improve accessibility
+
+### Developer Experience
+- [ ] Add development tools
+- [ ] Improve error messages
+- [ ] Add debugging utilities
+- [ ] Create component library
+
+## Validation Requirements
+
+1. **Performance benchmarks**
+   \`\`\`bash
+   gemini benchmark performance
+   \`\`\`
+
+2. **Feature validation**
+   \`\`\`bash
+   gemini prp validate --stage 3
+   \`\`\`
+
+3. **Security audit**
+   \`\`\`bash
+   gemini security audit --deep
+   \`\`\`
+
+## Success Criteria
+
+- [ ] All should-have features implemented
+- [ ] Performance targets met
+- [ ] User experience enhanced
+- [ ] Code quality maintained
+- [ ] Documentation complete
+
+## Final Steps
+
+- [ ] Full system testing
+- [ ] Performance optimization
+- [ ] Security hardening
+- [ ] Deployment preparation
+- [ ] Documentation finalization
+`;
+  }
+
+  private generatePRPValidation(): string {
+    return `# PRP Validation Gates
+
+## Overview
+
+Each stage must pass validation before proceeding to the next. This ensures quality and completeness at every phase.
+
+## Stage 1 Validation
+
+### Automated Checks
+\`\`\`bash
+gemini prp validate --stage 1
+\`\`\`
+
+### Manual Checklist
+- [ ] Project structure follows conventions
+- [ ] All dependencies properly configured
+- [ ] Environment variables documented
+- [ ] Database schema finalized
+- [ ] Base tests are passing
+
+### Required Files
+- [ ] README.md with setup instructions
+- [ ] .env.example with all variables
+- [ ] Database schema documentation
+- [ ] API specification draft
+
+## Stage 2 Validation
+
+### Automated Checks
+\`\`\`bash
+gemini prp validate --stage 2
+\`\`\`
+
+### Manual Checklist
+- [ ] All must-have features implemented
+- [ ] Unit test coverage > 80%
+- [ ] Integration tests passing
+- [ ] API documentation complete
+- [ ] No critical security issues
+
+### Quality Metrics
+- Code coverage: minimum 80%
+- Performance: < 3s page load
+- Bundle size: < 500KB initial
+- Accessibility: WCAG 2.1 AA
+
+## Stage 3 Validation
+
+### Automated Checks
+\`\`\`bash
+gemini prp validate --stage 3 --final
+\`\`\`
+
+### Manual Checklist
+- [ ] All planned features complete
+- [ ] Performance optimized
+- [ ] Security hardened
+- [ ] Documentation finalized
+- [ ] Deployment ready
+
+### Production Readiness
+- [ ] Load testing completed
+- [ ] Security audit passed
+- [ ] Monitoring configured
+- [ ] Backup strategy implemented
+- [ ] Rollback plan documented
+
+## Validation Commands
+
+### Quick Validation
+\`\`\`bash
+# Current stage validation
+gemini prp validate
+
+# Specific stage validation
+gemini prp validate --stage 2
+
+# Full project validation
+gemini prp validate --all
+\`\`\`
+
+### Detailed Reports
+\`\`\`bash
+# Generate validation report
+gemini prp report
+
+# Export validation results
+gemini prp report --export validation-report.md
+\`\`\`
+
+## Troubleshooting
+
+### Common Validation Failures
+
+1. **Test Coverage Too Low**
+   - Run: \`gemini generate tests --missing\`
+   - Focus on untested critical paths
+
+2. **Performance Issues**
+   - Run: \`gemini analyze performance\`
+   - Implement suggested optimizations
+
+3. **Security Vulnerabilities**
+   - Run: \`gemini security scan\`
+   - Apply recommended fixes
+
+## Moving Between Stages
+
+### Stage Progression
+\`\`\`bash
+# Check current stage
+gemini prp status
+
+# Move to next stage (after validation)
+gemini prp next
+
+# Skip to specific stage (not recommended)
+gemini prp goto --stage 3
+\`\`\`
+
+### Best Practices
+- Never skip validation gates
+- Document any exceptions
+- Review with team before progression
+- Commit code after each stage
+- Tag releases for each stage
+`;
+  }
+
+  private generateConfigYaml(): string {
+    const { features } = this.config;
+
+    return `# Gemini Code Assist Configuration
+
+# PRP Settings
+prp:
+  enabled: true
+  current_stage: 1
+  stages:
+    - name: "Foundation"
+      status: "pending"
+      path: ".gemini/prp/stage-1-foundation.md"
+    - name: "Core Features"
+      status: "pending"
+      path: ".gemini/prp/stage-2-core.md"
+    - name: "Advanced Features"
+      status: "pending"
+      path: ".gemini/prp/stage-3-advanced.md"
+
+# Feature Tracking
+features:
+${features
+  .map(
+    (f) => `  - id: "${f.id}"
+    name: "${f.name}"
+    priority: "${f.priority}"
+    complexity: "${f.complexity}"
+    status: "pending"`
+  )
+  .join('\n')}
+
+# Code Generation Settings
+generation:
+  follow_patterns: true
+  include_tests: true
+  documentation: inline
+  style: project_conventions
+  
+# Context Settings
+context:
+  include_prp: true
+  max_depth: 3
+  exclude_patterns:
+    - "node_modules/**"
+    - ".git/**"
+    - "dist/**"
+    - "build/**"
+
+# Validation Settings  
+validation:
+  test_coverage_threshold: 80
+  performance_budget:
+    page_load: 3000  # ms
+    bundle_size: 512000  # bytes
+  security:
+    scan_dependencies: true
+    check_secrets: true
+
+# Development Mode
+mode: development
+debug: false
+telemetry: false
+`;
+  }
+
+  private generateAcceptanceCriteria(feature: any): string {
+    // Generate specific acceptance criteria based on feature type
+    const criteria = [
+      '- [ ] Feature is fully functional',
+      '- [ ] All edge cases handled',
+      '- [ ] Performance meets requirements',
+      '- [ ] Accessible to all users',
+    ];
+
+    // Add feature-specific criteria
+    if (feature.name.toLowerCase().includes('auth')) {
+      criteria.push('- [ ] Secure authentication flow implemented');
+      criteria.push('- [ ] Session management working correctly');
+    }
+
+    if (feature.name.toLowerCase().includes('api')) {
+      criteria.push('- [ ] API documentation complete');
+      criteria.push('- [ ] Rate limiting implemented');
+    }
+
+    if (feature.complexity === 'complex') {
+      criteria.push('- [ ] Architecture documented');
+      criteria.push('- [ ] Performance optimized');
+    }
+
+    return criteria.join('\n');
   }
 }
