@@ -21,20 +21,26 @@ export async function runRetrofitPrompts(
 ): Promise<ProjectConfig> {
   console.log(chalk.blue.bold('\n🔧 Retrofitting Configuration\n'));
   console.log(chalk.gray("Based on your project analysis, let's configure Context Forge.\n"));
+  
+  console.log(chalk.gray('Step 1/5: Project information...'));
 
   // Step 1: Confirm or adjust project info
   const confirmedInfo = await confirmProjectInfo(basicAnalysis);
 
   // Step 2: IDE selection (use override or ask)
+  console.log(chalk.gray('Step 2/5: IDE selection...'));
   const targetIDEs = ideOverride || (await ideSelection());
 
   // Step 3: PRD input (different flow for retrofit)
+  console.log(chalk.gray('Step 3/5: PRD configuration...'));
   const prd = await retrofitPrdInput(basicAnalysis, detailedAnalysis);
 
   // Step 4: Project configuration
+  console.log(chalk.gray('Step 4/5: Project settings...'));
   const config = await projectConfig();
 
   // Step 5: Feature selection based on analysis
+  console.log(chalk.gray('Step 5/5: Feature selection...'));
   const selectedFeatures = await retrofitFeatures(basicAnalysis, detailedAnalysis);
 
   return {
@@ -44,6 +50,8 @@ export async function runRetrofitPrompts(
     techStack: mapAnalysisToTechStack(basicAnalysis),
     features: selectedFeatures,
     ...config,
+    isRetrofit: true,
+    plannedFeatures: prd.userStories || [],
   };
 }
 
@@ -56,7 +64,8 @@ async function confirmProjectInfo(analysis: BasicAnalysis) {
   console.log(
     `  • Files: ${analysis.fileStats.total} total, ${analysis.fileStats.components} components`
   );
-
+  
+  
   const { confirmInfo } = await inquirer.prompt([
     {
       type: 'confirm',
@@ -85,8 +94,8 @@ async function confirmProjectInfo(analysis: BasicAnalysis) {
     ]);
 
     return {
-      projectName: projectName.trim(),
-      description: description.trim(),
+      projectName,
+      description,
       projectType: analysis.projectType.toLowerCase(),
     };
   } else {
@@ -104,31 +113,60 @@ async function retrofitPrdInput(
   const hasExistingDocs = basicAnalysis.existingDocs.length > 0;
 
   if (hasExistingDocs) {
-    console.log(
-      chalk.gray(`Found existing documentation: ${basicAnalysis.existingDocs.join(', ')}`)
-    );
+    // Limit displayed docs to first 5 for readability
+    const displayDocs = basicAnalysis.existingDocs.slice(0, 5);
+    const moreCount = basicAnalysis.existingDocs.length - 5;
+    const docsDisplay = moreCount > 0 
+      ? `${displayDocs.join(', ')} (+${moreCount} more)`
+      : displayDocs.join(', ');
+    
+    console.log(chalk.gray(`Found existing documentation: ${docsDisplay}`));
 
     const { useExistingDocs } = await inquirer.prompt([
       {
         type: 'confirm',
         name: 'useExistingDocs',
-        message: 'Use existing documentation as basis for PRD?',
+        message: 'Analyze existing documentation to understand current state?',
         default: true,
       },
     ]);
 
     if (useExistingDocs) {
-      const { additionalRequirements } = await inquirer.prompt([
+      console.log(chalk.cyan('\n📚 Analyzing existing documentation...'));
+      
+      // TODO: Actually read and analyze the existing docs
+      const existingContext = `Project has ${basicAnalysis.existingDocs.length} documentation files describing current implementation.`;
+      
+      console.log(chalk.cyan('\n🚀 Planning Future Development'));
+      console.log(chalk.gray('What features or improvements are you planning to add?\n'));
+      
+      const { futureRequirements } = await inquirer.prompt([
         {
           type: 'editor',
-          name: 'additionalRequirements',
-          message: 'Any additional requirements or clarifications?',
-          default: '',
+          name: 'futureRequirements',
+          message: 'Describe planned features and improvements:',
+          default: '## Planned Features\n\n- Feature 1: \n- Feature 2: \n- Feature 3: \n\n## Technical Improvements\n\n- \n\n## Timeline\n\n- ',
         },
       ]);
 
+      // Parse features from the markdown
+      const featureLines = futureRequirements.split('\n').filter((line: string) => 
+        line.trim().startsWith('- ') && line.includes(':')
+      );
+      const userStories = featureLines.map((line: string) => line.trim().substring(2));
+
       return {
-        content: `Based on existing project documentation and analysis:\n\n${additionalRequirements}`,
+        content: `# Product Requirements Document - ${new Date().toLocaleDateString()}
+
+## Current State
+${existingContext}
+
+## Future Development
+${futureRequirements}
+
+## Context
+This is a retrofit of an existing project. The above requirements represent the next phase of development building upon the existing codebase.`,
+        userStories,
       };
     }
   }

@@ -30,6 +30,10 @@ export interface ProjectConfig {
     userStories?: string[];
   };
 
+  // Retrofit mode
+  isRetrofit?: boolean;
+  plannedFeatures?: string[];
+
   // Tech stack
   techStack: {
     frontend?: string;
