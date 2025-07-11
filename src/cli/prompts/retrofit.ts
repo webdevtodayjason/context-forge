@@ -21,7 +21,7 @@ export async function runRetrofitPrompts(
 ): Promise<ProjectConfig> {
   console.log(chalk.blue.bold('\n🔧 Retrofitting Configuration\n'));
   console.log(chalk.gray("Based on your project analysis, let's configure Context Forge.\n"));
-  
+
   console.log(chalk.gray('Step 1/5: Project information...'));
 
   // Step 1: Confirm or adjust project info
@@ -64,8 +64,7 @@ async function confirmProjectInfo(analysis: BasicAnalysis) {
   console.log(
     `  • Files: ${analysis.fileStats.total} total, ${analysis.fileStats.components} components`
   );
-  
-  
+
   const { confirmInfo } = await inquirer.prompt([
     {
       type: 'confirm',
@@ -116,10 +115,9 @@ async function retrofitPrdInput(
     // Limit displayed docs to first 5 for readability
     const displayDocs = basicAnalysis.existingDocs.slice(0, 5);
     const moreCount = basicAnalysis.existingDocs.length - 5;
-    const docsDisplay = moreCount > 0 
-      ? `${displayDocs.join(', ')} (+${moreCount} more)`
-      : displayDocs.join(', ');
-    
+    const docsDisplay =
+      moreCount > 0 ? `${displayDocs.join(', ')} (+${moreCount} more)` : displayDocs.join(', ');
+
     console.log(chalk.gray(`Found existing documentation: ${docsDisplay}`));
 
     const { useExistingDocs } = await inquirer.prompt([
@@ -133,26 +131,27 @@ async function retrofitPrdInput(
 
     if (useExistingDocs) {
       console.log(chalk.cyan('\n📚 Analyzing existing documentation...'));
-      
+
       // TODO: Actually read and analyze the existing docs
       const existingContext = `Project has ${basicAnalysis.existingDocs.length} documentation files describing current implementation.`;
-      
+
       console.log(chalk.cyan('\n🚀 Planning Future Development'));
       console.log(chalk.gray('What features or improvements are you planning to add?\n'));
-      
+
       const { futureRequirements } = await inquirer.prompt([
         {
           type: 'editor',
           name: 'futureRequirements',
           message: 'Describe planned features and improvements:',
-          default: '## Planned Features\n\n- Feature 1: \n- Feature 2: \n- Feature 3: \n\n## Technical Improvements\n\n- \n\n## Timeline\n\n- ',
+          default:
+            '## Planned Features\n\n- Feature 1: \n- Feature 2: \n- Feature 3: \n\n## Technical Improvements\n\n- \n\n## Timeline\n\n- ',
         },
       ]);
 
       // Parse features from the markdown
-      const featureLines = futureRequirements.split('\n').filter((line: string) => 
-        line.trim().startsWith('- ') && line.includes(':')
-      );
+      const featureLines = futureRequirements
+        .split('\n')
+        .filter((line: string) => line.trim().startsWith('- ') && line.includes(':'));
       const userStories = featureLines.map((line: string) => line.trim().substring(2));
 
       return {

@@ -99,10 +99,10 @@ export const analyzeCommand = new Command('analyze')
         spinner.succeed('Documentation generated successfully!');
 
         console.log(chalk.green('\n✅ Analysis and generation complete!'));
-        
+
         // Show comprehensive summary
         console.log(chalk.blue.bold('\n📋 Summary of Changes:\n'));
-        
+
         // API Configuration
         if (apiConfig) {
           console.log(chalk.cyan('🔑 API Configuration:'));
@@ -110,17 +110,17 @@ export const analyzeCommand = new Command('analyze')
           console.log(`   • Provider: ${chalk.green(apiConfig.provider)}`);
           console.log(`   • Added to .gitignore: ${chalk.green('✓')}\n`);
         }
-        
+
         // Generated Files
         console.log(chalk.cyan('📁 Generated Files:'));
         console.log(chalk.gray('   ' + outputPath + '/'));
-        
+
         // CLAUDE.md status
         const claudeMdPath = path.join(outputPath, 'CLAUDE.md');
         if (await fs.pathExists(claudeMdPath)) {
           console.log(chalk.yellow('   ├── CLAUDE.md (UPDATED - appended retrofit section)'));
         }
-        
+
         // Docs folder
         const docsPath = path.join(outputPath, 'Docs');
         if (await fs.pathExists(docsPath)) {
@@ -131,7 +131,7 @@ export const analyzeCommand = new Command('analyze')
             console.log(`   │   ${isLast ? '└──' : '├──'} ${chalk.green(file)}`);
           });
         }
-        
+
         // PRPs folder
         const prpsPath = path.join(outputPath, 'PRPs');
         if (await fs.pathExists(prpsPath)) {
@@ -142,12 +142,12 @@ export const analyzeCommand = new Command('analyze')
             console.log(`       ${isLast ? '└──' : '├──'} ${chalk.green(file)}`);
           });
         }
-        
+
         console.log(chalk.gray('\n💡 Next steps:'));
         console.log(chalk.gray('   1. Review the updated CLAUDE.md file'));
         console.log(chalk.gray('   2. Check the PRPs folder for feature-specific implementations'));
         console.log(chalk.gray('   3. Use these files with Claude Code for development'));
-        
+
         // Save summary to file
         let summaryContent = `# Context Forge Retrofit Summary
 Generated on: ${new Date().toLocaleString()}
@@ -160,9 +160,13 @@ Generated on: ${new Date().toLocaleString()}
 - **Test Coverage**: ${basicAnalysis.fileStats.tests} test files
 
 ## API Configuration
-${apiConfig ? `- **Provider**: ${apiConfig.provider}
+${
+  apiConfig
+    ? `- **Provider**: ${apiConfig.provider}
 - **Key Location**: .context-forge-api
-- **Added to .gitignore**: ✓` : 'No API configuration used'}
+- **Added to .gitignore**: ✓`
+    : 'No API configuration used'
+}
 
 ## Generated Files
 
@@ -176,24 +180,26 @@ ${apiConfig ? `- **Provider**: ${apiConfig.provider}
         if (await fs.pathExists(docsPath)) {
           summaryContent += '\n#### Docs/\n';
           const docFiles = await fs.readdir(docsPath);
-          docFiles.forEach(file => {
+          docFiles.forEach((file) => {
             summaryContent += `- ${file}\n`;
           });
         }
-        
+
         // Add PRP files
         if (await fs.pathExists(prpsPath)) {
           summaryContent += '\n#### PRPs/\n';
           const prpFiles = await fs.readdir(prpsPath);
-          prpFiles.forEach(file => {
+          prpFiles.forEach((file) => {
             summaryContent += `- ${file}\n`;
           });
         }
-        
+
         summaryContent += `\n## Planned Features
-${config.plannedFeatures && config.plannedFeatures.length > 0 
-  ? config.plannedFeatures.map(f => `- ${f}`).join('\n')
-  : 'No specific features documented'}
+${
+  config.plannedFeatures && config.plannedFeatures.length > 0
+    ? config.plannedFeatures.map((f) => `- ${f}`).join('\n')
+    : 'No specific features documented'
+}
 
 ## Next Steps
 1. Review the updated CLAUDE.md file
