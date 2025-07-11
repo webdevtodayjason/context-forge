@@ -65,7 +65,12 @@ export interface ProjectConfig {
     prp?: boolean;
     aiDocs?: boolean;
     claudeCommands?: boolean;
+    hooks?: boolean;
+    checkpoints?: boolean;
   };
+
+  // Checkpoint configuration
+  checkpointConfig?: CheckpointConfig;
 
   // PRP specific config
   prpConfig?: {
@@ -344,4 +349,49 @@ export interface PRPContext {
   lintCommand?: string;
   devCommand?: string;
   buildCommand?: string;
+}
+
+// Checkpoint System Types
+export interface CheckpointConfig {
+  enabled: boolean;
+  triggers: CheckpointTrigger[];
+  customMilestones?: CustomMilestone[];
+  notifications?: NotificationConfig;
+}
+
+export interface CheckpointTrigger {
+  id: string;
+  name: string;
+  description: string;
+  category: 'critical' | 'important' | 'normal';
+  autoTrigger: boolean;
+  conditions?: string[];
+}
+
+export interface CustomMilestone {
+  name: string;
+  description: string;
+  testInstructions: string[];
+  verificationPoints: string[];
+  triggerAfter?: string[];
+  blocksUntilApproved: boolean;
+}
+
+export interface NotificationConfig {
+  slack?: {
+    webhook: string;
+    channel: string;
+  };
+  email?: {
+    to: string[];
+    template: string;
+  };
+}
+
+export interface CheckpointCommand {
+  name: string;
+  category: string;
+  description: string;
+  template: string;
+  triggers: CheckpointTrigger[];
 }

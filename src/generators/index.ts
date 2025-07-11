@@ -4,6 +4,7 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { ProjectConfig } from '../types';
 import { createAdapter, getIDEInfo } from '../adapters';
+import { generateHooks } from './hooks';
 
 export async function generateDocumentation(
   config: ProjectConfig,
@@ -70,6 +71,31 @@ export async function generateDocumentation(
     await fs.ensureDir(path.join(outputPath, 'ai_docs'));
     const aiDocsContent = await generateAIDocsReadme(config);
     await fs.writeFile(path.join(outputPath, 'ai_docs', 'README.md'), aiDocsContent, 'utf-8');
+  }
+
+  // Generate hooks if enabled
+  if (config.extras.hooks) {
+    console.log(chalk.cyan('\n🪝 Generating Claude Code hooks...'));
+    const hooksFiles = await generateHooks(config);
+
+    for (const file of hooksFiles) {
+      const spinner = ora(`Creating ${path.basename(file.path)}...`).start();
+      try {
+        await fs.ensureDir(path.dirname(file.path));
+        await fs.writeFile(path.join(outputPath, file.path), file.content, 'utf-8');
+
+        // Make Python hooks executable
+        if (file.path.endsWith('.py')) {
+          await fs.chmod(path.join(outputPath, file.path), 0o755);
+        }
+
+        spinner.succeed(`Created ${path.basename(file.path)}`);
+      } catch (error) {
+        spinner.fail(`Failed to create ${path.basename(file.path)}`);
+        throw error;
+      }
+    }
+    console.log(chalk.green('✓ Claude Code hooks generated'));
   }
 
   console.log(chalk.green('\n✅ All documentation files generated successfully!'));

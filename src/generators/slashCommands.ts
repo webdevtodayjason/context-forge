@@ -1,4 +1,5 @@
 import { ProjectConfig } from '../types';
+import { generateCheckpointCommands } from './checkpointCommands';
 
 interface SlashCommand {
   name: string;
@@ -311,6 +312,19 @@ Steps to test the changes
 - [ ] Documentation updated
 - [ ] No regressions`,
   });
+
+  // Checkpoint Commands (if enabled)
+  if (config.extras.checkpoints) {
+    const checkpointCommands = generateCheckpointCommands(config);
+    checkpointCommands.forEach((cmd) => {
+      commands.push({
+        name: cmd.name,
+        category: cmd.category,
+        description: cmd.description,
+        content: cmd.template,
+      });
+    });
+  }
 
   return commands;
 }

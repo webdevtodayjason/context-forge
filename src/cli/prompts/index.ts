@@ -5,6 +5,7 @@ import { prdInput } from './prdInput';
 import { techStack } from './techStack';
 import { features } from './features';
 import { projectConfig } from './projectConfig';
+import { checkpointConfig } from './checkpointConfig';
 
 export async function runPrompts(): Promise<ProjectConfig> {
   // Step 1: Basic project information
@@ -25,6 +26,12 @@ export async function runPrompts(): Promise<ProjectConfig> {
   // Step 6: Project configuration
   const config = await projectConfig();
 
+  // Step 7: Checkpoint configuration (if enabled)
+  let checkpoints = undefined;
+  if (config.extras.checkpoints) {
+    checkpoints = await checkpointConfig(basicInfo.projectType);
+  }
+
   return {
     ...basicInfo,
     targetIDEs,
@@ -32,5 +39,6 @@ export async function runPrompts(): Promise<ProjectConfig> {
     techStack: stack,
     features: selectedFeatures,
     ...config,
+    checkpointConfig: checkpoints,
   };
 }

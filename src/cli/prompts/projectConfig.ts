@@ -13,6 +13,8 @@ interface ProjectConfigAnswers {
     prp?: boolean;
     aiDocs?: boolean;
     claudeCommands?: boolean;
+    hooks?: boolean;
+    checkpoints?: boolean;
   };
 }
 
@@ -83,6 +85,8 @@ export async function projectConfig(): Promise<ProjectConfigAnswers> {
         { name: 'PRP (Product Requirement Prompts)', value: 'prp' },
         { name: 'AI Documentation directory', value: 'aiDocs' },
         { name: 'Claude Code commands', value: 'claudeCommands' },
+        { name: 'Claude Code hooks integration', value: 'hooks' },
+        { name: 'Human-in-the-Loop Checkpoints', value: 'checkpoints' },
       ],
     },
   ]);
@@ -97,6 +101,8 @@ export async function projectConfig(): Promise<ProjectConfigAnswers> {
     prp: selectedExtras.includes('prp'),
     aiDocs: selectedExtras.includes('aiDocs'),
     claudeCommands: selectedExtras.includes('claudeCommands'),
+    hooks: selectedExtras.includes('hooks'),
+    checkpoints: selectedExtras.includes('checkpoints'),
   };
 
   return {
