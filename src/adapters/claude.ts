@@ -6,6 +6,7 @@ import { generateProjectStructure } from '../generators/projectStructure';
 import { generateUiUx } from '../generators/uiUx';
 import { generateBugTracking } from '../generators/bugTracking';
 import { generatePRP } from '../generators/prp';
+import { generateSlashCommands, generateSlashCommandFiles } from '../generators/slashCommands';
 
 export class ClaudeAdapter extends IDEAdapter {
   get name(): string {
@@ -17,7 +18,7 @@ export class ClaudeAdapter extends IDEAdapter {
   }
 
   get configFiles(): string[] {
-    return ['CLAUDE.md', 'Docs/', 'PRPs/'];
+    return ['CLAUDE.md', 'Docs/', 'PRPs/', '.claude/'];
   }
 
   get supportsValidation(): boolean {
@@ -111,6 +112,11 @@ export class ClaudeAdapter extends IDEAdapter {
         }
       }
     }
+
+    // Generate slash commands
+    const slashCommands = await generateSlashCommands(this.config);
+    const commandFiles = generateSlashCommandFiles(slashCommands);
+    files.push(...commandFiles);
 
     return files;
   }

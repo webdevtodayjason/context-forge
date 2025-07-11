@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { initCommand } from './commands/init';
 import { analyzeCommand } from './commands/analyze';
 import { validateCommand } from '../commands/validate';
+import { runPrpCommand } from './commands/run-prp';
 import { version } from '../../package.json';
 
 const program = new Command();
@@ -19,6 +20,7 @@ program
 program.addCommand(initCommand);
 program.addCommand(analyzeCommand);
 program.addCommand(validateCommand);
+program.addCommand(runPrpCommand);
 
 // Error handling wrapper
 const handleError = (error: Error) => {

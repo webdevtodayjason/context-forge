@@ -53,7 +53,71 @@
     </tr>
   </table>
   
-  <h3>🚀 PRP Support for 6 AI IDEs!</h3>
+  <h3>🚀 NEW: Slash Commands & PRP Runner</h3>
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <h4>⚡ Claude Code Slash Commands</h4>
+        <p>Pre-built commands for rapid development:</p>
+        <ul align="left">
+          <li><code>/prp-create</code> - Generate comprehensive PRPs</li>
+          <li><code>/prp-execute</code> - Execute PRPs with validation</li>
+          <li><code>/prime-context</code> - Load project knowledge</li>
+          <li><code>/parallel-prp-create</code> - Multi-feature PRPs</li>
+          <li>+ Custom command support</li>
+        </ul>
+      </td>
+      <td align="center" width="50%">
+        <h4>🤖 PRP Runner CLI</h4>
+        <p><code>context-forge run-prp</code></p>
+        <ul align="left">
+          <li>Execute PRPs directly with Claude Code</li>
+          <li>Interactive & headless modes</li>
+          <li>Automatic validation gate execution</li>
+          <li>One-pass implementation success</li>
+          <li>AI documentation curation support</li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+  
+  <h3>📝 Enhanced PRP Templates</h3>
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <h4>🎯 base-enhanced.md</h4>
+        <p>Context-rich implementation template</p>
+        <ul align="left">
+          <li>4-level validation gates</li>
+          <li>AI docs integration</li>
+          <li>Common fixes & patterns</li>
+          <li>Integration points</li>
+        </ul>
+      </td>
+      <td align="center" width="33%">
+        <h4>🔬 planning.md</h4>
+        <p>ULTRATHINK deep analysis</p>
+        <ul align="left">
+          <li>Architecture diagrams</li>
+          <li>Risk assessment</li>
+          <li>Performance planning</li>
+          <li>Security analysis</li>
+        </ul>
+      </td>
+      <td align="center" width="33%">
+        <h4>📋 spec.md & task.md</h4>
+        <p>Detailed specifications</p>
+        <ul align="left">
+          <li>API contracts</li>
+          <li>Data models</li>
+          <li>Test strategies</li>
+          <li>Single-task focus</li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+  
+  <h3>🎯 PRP Support for 6 AI IDEs!</h3>
   <p><strong>Product Requirement Prompts (PRP) now available for Claude, Cursor, Windsurf, Cline, Copilot & Gemini!</strong></p>
   <p>
     <img src="https://img.shields.io/badge/PRP-Claude%20Code-red?style=for-the-badge" alt="Claude Code" />
@@ -114,6 +178,15 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - **[🟣 Roo Code Guide](./docs/ide-configs/roo/)** - Workspace rules, YAML configuration, team settings
 - **[🟠 Gemini Guide](./docs/ide-configs/gemini/)** - PRP support, hierarchical context, CLI commands, Code Assist integration
 - **[⚫ GitHub Copilot Guide](./docs/ide-configs/copilot/)** - Custom instructions, VS Code settings, language-specific rules
+
+### 📖 Claude Code Advanced Features Documentation
+
+**[📚 Complete Claude Features Guide](./docs/claude-features/README.md)** - Master the new advanced features:
+
+- **[⚡ Slash Commands Reference](./docs/claude-features/slash-commands.md)** - 20+ pre-built commands for rapid development
+- **[🤖 PRP Runner Guide](./docs/claude-features/prp-runner.md)** - Automated PRP execution with validation gates
+- **[📝 Enhanced PRP Templates](./docs/claude-features/enhanced-prp-templates.md)** - Four specialized templates for different scenarios
+- **[🎯 Orchestration Workflow](./docs/claude-features/orchestration-workflow.md)** - How all components work together
 
 ## ✨ Features
 
@@ -205,6 +278,9 @@ context-forge validate
 
 # NEW: Retrofit existing projects with AI-optimized documentation
 context-forge analyze
+
+# NEW: Execute PRPs with Claude Code for one-pass implementation
+context-forge run-prp feature-name
 ```
 
 ## 💡 Usage Examples
