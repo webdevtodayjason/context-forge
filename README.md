@@ -20,7 +20,40 @@
 </p>
 
 <div align="center">
-  <h3>🎉 NEW: PRP Support for 6 AI IDEs!</h3>
+  <h2>🎉 What's New in v3.1.3</h2>
+  
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <h3>🔧 Retrofit Existing Projects</h3>
+        <p><strong>NEW: <code>context-forge analyze</code></strong></p>
+        <p>Transform your existing codebases into AI-ready projects!</p>
+        <ul align="left">
+          <li>🔍 Auto-detects tech stack & structure</li>
+          <li>📝 Asks about future development plans</li>
+          <li>🎯 Generates PRPs for each planned feature</li>
+          <li>🔒 Never overwrites existing files</li>
+          <li>📊 Creates comprehensive retrofit summary</li>
+        </ul>
+        <code>cd your-project && context-forge analyze</code>
+      </td>
+      <td align="center" width="50%">
+        <h3>🔗 PreCompact Hook Integration</h3>
+        <p><strong>Works with <a href="https://github.com/webdevtodayjason/claude-hooks">Claude Hooks Manager</a></strong></p>
+        <p>Never lose context during conversation compaction!</p>
+        <ul align="left">
+          <li>🧠 PRPs auto-reload when Claude compacts</li>
+          <li>🎯 Maintains project understanding</li>
+          <li>📋 Preserves validation gates</li>
+          <li>🔄 Seamless long-session support</li>
+          <li>✨ Works with Claude Code v1.0.48+</li>
+        </ul>
+        <code>Your PRPs stay with you, always!</code>
+      </td>
+    </tr>
+  </table>
+  
+  <h3>🚀 PRP Support for 6 AI IDEs!</h3>
   <p><strong>Product Requirement Prompts (PRP) now available for Claude, Cursor, Windsurf, Cline, Copilot & Gemini!</strong></p>
   <p>
     <img src="https://img.shields.io/badge/PRP-Claude%20Code-red?style=for-the-badge" alt="Claude Code" />
