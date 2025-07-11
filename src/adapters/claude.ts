@@ -69,19 +69,39 @@ export class ClaudeAdapter extends IDEAdapter {
       const prpPath = path.join(outputPath, 'PRPs');
       const projectSlug = this.config.projectName.toLowerCase().replace(/\s+/g, '-');
 
-      files.push({
-        path: path.join(prpPath, `${projectSlug}-prp.md`),
-        content: await generatePRP(this.config, 'base'),
-        description: 'Base implementation PRP',
-      });
-
-      // Add planning PRP for complex projects
-      if (this.config.timeline === 'enterprise' || this.config.teamSize !== 'solo') {
+      // In retrofit mode, generate PRPs for planned features
+      if (this.config.isRetrofit && this.config.plannedFeatures && this.config.plannedFeatures.length > 0) {
+        // Generate a PRP for each planned feature
+        for (const feature of this.config.plannedFeatures) {
+          const featureName = feature.split(':')[0].toLowerCase().replace(/\s+/g, '-');
+          files.push({
+            path: path.join(prpPath, `${featureName}-prp.md`),
+            content: await generatePRP({
+              ...this.config,
+              prd: { 
+                ...this.config.prd,
+                content: `Feature: ${feature}`,
+              }
+            }, 'base'),
+            description: `PRP for: ${feature}`,
+          });
+        }
+      } else {
+        // Regular mode - generate base PRP
         files.push({
-          path: path.join(prpPath, `${projectSlug}-planning.md`),
-          content: await generatePRP(this.config, 'planning'),
-          description: 'Architecture planning PRP',
+          path: path.join(prpPath, `${projectSlug}-prp.md`),
+          content: await generatePRP(this.config, 'base'),
+          description: 'Base implementation PRP',
         });
+
+        // Add planning PRP for complex projects
+        if (this.config.timeline === 'enterprise' || this.config.teamSize !== 'solo') {
+          files.push({
+            path: path.join(prpPath, `${projectSlug}-planning.md`),
+            content: await generatePRP(this.config, 'planning'),
+            description: 'Architecture planning PRP',
+          });
+        }
       }
     }
 

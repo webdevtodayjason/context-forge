@@ -31,6 +31,22 @@ export async function generateDocumentation(
         const spinner = ora(`Creating ${path.basename(file.path)}...`).start();
         try {
           await fs.ensureDir(path.dirname(file.path));
+          
+          // Check if file already exists
+          if (await fs.pathExists(file.path)) {
+            // Special handling for CLAUDE.md in retrofit mode
+            if (config.isRetrofit && path.basename(file.path) === 'CLAUDE.md') {
+              spinner.info(`Appending to existing ${path.basename(file.path)}...`);
+              const existingContent = await fs.readFile(file.path, 'utf-8');
+              const retrofitSection = `\n\n<!-- ===== APPENDED BY CONTEXT FORGE RETROFIT - ${new Date().toLocaleDateString()} ===== -->\n\n## Retrofit Updates - ${new Date().toLocaleDateString()}\n\n${file.content}`;
+              await fs.writeFile(file.path, existingContent + retrofitSection, 'utf-8');
+              spinner.succeed(`Updated ${path.basename(file.path)}`);
+            } else {
+              spinner.warn(`Skipped ${path.basename(file.path)} - file already exists`);
+            }
+            continue;
+          }
+          
           await fs.writeFile(file.path, file.content, 'utf-8');
           spinner.succeed(`Created ${path.basename(file.path)}`);
         } catch (error) {

@@ -127,6 +127,7 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - 📁 **Structured Output** - Organized documentation following each IDE's conventions
 - ⚡ **Fast Setup** - Go from zero to AI-ready project in minutes
 - 🔄 **Format Conversion** - Convert between different IDE formats (coming soon)
+- 🔧 **Retrofit Existing Projects** - NEW: Analyze and upgrade existing codebases with AI documentation
 
 ### Advanced Features
 
@@ -201,6 +202,9 @@ context-forge init --config ./context-forge.json
 
 # Run validation on existing project
 context-forge validate
+
+# NEW: Retrofit existing projects with AI-optimized documentation
+context-forge analyze
 ```
 
 ## 💡 Usage Examples
@@ -378,6 +382,62 @@ npx context-forge init --preset hackathon
 # 3. Get building in < 5 minutes
 # CLAUDE.md has simplified rules for rapid development
 ```
+
+## 🔧 Retrofitting Existing Projects
+
+**NEW in v3.1.3**: The `analyze` command allows you to retrofit existing codebases with AI-optimized documentation. This is perfect for:
+
+- Adding AI assistance to legacy projects
+- Upgrading existing projects with modern context engineering
+- Planning new features for established codebases
+- Generating PRPs for upcoming development work
+
+### How it Works
+
+1. **Smart Analysis**: Automatically detects your tech stack, project structure, and existing documentation
+2. **Interactive Setup**: Asks about your future development plans
+3. **Non-Destructive**: Never overwrites existing files (appends to CLAUDE.md with clear markers)
+4. **Feature PRPs**: Generates individual PRP files for each planned feature
+5. **Comprehensive Summary**: Creates a detailed retrofit summary with file tree visualization
+
+### Usage
+
+```bash
+# Run in your existing project directory
+cd /path/to/your/project
+context-forge analyze
+
+# Specify output directory
+context-forge analyze --output ./ai-docs
+
+# Target specific IDEs
+context-forge analyze --ide claude,cursor
+
+# Skip AI analysis for faster setup
+context-forge analyze --no-ai
+```
+
+### Example Output
+
+```
+📁 Generated Files:
+   ├── CLAUDE.md (UPDATED - appended retrofit section)
+   ├── Docs/
+   │   ├── Implementation.md
+   │   ├── project_structure.md
+   │   ├── UI_UX_doc.md
+   │   └── Bug_tracking.md
+   └── PRPs/
+       ├── user-authentication-prp.md
+       ├── payment-integration-prp.md
+       └── api-v2-prp.md
+```
+
+The analyze command is intelligent enough to:
+- Detect if you're using TypeScript, Python, or other languages
+- Identify frameworks like React, Next.js, Express, FastAPI
+- Find existing documentation to use as context
+- Ask about your future plans to generate relevant PRPs
 
 ## 📚 Documentation
 
