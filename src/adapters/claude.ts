@@ -70,19 +70,26 @@ export class ClaudeAdapter extends IDEAdapter {
       const projectSlug = this.config.projectName.toLowerCase().replace(/\s+/g, '-');
 
       // In retrofit mode, generate PRPs for planned features
-      if (this.config.isRetrofit && this.config.plannedFeatures && this.config.plannedFeatures.length > 0) {
+      if (
+        this.config.isRetrofit &&
+        this.config.plannedFeatures &&
+        this.config.plannedFeatures.length > 0
+      ) {
         // Generate a PRP for each planned feature
         for (const feature of this.config.plannedFeatures) {
           const featureName = feature.split(':')[0].toLowerCase().replace(/\s+/g, '-');
           files.push({
             path: path.join(prpPath, `${featureName}-prp.md`),
-            content: await generatePRP({
-              ...this.config,
-              prd: { 
-                ...this.config.prd,
-                content: `Feature: ${feature}`,
-              }
-            }, 'base'),
+            content: await generatePRP(
+              {
+                ...this.config,
+                prd: {
+                  ...this.config.prd,
+                  content: `Feature: ${feature}`,
+                },
+              },
+              'base'
+            ),
             description: `PRP for: ${feature}`,
           });
         }

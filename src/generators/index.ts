@@ -31,7 +31,7 @@ export async function generateDocumentation(
         const spinner = ora(`Creating ${path.basename(file.path)}...`).start();
         try {
           await fs.ensureDir(path.dirname(file.path));
-          
+
           // Check if file already exists
           if (await fs.pathExists(file.path)) {
             // Special handling for CLAUDE.md in retrofit mode
@@ -46,7 +46,7 @@ export async function generateDocumentation(
             }
             continue;
           }
-          
+
           await fs.writeFile(file.path, file.content, 'utf-8');
           spinner.succeed(`Created ${path.basename(file.path)}`);
         } catch (error) {

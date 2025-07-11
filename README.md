@@ -434,6 +434,7 @@ context-forge analyze --no-ai
 ```
 
 The analyze command is intelligent enough to:
+
 - Detect if you're using TypeScript, Python, or other languages
 - Identify frameworks like React, Next.js, Express, FastAPI
 - Find existing documentation to use as context
