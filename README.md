@@ -19,99 +19,101 @@
   <strong>Transform your project ideas into AI-ready applications with intelligent context engineering</strong>
 </p>
 
+<p align="center">
+  <em>🎯 Optimized for Claude Code with deep integration for slash commands, hooks, and PRPs</em><br>
+  <em>Also supports Cursor, Windsurf, Cline, Copilot, Gemini, and more AI coding assistants</em>
+</p>
+
 <div align="center">
-  <h2>🎉 What's New in v3.1.3</h2>
+  <h2>🎉 What's New in v3.1.4</h2>
   
   <table>
     <tr>
       <td align="center" width="50%">
-        <h3>🔧 Retrofit Existing Projects</h3>
-        <p><strong>NEW: <code>context-forge analyze</code></strong></p>
-        <p>Transform your existing codebases into AI-ready projects!</p>
+        <h3>🔄 Technology Migration Assistant</h3>
+        <p><strong>NEW: <code>context-forge migrate</code></strong></p>
+        <p>Safely transition between technology stacks!</p>
         <ul align="left">
-          <li>🔍 Auto-detects tech stack & structure</li>
-          <li>📝 Asks about future development plans</li>
-          <li>🎯 Generates PRPs for each planned feature</li>
-          <li>🔒 Never overwrites existing files</li>
-          <li>📊 Creates comprehensive retrofit summary</li>
+          <li>🎯 Analyzes migration complexity & risks</li>
+          <li>📊 Detects shared resources (DB, Auth, APIs)</li>
+          <li>🛡️ Generates phased migration plans</li>
+          <li>🔙 Comprehensive rollback procedures</li>
+          <li>✅ Migration-specific validation & monitoring</li>
         </ul>
-        <code>cd your-project && context-forge analyze</code>
+        <code>context-forge migrate --target "Next.js"</code>
       </td>
       <td align="center" width="50%">
-        <h3>🔗 PreCompact Hook Integration</h3>
-        <p><strong>Works with <a href="https://github.com/webdevtodayjason/claude-hooks">Claude Hooks Manager</a></strong></p>
-        <p>Never lose context during conversation compaction!</p>
+        <h3>🛑 Human-in-the-Loop Checkpoints</h3>
+        <p><strong>Pause for verification at critical milestones</strong></p>
+        <p>Never lose control during AI development!</p>
         <ul align="left">
-          <li>🧠 PRPs auto-reload when Claude compacts</li>
-          <li>🎯 Maintains project understanding</li>
-          <li>📋 Preserves validation gates</li>
-          <li>🔄 Seamless long-session support</li>
-          <li>✨ Works with Claude Code v1.0.48+</li>
+          <li>🔍 Define custom verification points</li>
+          <li>📋 Milestone-based development gates</li>
+          <li>🤝 Human approval before proceeding</li>
+          <li>📊 Progress tracking & reporting</li>
+          <li>🎯 Integrates with migration & PRPs</li>
         </ul>
-        <code>Your PRPs stay with you, always!</code>
+        <code>/checkpoint "Database migration complete"</code>
       </td>
     </tr>
   </table>
   
-  <h3>🚀 NEW: Slash Commands & PRP Runner</h3>
+  <h3>🚀 Enhanced Claude Code Integration</h3>
   <table>
     <tr>
       <td align="center" width="50%">
-        <h4>⚡ Claude Code Slash Commands</h4>
-        <p>Pre-built commands for rapid development:</p>
+        <h4>⚡ 20+ Slash Commands</h4>
+        <p>Comprehensive command library:</p>
         <ul align="left">
-          <li><code>/prp-create</code> - Generate comprehensive PRPs</li>
-          <li><code>/prp-execute</code> - Execute PRPs with validation</li>
-          <li><code>/prime-context</code> - Load project knowledge</li>
-          <li><code>/parallel-prp-create</code> - Multi-feature PRPs</li>
-          <li>+ Custom command support</li>
+          <li><strong>PRPs:</strong> create, execute, validate, parallel</li>
+          <li><strong>Dev:</strong> prime-context, debug-issue, review-code</li>
+          <li><strong>Git:</strong> smart-commit, create-pr</li>
+          <li><strong>Checkpoints:</strong> checkpoint, milestone-gate</li>
+          <li><strong>Migration:</strong> status, validate, rollback</li>
         </ul>
       </td>
       <td align="center" width="50%">
-        <h4>🤖 PRP Runner CLI</h4>
-        <p><code>context-forge run-prp</code></p>
+        <h4>🪝 4 Claude Code Hooks</h4>
+        <p><code>context-forge copy-hooks</code></p>
         <ul align="left">
-          <li>Execute PRPs directly with Claude Code</li>
-          <li>Interactive & headless modes</li>
-          <li>Automatic validation gate execution</li>
-          <li>One-pass implementation success</li>
-          <li>AI documentation curation support</li>
+          <li><strong>PreCompact:</strong> Preserve context</li>
+          <li><strong>ContextRotation:</strong> Smart file switching</li>
+          <li><strong>PreSubmit:</strong> Quality gates</li>
+          <li><strong>PRPTracking:</strong> Progress monitoring</li>
+          <li>+ Migration-specific hooks</li>
         </ul>
       </td>
     </tr>
   </table>
   
-  <h3>📝 Enhanced PRP Templates</h3>
+  <h3>📁 Complete Project Structure</h3>
   <table>
     <tr>
       <td align="center" width="33%">
-        <h4>🎯 base-enhanced.md</h4>
-        <p>Context-rich implementation template</p>
+        <h4>📄 Core Files</h4>
         <ul align="left">
-          <li>4-level validation gates</li>
-          <li>AI docs integration</li>
-          <li>Common fixes & patterns</li>
-          <li>Integration points</li>
+          <li>CLAUDE.md</li>
+          <li>Docs/</li>
+          <li>PRPs/</li>
+          <li>ai_docs/</li>
         </ul>
       </td>
       <td align="center" width="33%">
-        <h4>🔬 planning.md</h4>
-        <p>ULTRATHINK deep analysis</p>
+        <h4>⚡ .claude/commands/</h4>
         <ul align="left">
-          <li>Architecture diagrams</li>
-          <li>Risk assessment</li>
-          <li>Performance planning</li>
-          <li>Security analysis</li>
+          <li>PRPs/</li>
+          <li>development/</li>
+          <li>checkpoints/</li>
+          <li>migration/</li>
         </ul>
       </td>
       <td align="center" width="33%">
-        <h4>📋 spec.md & task.md</h4>
-        <p>Detailed specifications</p>
+        <h4>🪝 .claude/hooks/</h4>
         <ul align="left">
-          <li>API contracts</li>
-          <li>Data models</li>
-          <li>Test strategies</li>
-          <li>Single-task focus</li>
+          <li>PreCompact.py</li>
+          <li>ContextRotation.py</li>
+          <li>PreSubmit.py</li>
+          <li>MigrationHooks/</li>
         </ul>
       </td>
     </tr>
@@ -199,38 +201,138 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - 🛠️ **Multiple Tech Stacks** - Support for 9+ frameworks with specific configurations
 - 📁 **Structured Output** - Organized documentation following each IDE's conventions
 - ⚡ **Fast Setup** - Go from zero to AI-ready project in minutes
-- 🔄 **Format Conversion** - Convert between different IDE formats (coming soon)
-- 🔧 **Retrofit Existing Projects** - NEW: Analyze and upgrade existing codebases with AI documentation
+- 🔄 **Technology Migration** - Safe migration planning between tech stacks
+- 🔧 **Retrofit Existing Projects** - Analyze and upgrade existing codebases with AI documentation
 
 ### Advanced Features
 
 - 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude, Cursor, Windsurf, Cline, Copilot & Gemini)
 - ✅ **Validation System** - Built-in code quality checks and gates
+- 🛑 **Human-in-the-Loop Checkpoints** - Pause for verification at critical milestones
+- 🪝 **Claude Code Hooks** - PreCompact, ContextRotation, PreSubmit, and PRPTracking hooks
+- ⚡ **20+ Slash Commands** - Comprehensive command library for rapid development
 - 🎨 **Tech-Stack Specific Templates** - Optimized CLAUDE.md for each framework
 - 📊 **Comprehensive Reporting** - Validation reports and progress tracking
+- 🔄 **Phased Migration Plans** - Step-by-step migration with rollback strategies
 - 🔧 **Extensible Architecture** - Easy to add new tech stacks and features
 
 ## 🔗 Claude Hooks Manager Integration
 
-Context Forge now integrates seamlessly with [Claude Hooks Manager](https://github.com/webdevtodayjason/claude-hooks) to solve one of the most frustrating challenges in agentic development: **context loss during conversation compaction**.
+Context Forge provides deep integration with [Claude Hooks Manager](https://github.com/webdevtodayjason/claude-hooks) through 4 powerful hooks that enhance your development workflow and maintain context throughout long sessions.
 
-### The PreCompact Hook Advantage
+### The 4 Claude Code Hooks
 
-With Claude Code v1.0.48's new [PreCompact hook](https://docs.anthropic.com/en/docs/claude-code/hooks), Context Forge's PRP files can be automatically re-read when Claude needs to compact the conversation. This means:
+#### 1. **PreCompact Hook** - Context Preservation
+With Claude Code v1.0.48+, the PreCompact hook ensures your PRPs and project context survive conversation compaction:
+- 🧠 Critical project structure persists
+- 🎯 Current implementation stage maintained
+- 📋 Validation gates remain active
 
-- 🧠 **Persistent Context** - Critical project structure and PRP stages survive compaction
-- 🎯 **Maintained Focus** - Claude retains understanding of current implementation stage
-- 📋 **Continuous Planning** - PRP validation gates and feature tracking remain active
-- 🔄 **Seamless Recovery** - No manual re-explanation of project context needed
+#### 2. **ContextRotation Hook** - Smart File Management
+Intelligently manages which files stay in context as you work:
+- 📁 Prioritizes relevant files based on current task
+- 🔄 Automatically rotates less relevant files out
+- 💾 Preserves critical configuration files
 
-### How It Works
+#### 3. **PreSubmit Hook** - Quality Gates
+Runs validation before code submission:
+- ✅ Syntax and type checking
+- 🧪 Test execution
+- 📊 Coverage requirements
+- 🔒 Security scanning
 
-1. **Generate PRP files** with Context Forge for your AI IDE
-2. **Configure Claude Hooks Manager** to watch your PRP directory
-3. **PreCompact hook triggers** when conversation needs compaction
-4. **PRP files are re-injected** maintaining project continuity
+#### 4. **PRPTracking Hook** - Progress Monitoring
+Tracks PRP implementation progress:
+- 📈 Monitors task completion
+- ⏱️ Time tracking per feature
+- 📋 Automatic status updates
+- 🎯 Milestone achievements
 
-This integration is especially powerful for long-running development sessions where context preservation is critical for maintaining code quality and architectural consistency.
+### Setup
+
+```bash
+# Generate project with hooks
+context-forge init  # Select "Enable Claude Code hooks? Yes"
+
+# Or copy hooks from another project
+context-forge copy-hooks --source ../claude-hooks-repo/hooks
+
+# Hooks are created in:
+# .claude/hooks/
+```
+
+This integration is especially powerful for:
+- Long-running development sessions
+- Complex multi-phase implementations
+- Team projects requiring consistency
+- Migration projects with checkpoints
+
+## 🛑 Human-in-the-Loop Checkpoints
+
+Context Forge introduces a powerful checkpoint system that pauses AI development at critical milestones for human verification, ensuring you maintain control over the implementation process.
+
+### Why Checkpoints?
+
+- **Prevent Breaking Changes**: Verify database migrations before data modification
+- **Quality Assurance**: Review architectural decisions before proceeding
+- **Safety First**: Human approval for production deployments
+- **Learning Opportunity**: Understand what the AI has implemented
+
+### How Checkpoints Work
+
+1. **Automatic Triggers**: AI pauses at predefined critical points
+2. **Manual Checkpoints**: Use `/checkpoint` command anytime
+3. **Verification Request**: AI presents what was done and what needs testing
+4. **Human Decision**: Approve to continue or request fixes
+
+### Checkpoint Commands
+
+- `/checkpoint [description]` - Create manual checkpoint
+- `/should-checkpoint` - AI asks if checkpoint is needed
+- `/milestone-gate [milestone]` - Major milestone verification
+
+### Example Checkpoint Flow
+
+```
+🛑 CHECKPOINT: Human Verification Required
+
+Analytics Dashboard - I've completed database schema setup:
+
+✅ What I've Accomplished:
+- Created PostgreSQL schema with 5 tables
+- Set up foreign key relationships
+- Added indexes for query optimization
+
+🧪 Please Test:
+1. Run: npm run db:migrate
+2. Check tables exist: psql -c "\dt"
+3. Verify foreign keys: psql -c "\d+ users"
+
+📋 Critical Verification Points:
+- [ ] All tables created successfully
+- [ ] Foreign keys properly linked
+- [ ] No data loss from existing tables
+
+Please respond:
+- ✅ "Approved" - Continue to next task
+- ❌ "Issues: [description]" - Fix before proceeding
+```
+
+### Configuring Checkpoints
+
+Checkpoints are configured during project initialization or can be added to existing projects:
+
+```yaml
+# .context-forge/checkpoints.yaml
+checkpoints:
+  - name: "Database Migration"
+    phase: "infrastructure"
+    requires_approval: true
+    validation_steps:
+      - "Run migration scripts"
+      - "Verify data integrity"
+      - "Check rollback procedures"
+```
 
 ## 📦 Installation
 
@@ -276,11 +378,17 @@ context-forge init --config ./context-forge.json
 # Run validation on existing project
 context-forge validate
 
-# NEW: Retrofit existing projects with AI-optimized documentation
+# Retrofit existing projects with AI-optimized documentation
 context-forge analyze
 
-# NEW: Execute PRPs with Claude Code for one-pass implementation
+# Execute PRPs with Claude Code for one-pass implementation
 context-forge run-prp feature-name
+
+# NEW: Plan technology migration
+context-forge migrate --target "Next.js"
+
+# NEW: Copy Claude Code hooks from another project
+context-forge copy-hooks --source ../claude-hooks-repo/hooks
 ```
 
 ## 💡 Usage Examples
@@ -302,6 +410,8 @@ $ context-forge init
 ? Team size: small
 ? Enable PRP generation? Yes
 ? Enable validation system? Yes
+? Enable Human-in-the-Loop checkpoints? Yes
+? Enable Claude Code hooks? Yes
 
 ✅ Project initialized successfully!
 
@@ -310,12 +420,15 @@ Generated files:
 - Docs/Implementation.md (4 development stages)
 - Docs/project_structure.md
 - PRPs/base.md (Implementation prompt with validation gates)
+- .claude/commands/ (20+ slash commands)
+- .claude/hooks/ (4 Claude Code hooks)
 - .context-forge/config.json
 
 Next steps:
 1. cd analytics-dashboard
 2. Review CLAUDE.md for project rules
-3. Start with Stage 1 in Docs/Implementation.md
+3. Use /prime-context to load project knowledge
+4. Start with Stage 1 in Docs/Implementation.md
 ```
 
 ### Example 2: API-Only Microservice
@@ -461,7 +574,7 @@ npx context-forge init --preset hackathon
 
 ## 🔧 Retrofitting Existing Projects
 
-**NEW in v3.1.3**: The `analyze` command allows you to retrofit existing codebases with AI-optimized documentation. This is perfect for:
+**NEW in v3.1.3+**: The `analyze` command allows you to retrofit existing codebases with AI-optimized documentation. This is perfect for:
 
 - Adding AI assistance to legacy projects
 - Upgrading existing projects with modern context engineering
@@ -516,6 +629,85 @@ The analyze command is intelligent enough to:
 - Find existing documentation to use as context
 - Ask about your future plans to generate relevant PRPs
 
+## 🔄 Technology Migration
+
+**NEW in v3.1.4**: The `migrate` command helps you safely transition between technology stacks with comprehensive planning, risk analysis, and rollback strategies.
+
+### When to Use Migration
+
+Perfect for:
+- Modernizing legacy applications (e.g., jQuery → React, Flask → FastAPI)
+- Switching frameworks (e.g., Express → Next.js, Django → FastAPI)
+- Adopting new technologies while maintaining production stability
+- Planning complex migrations with shared resources (databases, auth systems)
+
+### How Migration Works
+
+1. **Analyzes Current Stack**: Detects your existing technology and architecture
+2. **Assesses Complexity**: Calculates migration risks and shared resource dependencies
+3. **Creates Phased Plan**: Generates step-by-step migration with checkpoints
+4. **Provides Safety Net**: Includes comprehensive rollback procedures
+5. **Monitors Progress**: Tracks migration status with validation gates
+
+### Usage
+
+```bash
+# Interactive migration planning
+context-forge migrate
+
+# Specify target technology
+context-forge migrate --target "Next.js"
+
+# Quick mode (skip detailed analysis)
+context-forge migrate --quick --target "FastAPI"
+
+# Analyze only (no file generation)
+context-forge migrate --analyze-only
+```
+
+### Example Migration Output
+
+```
+🔄 Migration Analysis Complete!
+
+Source: Flask + Jinja2 + SQLAlchemy
+Target: Next.js + FastAPI + Prisma
+Complexity: HIGH (Score: 78/100)
+Recommended Strategy: parallel-run
+
+📁 Generated Migration Files:
+   ├── CLAUDE.md (Migration-aware configuration)
+   ├── PRPs/
+   │   ├── migration-overview.md
+   │   ├── phase-1-infrastructure.md
+   │   ├── phase-2-api-migration.md
+   │   ├── phase-3-frontend-migration.md
+   │   └── rollback-procedures.md
+   └── .claude/
+       ├── commands/migration/
+       │   ├── migration-status.md
+       │   ├── migration-checkpoint.md
+       │   └── migration-rollback.md
+       └── hooks/
+           ├── MigrationCheckpoint.py
+           └── DataIntegrityCheck.py
+```
+
+### Migration Features
+
+- **Shared Resource Detection**: Identifies databases, auth systems, and APIs used by both systems
+- **Risk Assessment**: Analyzes potential breaking changes and data integrity risks
+- **Parallel-Run Support**: Enables running old and new systems simultaneously
+- **Checkpoint System**: Human verification at critical migration milestones
+- **Rollback Planning**: One-command rollback to any checkpoint
+- **Progress Monitoring**: Real-time migration status and health checks
+
+### Migration Strategies
+
+1. **Big-Bang**: Complete cutover (low complexity projects)
+2. **Incremental**: Feature-by-feature migration (medium complexity)
+3. **Parallel-Run**: Both systems active during transition (high complexity)
+
 ## 📚 Documentation
 
 ### Generated Files Structure
@@ -528,11 +720,27 @@ Context Forge creates IDE-specific documentation structures:
 project-folder/
 ├── CLAUDE.md                    # Main context file with tech-stack specific rules
 ├── Docs/
-│   ├── Implementation.md       # Staged development plan
-│   ├── project_structure.md    # Folder organization
-│   ├── UI_UX_doc.md           # Design specifications
-│   └── Bug_tracking.md        # Bug tracking template
-└── PRPs/                      # Product Requirement Prompts (if enabled)
+│   ├── Implementation.md        # Staged development plan
+│   ├── project_structure.md     # Folder organization
+│   ├── UI_UX_doc.md            # Design specifications
+│   └── Bug_tracking.md         # Bug tracking template
+├── PRPs/                       # Product Requirement Prompts (if enabled)
+│   ├── {project}-prp.md        # Base implementation PRP
+│   ├── {project}-planning.md   # Architecture planning (if enterprise/team)
+│   └── {feature}-prp.md        # Feature-specific PRPs (if retrofit)
+├── .claude/                    # Claude Code specific configuration
+│   ├── commands/               # Slash commands (20+ commands)
+│   │   ├── PRPs/              # PRP management commands
+│   │   ├── development/       # Development workflow commands
+│   │   ├── checkpoints/       # Human-in-the-loop commands
+│   │   └── migration/         # Migration commands (if applicable)
+│   └── hooks/                 # Claude Code hooks (if enabled)
+│       ├── PreCompact.py      # Context preservation hook
+│       ├── ContextRotation.py # Smart file switching
+│       ├── PreSubmit.py       # Quality gates
+│       └── PRPTracking.py     # Progress monitoring
+└── ai_docs/                   # AI documentation curation (if enabled)
+    └── README.md              # Documentation guide
 ```
 
 #### Cursor IDE
