@@ -67,3 +67,8 @@ prd-forge-plan.md
 
 # Context Forge API keys
 .context-forge-api
+
+# Claude-specific files (local development)
+.claude/
+.dart
+CLAUDE.md

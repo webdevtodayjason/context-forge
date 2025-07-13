@@ -5,6 +5,7 @@ import { analyzeCommand } from './commands/analyze';
 import { validateCommand } from '../commands/validate';
 import { runPrpCommand } from './commands/run-prp';
 import { copyHooksCommand } from './commands/copy-hooks';
+import { migrateCommand } from './commands/migrate';
 import { version } from '../../package.json';
 
 const program = new Command();
@@ -23,6 +24,7 @@ program.addCommand(analyzeCommand);
 program.addCommand(validateCommand);
 program.addCommand(runPrpCommand);
 program.addCommand(copyHooksCommand);
+program.addCommand(migrateCommand);
 
 // Error handling wrapper
 const handleError = (error: Error) => {

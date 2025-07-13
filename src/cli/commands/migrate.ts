@@ -77,6 +77,28 @@ export const migrateCommand = new Command('migrate')
         const migrationAnalysis = await migrationAnalyzer.analyzeMigration(basicAnalysis);
         spinner.succeed('Migration analysis complete');
 
+        // Display framework detection results
+        if (migrationAnalysis.sourceStack.metadata) {
+          console.log(chalk.cyan('\n🔍 Framework Detection:'));
+          console.log(
+            `  • Primary: ${chalk.green(migrationAnalysis.sourceStack.name)} v${migrationAnalysis.sourceStack.version || 'unknown'} (${migrationAnalysis.sourceStack.metadata.confidence}% confidence)`
+          );
+
+          const otherFrameworks = migrationAnalysis.sourceStack.metadata.detectedFrameworks
+            .filter((f) => (f.variant || f.framework) !== migrationAnalysis.sourceStack.name)
+            .slice(0, 3);
+
+          if (otherFrameworks.length > 0) {
+            console.log('  • Also detected:');
+            otherFrameworks.forEach((f) => {
+              const name = f.variant || f.framework;
+              console.log(
+                `    - ${name} ${f.version ? `v${f.version}` : ''} (${f.confidence}% confidence)`
+              );
+            });
+          }
+        }
+
         // Display migration complexity
         console.log(chalk.cyan('\n🎯 Migration Analysis:'));
         console.log(
@@ -96,6 +118,72 @@ export const migrateCommand = new Command('migrate')
             console.log(`  • ${factor.name}: [${impact}] ${factor.impact}/10`);
             console.log(`    ${chalk.gray(factor.description)}`);
           });
+        }
+
+        if (
+          migrationAnalysis.breakingChangesSummary &&
+          migrationAnalysis.breakingChangesSummary.total > 0
+        ) {
+          console.log(chalk.cyan('\n🔧 Breaking Changes:'));
+          console.log(
+            `  • Total: ${chalk.yellow(migrationAnalysis.breakingChangesSummary.total)} changes detected`
+          );
+          console.log(
+            `  • Critical: ${chalk.red(migrationAnalysis.breakingChangesSummary.critical)}`
+          );
+          console.log(
+            `  • Automatable: ${chalk.green(migrationAnalysis.breakingChangesSummary.automatable)}`
+          );
+          console.log(
+            `  • Est. Hours: ${chalk.yellow(migrationAnalysis.breakingChangesSummary.estimatedHours)}`
+          );
+
+          if (migrationAnalysis.breakingChanges && migrationAnalysis.breakingChanges.length > 0) {
+            console.log(chalk.gray('\n  Top Breaking Changes:'));
+            migrationAnalysis.breakingChanges.slice(0, 3).forEach((change) => {
+              const icon =
+                change.severity === 'critical' ? '🔴' : change.severity === 'high' ? '🟡' : '🟢';
+              console.log(`  ${icon} ${change.description}`);
+              if (change.automatable) {
+                console.log(chalk.green(`     ✓ Automatable - ${change.effort} effort`));
+              } else {
+                console.log(
+                  chalk.yellow(`     ⚠ Manual migration required - ${change.effort} effort`)
+                );
+              }
+            });
+          }
+        }
+
+        if (
+          migrationAnalysis.dependencyAnalysis &&
+          migrationAnalysis.dependencyAnalysis.totalDependencies > 0
+        ) {
+          console.log(chalk.cyan('\n📦 Dependency Analysis:'));
+          console.log(
+            `  • Total Dependencies: ${chalk.yellow(migrationAnalysis.dependencyAnalysis.totalDependencies)}`
+          );
+          console.log(
+            `  • Incompatible: ${chalk.red(migrationAnalysis.dependencyAnalysis.incompatibleCount)}`
+          );
+          console.log(
+            `  • Replacements Available: ${chalk.green(migrationAnalysis.dependencyAnalysis.hasReplacements)}`
+          );
+          console.log(
+            `  • Complexity: ${chalk.yellow(migrationAnalysis.dependencyAnalysis.migrationComplexity.toUpperCase())}`
+          );
+
+          if (migrationAnalysis.dependencyAnalysis.incompatible.length > 0) {
+            console.log(chalk.gray('\n  Top Incompatible Dependencies:'));
+            migrationAnalysis.dependencyAnalysis.incompatible.slice(0, 3).forEach((dep) => {
+              const icon =
+                dep.severity === 'critical' ? '🔴' : dep.severity === 'high' ? '🟡' : '🟢';
+              console.log(`  ${icon} ${dep.package} - ${dep.reason}`);
+              if (dep.resolution) {
+                console.log(chalk.green(`     → ${dep.resolution}`));
+              }
+            });
+          }
         }
 
         if (migrationAnalysis.risks.length > 0) {

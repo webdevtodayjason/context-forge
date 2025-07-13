@@ -79,6 +79,9 @@ export interface ProjectConfig {
     includeValidation?: boolean;
     includeDiagrams?: boolean;
   };
+
+  // Migration configuration (for retrofit projects)
+  migrationConfig?: MigrationConfig;
 }
 
 export interface Feature {
@@ -94,7 +97,7 @@ export interface Feature {
 
 export interface TechStackInfo {
   name: string;
-  type: 'frontend' | 'backend' | 'database' | 'auth' | 'styling';
+  type: 'frontend' | 'backend' | 'database' | 'auth' | 'styling' | 'fullstack';
   docs: string;
   structure?: string;
   dependencies: string[];
@@ -108,6 +111,17 @@ export interface TechStackInfo {
   startCommand?: string;
   gotchas?: string[];
   bestPractices?: string[];
+  // Framework detection fields
+  version?: string;
+  metadata?: {
+    confidence: number;
+    detectedFrameworks: Array<{
+      framework: string;
+      version?: string;
+      variant?: string;
+      confidence: number;
+    }>;
+  };
 }
 
 export interface Stage {
@@ -394,4 +408,75 @@ export interface CheckpointCommand {
   description: string;
   template: string;
   triggers: CheckpointTrigger[];
+}
+
+// Migration System Types
+export interface MigrationConfig {
+  strategy: 'big-bang' | 'incremental' | 'parallel-run';
+  sourceStack: TechStackInfo;
+  targetStack: TechStackInfo;
+  sharedResources: SharedResource[];
+  migrationPhases: MigrationPhase[];
+  rollbackStrategy: RollbackStrategy;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  checkpoints?: MigrationCheckpoint[];
+}
+
+export interface MigrationPhase {
+  id: string;
+  name: string;
+  description: string;
+  criticalCheckpoints: CheckpointTrigger[];
+  dependencies: string[];
+  rollbackPoint: boolean;
+  estimatedDuration: string;
+  risks: MigrationRisk[];
+  validationCriteria: string[];
+}
+
+export interface SharedResource {
+  type: 'database' | 'api' | 'auth' | 'storage' | 'cache' | 'queue';
+  name: string;
+  description: string;
+  criticalityLevel: 'low' | 'medium' | 'high' | 'critical';
+  migrationStrategy: string;
+}
+
+export interface RollbackStrategy {
+  automatic: boolean;
+  triggers: RollbackTrigger[];
+  procedures: RollbackProcedure[];
+  dataBackupRequired: boolean;
+  estimatedTime: string;
+}
+
+export interface RollbackTrigger {
+  condition: string;
+  severity: 'warning' | 'error' | 'critical';
+  action: 'alert' | 'pause' | 'rollback';
+}
+
+export interface RollbackProcedure {
+  phase: string;
+  steps: string[];
+  verificationPoints: string[];
+  estimatedDuration: string;
+}
+
+export interface MigrationRisk {
+  category: 'data-loss' | 'downtime' | 'compatibility' | 'performance' | 'security';
+  description: string;
+  probability: 'low' | 'medium' | 'high';
+  impact: 'low' | 'medium' | 'high' | 'critical';
+  mitigation: string;
+}
+
+export interface MigrationCheckpoint {
+  phaseId: string;
+  name: string;
+  description: string;
+  validationSteps: string[];
+  rollbackEnabled: boolean;
+  requiresApproval: boolean;
+  automatedTests?: string[];
 }
