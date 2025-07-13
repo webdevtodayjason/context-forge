@@ -2,6 +2,63 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.4] - 2025-07-12
+
+### 🚀 Major Feature Release: Migration Assistant & Enhanced Claude Code Integration
+
+This release introduces powerful new features for technology migration, human-in-the-loop development, and deeper Claude Code integration.
+
+### ✨ New Features
+
+- **🔄 Technology Migration Assistant** (`context-forge migrate`):
+  - Analyzes existing projects and complexity
+  - Detects shared resources (databases, auth systems, APIs)
+  - Generates phased migration plans with rollback strategies
+  - Supports big-bang, incremental, and parallel-run strategies
+  - Creates migration-specific PRPs and validation procedures
+
+- **🛑 Human-in-the-Loop Checkpoints**:
+  - Pause AI development at critical milestones
+  - Human verification before proceeding
+  - Configurable checkpoint triggers
+  - Integration with migration and PRP workflows
+  - Commands: `/checkpoint`, `/should-checkpoint`, `/milestone-gate`
+
+- **🪝 Enhanced Claude Code Hooks** (4 types):
+  - **PreCompact**: Context preservation during compaction
+  - **ContextRotation**: Smart file management
+  - **PreSubmit**: Quality gates before submission
+  - **PRPTracking**: Progress monitoring
+  - New `copy-hooks` command to import from other projects
+
+- **⚡ Expanded Slash Commands** (20+ commands):
+  - Migration commands: `/migration-status`, `/migration-validate`, `/migration-rollback`
+  - Checkpoint commands: `/checkpoint`, `/milestone-gate`
+  - Development commands: `/debug-issue`, `/review-code`, `/refactor-code`
+  - Git commands: `/smart-commit`, `/create-pr`
+
+### 🔧 Improvements
+
+- Enhanced PRP templates with migration support
+- Better file structure with `.claude/` directory organization
+- Improved interactive prompts with checkpoint and hooks options
+- SEO-optimized npm description and keywords
+- Comprehensive documentation updates
+
+### 📚 Documentation
+
+- Added migration system documentation
+- Expanded Claude Code features guide
+- Updated all examples to show new features
+- Added Human-in-the-Loop checkpoint guide
+- Enhanced hooks documentation for all 4 types
+
+### 🐛 Bug Fixes
+
+- Fixed TypeScript type issues in migration components
+- Resolved ESLint warnings in migration generators
+- Fixed import issues in migration analyzer
+
 ## [3.1.2] - 2025-01-10
 
 ### 🚀 Major Version Release
