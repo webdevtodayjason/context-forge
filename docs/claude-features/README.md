@@ -2,14 +2,14 @@
 
 ## Overview
 
-This directory contains comprehensive documentation for the advanced Claude Code features implemented in Context Forge v3.1.3+. These features transform Claude Code into a powerful AI development orchestrator, enabling "one-pass implementation success" through structured workflows and intelligent automation.
+This directory contains comprehensive documentation for the advanced Claude Code features implemented in Context Forge v3.2.0+. These features transform Claude Code into a powerful AI development orchestrator, enabling "one-pass implementation success" through structured workflows, intelligent automation, and autonomous AI teams.
 
 ## Documentation Structure
 
 ### 📁 Core Features
 
 1. **[Slash Commands](./slash-commands.md)**
-   - 20+ pre-built commands for common development tasks
+   - 25+ pre-built commands for common development tasks
    - Custom command creation
    - Command categories and usage patterns
    - Integration with development workflows

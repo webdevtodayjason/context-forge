@@ -25,35 +25,35 @@
 </p>
 
 <div align="center">
-  <h2>🎉 What's New in v3.1.4</h2>
+  <h2>🎉 What's New in v3.2.0</h2>
   
   <table>
     <tr>
       <td align="center" width="50%">
-        <h3>🔄 Technology Migration Assistant</h3>
-        <p><strong>NEW: <code>context-forge migrate</code></strong></p>
-        <p>Safely transition between technology stacks!</p>
+        <h3>🤖 Autonomous AI Orchestration</h3>
+        <p><strong>NEW: <code>context-forge orchestrate</code></strong></p>
+        <p>Deploy teams of AI agents working 24/7!</p>
         <ul align="left">
-          <li>🎯 Analyzes migration complexity & risks</li>
-          <li>📊 Detects shared resources (DB, Auth, APIs)</li>
-          <li>🛡️ Generates phased migration plans</li>
-          <li>🔙 Comprehensive rollback procedures</li>
-          <li>✅ Migration-specific validation & monitoring</li>
+          <li>🚀 Autonomous AI team management</li>
+          <li>💻 Tmux session orchestration</li>
+          <li>💬 Inter-agent communication</li>
+          <li>⏰ Self-scheduling & planning</li>
+          <li>📊 Progress tracking & monitoring</li>
         </ul>
-        <code>context-forge migrate --target "Next.js"</code>
+        <code>context-forge orchestrate --team-size medium</code>
       </td>
       <td align="center" width="50%">
-        <h3>🛑 Human-in-the-Loop Checkpoints</h3>
-        <p><strong>Pause for verification at critical milestones</strong></p>
-        <p>Never lose control during AI development!</p>
+        <h3>🎯 Enhancement Planning System</h3>
+        <p><strong>NEW: <code>context-forge enhance</code></strong></p>
+        <p>Plan and implement features systematically!</p>
         <ul align="left">
-          <li>🔍 Define custom verification points</li>
-          <li>📋 Milestone-based development gates</li>
-          <li>🤝 Human approval before proceeding</li>
-          <li>📊 Progress tracking & reporting</li>
-          <li>🎯 Integrates with migration & PRPs</li>
+          <li>🎯 Feature definition & analysis</li>
+          <li>📊 Dependency mapping</li>
+          <li>🛡️ Phased implementation plans</li>
+          <li>✅ Progress tracking commands</li>
+          <li>🔍 Validation checkpoints</li>
         </ul>
-        <code>/checkpoint "Database migration complete"</code>
+        <code>context-forge enhance --features auth,api</code>
       </td>
     </tr>
   </table>
@@ -62,14 +62,14 @@
   <table>
     <tr>
       <td align="center" width="50%">
-        <h4>⚡ 20+ Slash Commands</h4>
+        <h4>⚡ 25+ Slash Commands</h4>
         <p>Comprehensive command library:</p>
         <ul align="left">
           <li><strong>PRPs:</strong> create, execute, validate, parallel</li>
           <li><strong>Dev:</strong> prime-context, debug-issue, review-code</li>
           <li><strong>Git:</strong> smart-commit, create-pr</li>
-          <li><strong>Checkpoints:</strong> checkpoint, milestone-gate</li>
-          <li><strong>Migration:</strong> status, validate, rollback</li>
+          <li><strong>Orchestration:</strong> orchestrate-status, team-health</li>
+          <li><strong>Enhancement:</strong> track-features, update-progress</li>
         </ul>
       </td>
       <td align="center" width="50%">
