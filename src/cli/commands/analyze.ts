@@ -10,6 +10,7 @@ import { ApiKeyManager } from '../../services/apiKeyManager';
 import { runRetrofitPrompts } from '../prompts/retrofit';
 import { generateDocumentation } from '../../generators';
 import { version } from '../../../package.json';
+import { ErrorRecoveryService } from '../../services/errorRecoveryService';
 
 export const analyzeCommand = new Command('analyze')
   .description('Analyze existing project and generate AI-optimized documentation')
@@ -39,6 +40,8 @@ export const analyzeCommand = new Command('analyze')
     const spinner = ora();
     const projectPath = process.cwd();
     const outputPath = path.resolve(options.output);
+    const errorRecovery = new ErrorRecoveryService();
+    let config: ProjectConfig | undefined;
 
     try {
       // Initialize services
@@ -85,11 +88,7 @@ export const analyzeCommand = new Command('analyze')
 
       // Step 3: Retrofit Questions
       spinner.stop(); // Stop spinner before interactive prompts
-      const config: ProjectConfig = await runRetrofitPrompts(
-        basicAnalysis,
-        detailedAnalysis,
-        options.ide
-      );
+      config = await runRetrofitPrompts(basicAnalysis, detailedAnalysis, options.ide);
       console.log(chalk.green('✔ Configuration complete'));
 
       // Step 4: Generate Documentation
@@ -216,6 +215,15 @@ ${
       }
     } catch (error) {
       spinner.fail('Analysis failed');
+
+      // Use error recovery service to provide intelligent suggestions
+      await errorRecovery.handleError(error as Error, {
+        command: 'analyze',
+        operation: 'project analysis',
+        projectPath,
+        config,
+      });
+
       throw error;
     }
   });

@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest --testPathPattern='(__tests__|test).*\\.(test|spec)\\.[jt]s$' --testPathIgnorePatterns='integration.test.ts|e2e.test.ts'",
+    "test:integration": "jest integration.test.ts",
+    "test:e2e": "jest e2e.test.ts",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:services": "jest --testPathPattern='services.*test'",
+    "test:commands": "jest --testPathPattern='commands.*test'",
+    "test:prompts": "jest --testPathPattern='prompts.*test'"
+  }
+}

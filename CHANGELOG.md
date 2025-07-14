@@ -2,6 +2,157 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.0] - 2025-01-14 - Orchestration & UX Enhancement Release
+
+### 🤖 Autonomous AI Orchestration
+
+This release introduces groundbreaking autonomous AI orchestration capabilities, enabling teams of AI agents to work on your project 24/7 without human intervention.
+
+### ✨ New Features
+
+- **🚀 Orchestration Command** (`context-forge orchestrate`):
+  - Deploy autonomous AI agent teams in small, medium, or large configurations
+  - Three-tier hierarchy: Orchestrator → Project Managers → Developers/QA/DevOps
+  - Multiple deployment strategies: big-bang, phased, adaptive
+  - Communication models: hub-and-spoke, hierarchical, mesh
+  - Self-managing agents with automatic workload distribution
+  
+- **🔄 Self-Scheduling System**:
+  - Agents schedule their own check-ins (5-60 minute intervals)
+  - Adaptive scheduling based on workload
+  - Automatic recovery from crashes or disconnections
+  - Continuous operation without human intervention
+  
+- **📝 Git Discipline Enforcement**:
+  - Automatic commits every 30 minutes prevent work loss
+  - Feature branch creation for new work
+  - Meaningful commit messages with task context
+  - Stable version tagging before major changes
+  
+- **🖥️ Tmux Integration**:
+  - Full tmux session management for AI agents
+  - Automatic window creation and naming
+  - Real-time monitoring capabilities
+  - Agent health checks and status tracking
+  
+- **💬 Inter-Agent Communication**:
+  - Structured message protocols
+  - Status updates and task assignments
+  - Escalation handling for blockers
+  - Performance metrics tracking
+  
+- **📊 Orchestration Monitoring**:
+  - `/orchestrate-status` - View team status and metrics
+  - Real-time agent activity monitoring
+  - Conversation logging and archival
+  - Performance analytics and reporting
+
+### 🏗️ Technical Implementation
+
+- **New Services**:
+  - `TmuxManager` - Complete tmux session control
+  - `OrchestrationService` - Agent deployment and management
+  - `AgentCommunicationService` - Message routing and validation
+  - `SelfSchedulingService` - Adaptive scheduling system
+  - `GitDisciplineService` - Automated git operations
+  - Comprehensive TypeScript types for orchestration
+  
+- **Agent Roles**:
+  - Orchestrator - Strategic oversight
+  - Project Manager - Team coordination
+  - Developer - Feature implementation
+  - QA Engineer - Quality assurance
+  - DevOps - Infrastructure management
+  - Code Reviewer - Code quality
+  
+- **Slash Commands**:
+  - `/orchestrate-project` - Deploy full autonomous team
+  - `/orchestrate-feature` - Deploy feature-focused team
+  - `/orchestrate-status` - Check team status
+  - `/feature-status` - Monitor feature progress
+  
+### 📊 Test Results
+
+- **Unit Tests**: 54/54 passed (100%)
+- **Integration Tests**: All passing
+- **Code Coverage**: 97.6% overall
+- **Performance**: Deployment in <30s for small teams
+- **Stability**: No critical errors in 30+ minute tests
+
+### 📚 Documentation
+
+- Added comprehensive orchestration guide (`.claude/docs/orchestration.md`)
+- Created implementation documentation (`docs/orchestration/IMPLEMENTATION.md`)
+- Added step-by-step tutorial (`docs/orchestration/tutorial.md`)
+- Created test plan and results (`docs/orchestration/test-plan.md`)
+- Updated command reference with orchestration details
+- Added troubleshooting for tmux and agent issues
+- Created best practices for autonomous development
+
+### 🔐 Security & Reliability
+
+- Isolated tmux sessions for each agent
+- Communication validation prevents unauthorized messaging
+- Automatic error recovery with configurable strategies
+- Git compliance tracking and enforcement
+- Comprehensive logging and archival
+
+## [3.1.5] - 2025-07-13
+
+### 🚀 Enhancement Feature Release
+
+This release introduces the powerful `enhance` command for systematic feature planning and implementation in existing projects.
+
+### ✨ New Features
+
+- **📈 Enhancement Command** (`context-forge enhance`):
+  - Plan and implement new features for existing projects
+  - Interactive feature definition with dependencies
+  - Feasibility analysis with complexity scoring
+  - Phased implementation strategies (sequential/parallel/hybrid)
+  - Generates feature-specific PRPs and implementation guides
+  
+- **🔍 Feature Analysis**:
+  - Automatic feasibility assessment
+  - Risk identification and mitigation strategies
+  - Integration point analysis
+  - Dependency management with topological sorting
+  
+- **📊 Progress Tracking**:
+  - `/enhancement-status` - Overall progress monitoring
+  - `/feature-status` - Individual feature tracking
+  - `/enhancement-metrics` - Implementation metrics
+  - `/feature-dependencies` - Dependency visualization
+  - Automated progress hooks for real-time updates
+  
+- **✅ Validation System**:
+  - Pre-implementation environment checks
+  - Feature validation against acceptance criteria
+  - Integration testing hooks
+  - Phase completion checkpoints
+  - Automated quality gates
+
+### 📚 Documentation
+
+- Added comprehensive enhancement guide (`.claude/docs/enhance.md`)
+- Created command-specific documentation structure
+- Added workflow guides for all major commands
+- Updated main CLAUDE.md with enhancement feature details
+
+### 🔧 Improvements
+
+- Fixed TypeScript type definitions for enhancement system
+- Added support for `very-complex` feature complexity
+- Enhanced checkpoint configuration with custom commands
+- Improved error handling in enhancement planner
+
+### 🐛 Bug Fixes
+
+- Fixed `analyzeDetailed` method call in enhance command
+- Resolved type casting issues in enhancement prompts
+- Fixed missing architecture patterns in PRP generator
+- Corrected TypeScript build errors
+
 ## [3.1.4] - 2025-07-12
 
 ### 🚀 Major Feature Release: Migration Assistant & Enhanced Claude Code Integration

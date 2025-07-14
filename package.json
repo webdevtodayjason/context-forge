@@ -1,7 +1,7 @@
 {
   "name": "context-forge",
-  "version": "3.1.4",
-  "description": "Claude Code project generator with migration tools, 20+ slash commands, human checkpoints & AI hooks. Supports Cursor, Windsurf, Cline, Copilot, Gemini",
+  "version": "3.2.0",
+  "description": "AI orchestration platform with autonomous teams, enhancement planning, migration tools, 25+ slash commands, checkpoints & hooks. Multi-IDE: Claude, Cursor, Windsurf, Cline, Copilot",
   "main": "dist/index.js",
   "bin": {
     "context-forge": "./bin/context-forge.js"
@@ -10,9 +10,18 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest --testPathPattern='(__tests__|test).*\\.(test|spec)\\.[jt]s$' --testPathIgnorePatterns='integration.test.ts|e2e.test.ts'",
+    "test:integration": "jest integration.test.ts",
+    "test:e2e": "jest e2e.test.ts",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:services": "jest --testPathPattern='services.*test'",
+    "test:commands": "jest --testPathPattern='commands.*test'",
+    "test:prompts": "jest --testPathPattern='prompts.*test'",
     "lint": "eslint . --ext .ts,.js",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
-    "prepublishOnly": "npm run build && npm run lint && npm test"
+    "prepublishOnly": "npm run build && npm run lint && npm run test:ci"
   },
   "keywords": [
     "claude-code",
@@ -67,15 +76,20 @@
   "files": [
     "dist/",
     "bin/",
-    "templates/"
+    "templates/",
+    ".claude/docs/"
   ],
   "dependencies": {
+    "@anthropic-ai/claude-code": "^1.0.51",
+    "@anthropic-ai/sdk": "^0.56.0",
+    "@types/uuid": "^10.0.0",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
     "fs-extra": "^11.3.0",
     "handlebars": "^4.7.8",
     "inquirer": "^12.7.0",
-    "ora": "^8.2.0"
+    "ora": "^8.2.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

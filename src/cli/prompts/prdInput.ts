@@ -1,4 +1,5 @@
 import inquirer from 'inquirer';
+import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import { validatePRD } from '../../utils/validator';
@@ -11,12 +12,15 @@ interface PRDResult {
 }
 
 export async function prdInput(): Promise<PRDResult> {
+  console.log(chalk.blue('\n📝 Step 3 of 7: Product Requirements'));
+  console.log(chalk.gray("Define what you're building and why.\n"));
+
   const { hasPRD } = await inquirer.prompt([
     {
       type: 'confirm',
       name: 'hasPRD',
-      message: 'Do you have a Product Requirements Document (PRD)?',
-      default: true,
+      message: 'Do you have an existing Product Requirements Document (PRD)?',
+      default: false,
     },
   ]);
 
@@ -27,9 +31,9 @@ export async function prdInput(): Promise<PRDResult> {
         name: 'inputMethod',
         message: 'How would you like to provide the PRD?',
         choices: [
-          { name: 'Type/paste it here', value: 'type' },
-          { name: 'Load from file (prd.md)', value: 'file' },
-          { name: 'Create one through guided questions', value: 'guided' },
+          { name: '✏️  Type/paste it here', value: 'type' },
+          { name: '📁 Load from file (prd.md)', value: 'file' },
+          { name: '🧞‍♂️  Create one through guided questions', value: 'guided' },
         ],
       },
     ]);
@@ -49,8 +53,8 @@ export async function prdInput(): Promise<PRDResult> {
 }
 
 async function typePRD(): Promise<PRDResult> {
-  console.log('\n📝 Please paste your PRD content below.');
-  console.log('   (Press Enter twice when done)\n');
+  console.log(chalk.yellow('\n📝 Paste your PRD content'));
+  console.log(chalk.gray('This will open your default editor. Save and close when done.\n'));
 
   const { prdContent } = await inquirer.prompt([
     {
@@ -61,12 +65,14 @@ async function typePRD(): Promise<PRDResult> {
     },
   ]);
 
+  console.log(chalk.green('✓ PRD content loaded\n'));
   return {
     content: prdContent,
   };
 }
 
 async function loadPRDFromFile(): Promise<PRDResult> {
+  console.log(chalk.yellow('\n📁 Load PRD from file'));
   const { filePath } = await inquirer.prompt([
     {
       type: 'input',
@@ -90,6 +96,7 @@ async function loadPRDFromFile(): Promise<PRDResult> {
 
   try {
     const content = await fs.readFile(path.resolve(filePath), 'utf-8');
+    console.log(chalk.green(`✓ PRD loaded from ${filePath}\n`));
     return {
       content,
     };
@@ -101,20 +108,33 @@ async function loadPRDFromFile(): Promise<PRDResult> {
 }
 
 async function guidedPRD(): Promise<PRDResult> {
-  console.log("\n🎯 Let's create a PRD through guided questions.\n");
+  console.log(chalk.yellow('\n🎯 Create PRD through guided questions'));
+  console.log(chalk.gray('Answer a few questions to generate a comprehensive PRD.\n'));
 
   const answers = await inquirer.prompt([
     {
       type: 'input',
       name: 'problemStatement',
       message: 'What problem does this solve?',
-      validate: (input) => input.length > 10 || 'Please provide a detailed problem statement',
+      validate: (input) =>
+        input.length > 10 || 'Please provide a detailed problem statement (min 10 characters)',
+      transformer: (input: string) => {
+        if (input.length > 20) return chalk.green(input);
+        if (input.length > 10) return chalk.yellow(input);
+        return input;
+      },
     },
     {
       type: 'input',
       name: 'targetUsers',
       message: 'Who are the target users?',
-      validate: (input) => input.length > 5 || 'Please describe your target users',
+      validate: (input) =>
+        input.length > 5 || 'Please describe your target users (min 5 characters)',
+      transformer: (input: string) => {
+        if (input.length > 15) return chalk.green(input);
+        if (input.length > 5) return chalk.yellow(input);
+        return input;
+      },
     },
     {
       type: 'editor',
@@ -139,9 +159,9 @@ async function guidedPRD(): Promise<PRDResult> {
       name: 'scope',
       message: 'Project scope:',
       choices: [
-        { name: 'MVP - Essential features only', value: 'mvp' },
-        { name: 'Standard - Core features + nice-to-haves', value: 'standard' },
-        { name: 'Full Product - All features', value: 'full' },
+        { name: '🎯 MVP - Essential features only', value: 'mvp' },
+        { name: '🚀 Standard - Core features + nice-to-haves', value: 'standard' },
+        { name: '🎆 Full Product - All features', value: 'full' },
       ],
     },
   ]);
@@ -189,6 +209,7 @@ ${answers.scope === 'mvp' ? 'MVP - Essential features only' : answers.scope === 
 Based on the ${answers.scope} scope, estimated timeline will be determined during implementation planning.
 `;
 
+  console.log(chalk.green('\n✓ PRD generated successfully\n'));
   return {
     content,
     problemStatement: answers.problemStatement,

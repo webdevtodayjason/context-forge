@@ -6,6 +6,9 @@ import { validateCommand } from '../commands/validate';
 import { runPrpCommand } from './commands/run-prp';
 import { copyHooksCommand } from './commands/copy-hooks';
 import { migrateCommand } from './commands/migrate';
+import { enhanceCommand } from './commands/enhance';
+import { dashboardCommand } from './commands/dashboard';
+import { orchestrateCommand } from './commands/orchestrate';
 import { version } from '../../package.json';
 
 const program = new Command();
@@ -25,6 +28,9 @@ program.addCommand(validateCommand);
 program.addCommand(runPrpCommand);
 program.addCommand(copyHooksCommand);
 program.addCommand(migrateCommand);
+program.addCommand(enhanceCommand);
+program.addCommand(dashboardCommand);
+program.addCommand(orchestrateCommand);
 
 // Error handling wrapper
 const handleError = (error: Error) => {

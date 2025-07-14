@@ -326,6 +326,84 @@ Steps to test the changes
     });
   }
 
+  // Orchestration Commands
+  commands.push({
+    name: 'orchestrate-project',
+    category: 'orchestration',
+    description: 'Deploy autonomous AI team for 24/7 development',
+    content: generateOrchestratorCommand(config),
+  });
+
+  commands.push({
+    name: 'orchestrate-feature',
+    category: 'orchestration',
+    description: 'Deploy focused team for specific feature',
+    content: generateFeatureOrchestratorCommand(config),
+  });
+
+  commands.push({
+    name: 'orchestrate-status',
+    category: 'orchestration',
+    description: 'Check orchestration team status',
+    content: generateOrchestratorStatusCommand(),
+  });
+
+  commands.push({
+    name: 'feature-status',
+    category: 'development',
+    description: 'Check feature implementation progress',
+    content: `# Check Feature Status: $ARGUMENTS
+
+View progress on a specific feature implementation.
+
+## Usage
+
+\`/feature-status "authentication"\` - Status of auth feature
+\`/feature-status all\` - Status of all features
+
+## Information Displayed
+
+### Feature Overview
+- Feature name and description
+- Assigned team members
+- Current phase
+- Overall progress percentage
+
+### Task Breakdown
+- Completed tasks ✅
+- In-progress tasks 🔄
+- Blocked tasks 🚫
+- Pending tasks ⏳
+
+### Quality Metrics
+- Test coverage
+- Code review status
+- Documentation status
+- Performance benchmarks
+
+### Timeline
+- Start date
+- Expected completion
+- Actual vs planned progress
+- Blocker impact on timeline
+
+### Recent Activity
+- Last 5 commits related to feature
+- Recent PR activity
+- Test results
+- Key decisions made
+
+## Quick Actions
+
+Based on status:
+1. Unblock team members
+2. Adjust timeline
+3. Add resources
+4. Review completed work
+
+Use this to keep features on track!`,
+  });
+
   return commands;
 }
 
@@ -460,3 +538,195 @@ Remember: The goal is to provide AI with all necessary context for one-pass impl
 // Re-export for use in adapters
 import { GeneratedFile } from '../adapters/base';
 import path from 'path';
+
+function generateOrchestratorCommand(config: ProjectConfig): string {
+  return `# Deploy Autonomous Orchestration: $ARGUMENTS
+
+Deploy a full AI orchestration team to work on your project autonomously.
+
+## What This Does
+
+1. **Creates AI Team**: Deploys orchestrator, project managers, and developers
+2. **Self-Managing**: Agents schedule their own check-ins and manage workload
+3. **Git Discipline**: Auto-commits every 30 minutes to prevent work loss
+4. **24/7 Operation**: Can run continuously without human intervention
+
+## Usage
+
+\`/orchestrate-project\` - Deploy with default team structure
+\`/orchestrate-project small\` - Small team (1 PM, 2 devs)
+\`/orchestrate-project large\` - Large team (2 PMs, 4 devs, QA, DevOps)
+
+## Team Structure
+
+### Default Team
+- 1 Orchestrator (oversees everything)
+- 1 Project Manager (coordinates work)
+- 2 Developers (implement features)
+- 1 QA Engineer (ensures quality)
+
+### Small Team
+- 1 Orchestrator
+- 1 Project Manager
+- 2 Developers
+
+### Large Team
+- 1 Orchestrator
+- 2 Project Managers
+- 4 Developers
+- 2 QA Engineers
+- 1 DevOps Engineer
+- 1 Code Reviewer
+
+## Prerequisites
+
+1. **tmux installed**: Required for agent management
+2. **Git initialized**: Project must be a git repository
+3. **Claude access**: Each agent needs Claude access
+4. **PRPs created**: Agents work best with clear PRPs
+
+## Deployment Process
+
+1. Check tmux availability
+2. Create orchestration session
+3. Deploy agents with specific roles
+4. Initialize git auto-commit
+5. Set up self-scheduling
+6. Brief each agent on their responsibilities
+
+## Monitoring
+
+Use \`/orchestrate-status\` to check on your team
+Use \`tmux attach -t cf-${config.projectName}\` to view agents
+
+## Important Notes
+
+- Agents commit automatically - review commits regularly
+- Each agent has specific responsibilities and constraints
+- Communication follows hub-and-spoke model through PM
+- Orchestrator handles high-level decisions only
+
+Ready to deploy your AI team!`;
+}
+
+function generateFeatureOrchestratorCommand(config: ProjectConfig): string {
+  return `# Deploy Feature-Focused Orchestration: $ARGUMENTS
+
+Deploy a focused AI team to implement a specific feature.
+
+## Usage
+
+\`/orchestrate-feature "user authentication"\` - Deploy team for auth feature
+\`/orchestrate-feature "payment integration" large\` - Large team for complex feature
+
+## What This Does
+
+1. **Focused Team**: Smaller team dedicated to one feature
+2. **Feature PRP**: Generates feature-specific PRP if needed
+3. **Auto PR**: Creates pull request when feature is complete
+4. **Progress Tracking**: Regular updates on feature progress
+
+## Team Composition
+
+### Default Feature Team
+- 1 Lead Developer (owns the feature)
+- 1 Supporting Developer (assists and reviews)
+- 1 QA Engineer (tests the feature)
+
+### Large Feature Team
+- 1 Feature Lead
+- 2 Developers
+- 1 QA Engineer
+- 1 Code Reviewer
+
+## Process
+
+1. Analyze feature requirements
+2. Generate or load feature PRP
+3. Deploy specialized team
+4. Implement with test-driven development
+5. Create PR when complete
+
+## Feature Workflow
+
+1. **Planning**: Team reviews requirements
+2. **Implementation**: TDD approach
+3. **Testing**: Comprehensive test coverage
+4. **Review**: Internal code review
+5. **PR Creation**: Automated PR with details
+
+## Success Criteria
+
+- All acceptance criteria met
+- Tests passing with >80% coverage
+- Code review approved
+- No regressions in existing features
+- Documentation updated
+
+## Monitoring
+
+Check progress with:
+- \`/feature-status [feature-name]\`
+- \`/orchestrate-status\`
+
+Feature-focused orchestration ensures dedicated attention to critical features!`;
+}
+
+function generateOrchestratorStatusCommand(): string {
+  return `# Check Orchestration Status
+
+View the current status of your AI orchestration team.
+
+## Usage
+
+\`/orchestrate-status\` - Show current team status
+\`/orchestrate-status detailed\` - Include agent performance metrics
+\`/orchestrate-status logs\` - Show recent agent activity
+
+## Status Information
+
+### Team Overview
+- Active agents and their roles
+- Current tasks being worked on
+- Blocked agents needing attention
+- Overall progress metrics
+
+### Git Activity
+- Recent commits by agents
+- Current branch structure
+- Pending changes
+
+### Performance Metrics
+- Tasks completed per agent
+- Average task completion time
+- Code quality scores
+- Communication efficiency
+
+### Health Indicators
+- Agent uptime
+- Error rates
+- Blocker frequency
+- Recovery success rate
+
+## Status Codes
+
+- 🟢 **Active**: Agent working normally
+- 🟡 **Idle**: No activity for 30+ minutes
+- 🔴 **Blocked**: Agent needs help
+- ⚫ **Offline**: Agent not responding
+
+## Quick Actions
+
+Based on status, you might:
+1. Unblock agents with additional context
+2. Adjust team size for workload
+3. Review and merge completed work
+4. Address quality issues
+
+## Dashboard View
+
+For real-time monitoring:
+\`tmux attach -t cf-[project-name]\`
+
+This lets you watch agents work in real-time!`;
+}

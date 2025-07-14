@@ -12,6 +12,7 @@ import { generateDocumentation } from '../../generators';
 import { generateMigrationPRPs } from '../../generators/migrationPrp';
 import { generateMigrationCheckpoints } from '../../generators/migrationCheckpoints';
 import { generateMigrationHooks } from '../../generators/migrationHooks';
+import { ErrorRecoveryService } from '../../services/errorRecoveryService';
 
 export const migrateCommand = new Command('migrate')
   .description('Create a comprehensive migration plan for technology stack transitions')
@@ -41,6 +42,8 @@ export const migrateCommand = new Command('migrate')
     const spinner = ora();
     const projectPath = process.cwd();
     const outputPath = path.resolve(options.output);
+    const errorRecovery = new ErrorRecoveryService();
+    let config: ProjectConfig | undefined;
 
     try {
       // Initialize services
@@ -204,12 +207,7 @@ export const migrateCommand = new Command('migrate')
 
       // Step 3: Run migration prompts
       spinner.stop(); // Stop spinner before interactive prompts
-      const config: ProjectConfig = await runMigrationPrompts(
-        basicAnalysis,
-        targetStack,
-        options.ide,
-        options.quick
-      );
+      config = await runMigrationPrompts(basicAnalysis, targetStack, options.ide, options.quick);
 
       // Step 4: Generate migration artifacts
       console.log(chalk.blue.bold('\n📝 Generating migration artifacts...\n'));
@@ -268,11 +266,11 @@ export const migrateCommand = new Command('migrate')
       console.log('   ├── MIGRATION_PLAN.md');
       console.log('   ├── CLAUDE.md (updated with migration context)');
 
-      if (config.migrationConfig) {
+      if (config && config.migrationConfig) {
         console.log('   ├── PRPs/');
         console.log('   │   ├── migration-overview.md');
         config.migrationConfig.migrationPhases.forEach((phase, index) => {
-          const isLast = index === config.migrationConfig!.migrationPhases.length - 1;
+          const isLast = index === config!.migrationConfig!.migrationPhases.length - 1;
           console.log(`   │   ${isLast ? '└──' : '├──'} phase-${phase.id}.md`);
         });
 
@@ -293,7 +291,7 @@ export const migrateCommand = new Command('migrate')
       console.log(chalk.white('4. Follow checkpoints at critical milestones'));
       console.log(chalk.white('5. Test rollback procedures before production changes'));
 
-      if (config.migrationConfig && config.migrationConfig.sharedResources.length > 0) {
+      if (config && config.migrationConfig && config.migrationConfig.sharedResources.length > 0) {
         console.log(chalk.yellow('\n⚠️  Important Reminders:'));
         config.migrationConfig.sharedResources.forEach((resource) => {
           if (resource.criticalityLevel === 'critical') {
@@ -303,6 +301,15 @@ export const migrateCommand = new Command('migrate')
       }
     } catch (error) {
       spinner.fail('Migration planning failed');
+
+      // Use error recovery service to provide intelligent suggestions
+      await errorRecovery.handleError(error as Error, {
+        command: 'migrate',
+        operation: 'migration planning',
+        projectPath,
+        config,
+      });
+
       throw error;
     }
   });

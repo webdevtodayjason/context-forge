@@ -1,0 +1,36 @@
+{{commitType}}: {{taskDescription}}
+
+Agent: {{agentId}} ({{agentRole}})
+Session: {{sessionId}}
+Phase: {{#if currentPhase}}{{currentPhase}}{{else}}General Development{{/if}}
+
+Changes:
+{{#each changes}}
+- {{this}}
+{{/each}}
+
+{{#if tests}}
+Tests:
+{{#each tests}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+{{#if blockers}}
+Blockers encountered:
+{{#each blockers}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+{{#if nextSteps}}
+Next steps:
+{{#each nextSteps}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+Auto-commit by Context Forge Orchestration
+Time: {{timestamp}}
+Interval: {{commitInterval}} minutes

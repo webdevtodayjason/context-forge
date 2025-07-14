@@ -82,6 +82,9 @@ export interface ProjectConfig {
 
   // Migration configuration (for retrofit projects)
   migrationConfig?: MigrationConfig;
+
+  // Enhancement configuration (for feature additions)
+  enhancementConfig?: EnhancementConfig;
 }
 
 export interface Feature {
@@ -371,6 +374,7 @@ export interface CheckpointConfig {
   triggers: CheckpointTrigger[];
   customMilestones?: CustomMilestone[];
   notifications?: NotificationConfig;
+  customCommands?: CheckpointCommand[];
 }
 
 export interface CheckpointTrigger {
@@ -480,3 +484,109 @@ export interface MigrationCheckpoint {
   requiresApproval: boolean;
   automatedTests?: string[];
 }
+
+// Enhancement System Types
+export interface EnhancementConfig {
+  projectName: string;
+  existingStack: TechStackInfo;
+  features: FeatureRequirement[];
+  enhancementPhases: EnhancementPhase[];
+  implementationStrategy: 'sequential' | 'parallel' | 'hybrid';
+  estimatedDuration: string;
+  checkpoints?: EnhancementCheckpoint[];
+  validationStrategy: ValidationStrategy;
+}
+
+export interface FeatureRequirement {
+  id: string;
+  name: string;
+  description: string;
+  category: 'api' | 'ui' | 'database' | 'integration' | 'infrastructure' | 'analytics' | 'security';
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  complexity: 'simple' | 'medium' | 'complex' | 'very-complex';
+  dependencies: string[]; // IDs of other features
+  acceptanceCriteria: string[];
+  technicalRequirements: string[];
+  estimatedEffort: string; // e.g., "2-3 days", "1 week"
+  risks: FeatureRisk[];
+  integrationPoints: IntegrationPoint[];
+}
+
+export interface EnhancementPhase {
+  id: string;
+  name: string;
+  description: string;
+  features: string[]; // Feature IDs included in this phase
+  tasks: ImplementationTask[];
+  dependencies: string[]; // Other phase IDs
+  checkpoints: CheckpointTrigger[];
+  estimatedDuration: string;
+  validationCriteria: string[];
+  rollbackStrategy?: RollbackStrategy;
+  risks?: FeatureRisk[];
+}
+
+export interface ImplementationTask {
+  id: string;
+  name: string;
+  description: string;
+  type: 'create' | 'modify' | 'refactor' | 'test' | 'document' | 'deploy';
+  targetFiles?: string[];
+  subtasks: string[];
+  estimatedHours: number;
+  complexity: 'trivial' | 'simple' | 'medium' | 'complex' | 'very-complex';
+  dependencies: string[]; // Other task IDs
+  validationSteps: string[];
+  aiContext?: string; // Additional context for AI assistance
+}
+
+export interface FeatureRisk {
+  category: 'technical' | 'integration' | 'performance' | 'security' | 'ux';
+  description: string;
+  impact: 'low' | 'medium' | 'high' | 'critical';
+  probability: 'unlikely' | 'possible' | 'likely' | 'certain';
+  mitigation: string;
+}
+
+export interface IntegrationPoint {
+  component: string;
+  type: 'api' | 'database' | 'ui' | 'service' | 'config';
+  description: string;
+  requiredChanges: string[];
+  testingStrategy: string;
+}
+
+export interface EnhancementCheckpoint {
+  phaseId: string;
+  featureId?: string;
+  name: string;
+  description: string;
+  validationSteps: string[];
+  automatedTests?: string[];
+  requiresReview: boolean;
+  reviewers?: string[];
+  successCriteria: string[];
+}
+
+export interface ValidationStrategy {
+  unitTests: boolean;
+  integrationTests: boolean;
+  e2eTests: boolean;
+  performanceTests: boolean;
+  securityScans: boolean;
+  codeReview: boolean;
+  stagingDeployment: boolean;
+  userAcceptance: boolean;
+}
+
+// Hook System Types
+export interface HookTemplate {
+  name: string;
+  description: string;
+  script: string;
+  trigger: 'pre-commit' | 'post-commit' | 'pre-push' | 'post-push' | 'custom';
+  enabled: boolean;
+}
+
+// Export orchestration types
+export * from './orchestration';

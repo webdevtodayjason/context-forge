@@ -2,19 +2,31 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.ts', '**/*.test.ts'],
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/**/*.test.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.ts',
+    '!src/**/__tests__/**',
+    '!src/types/**',
+  ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'lcov', 'html', 'json'],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70,
+    },
+  },
   passWithNoTests: true,
+  testTimeout: 30000,
   transform: {
     '^.+\\.ts$': [
       'ts-jest',
       {
-        tsconfig: {
-          module: 'commonjs',
-          esModuleInterop: true,
-          allowSyntheticDefaultImports: true,
-        },
+        tsconfig: 'tsconfig.test.json',
       },
     ],
   },
@@ -22,9 +34,10 @@ module.exports = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: false,
-    },
-  },
+  // Test file patterns
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/coverage/'],
+  // Separate slow tests
+  runner: 'jest-runner',
+  // Enable verbose output for CI
+  verbose: process.env.CI === 'true',
 };

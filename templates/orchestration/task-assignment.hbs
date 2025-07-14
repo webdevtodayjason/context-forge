@@ -1,0 +1,89 @@
+# Task Assignment
+
+**Task ID**: {{taskId}}
+**Assigned To**: {{assignedAgent}} ({{agentRole}})
+**Priority**: {{priority}}
+**Estimated Hours**: {{estimatedHours}}
+
+## Task Details
+
+**Name**: {{taskName}}
+
+**Description**:
+{{description}}
+
+**Type**: {{taskType}}
+
+## Requirements
+
+### Acceptance Criteria
+{{#each acceptanceCriteria}}
+- [ ] {{this}}
+{{/each}}
+
+### Technical Requirements
+{{#each technicalRequirements}}
+- {{this}}
+{{/each}}
+
+{{#if dependencies}}
+### Dependencies
+This task depends on:
+{{#each dependencies}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+## Implementation Guidance
+
+{{#if prpReference}}
+**Reference PRP**: {{prpReference}}
+{{/if}}
+
+{{#if implementationHints}}
+### Implementation Hints
+{{#each implementationHints}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+{{#if relatedFiles}}
+### Related Files
+{{#each relatedFiles}}
+- `{{this}}`
+{{/each}}
+{{/if}}
+
+## Validation
+
+### How to Test
+{{#each validationSteps}}
+1. {{this}}
+{{/each}}
+
+### Expected Outcome
+{{expectedOutcome}}
+
+## Communication
+
+- **Report To**: {{reportTo}}
+- **Update Frequency**: Every {{updateFrequency}} hours
+- **Escalate If**: Blocked for more than {{escalationTime}} minutes
+
+## Git Workflow
+
+1. Create feature branch: `feature/{{taskId}}-{{branchName}}`
+2. Implement changes with regular commits
+3. Run all validation steps
+4. Create PR when complete
+5. Tag {{reportTo}} for review
+
+## Time Management
+
+- **Start By**: {{startBy}}
+- **Complete By**: {{completeBy}}
+- **Checkpoint**: {{checkpointTime}}
+
+---
+
+Please acknowledge receipt of this task and provide your implementation plan.

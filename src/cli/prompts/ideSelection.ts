@@ -4,8 +4,10 @@ import { IDE_INFO } from '../../adapters';
 import chalk from 'chalk';
 
 export async function ideSelection(): Promise<SupportedIDE[]> {
-  console.log(chalk.blue('\n📱 IDE Selection\n'));
+  console.log(chalk.blue('\n📱 Step 2 of 7: IDE Selection'));
   console.log(chalk.gray('Context Forge can generate configuration for multiple AI IDEs.\n'));
+
+  console.log(chalk.yellow('💡 Tip: Choose Claude Code for the best experience with this tool!\n'));
 
   const { ideChoice } = await inquirer.prompt([
     {
@@ -14,7 +16,7 @@ export async function ideSelection(): Promise<SupportedIDE[]> {
       message: 'Which AI IDE are you using?',
       choices: [
         {
-          name: `${chalk.green('Claude Code')} ${chalk.gray('(recommended)')} - Anthropic's official CLI`,
+          name: `${chalk.green('★ Claude Code')} ${chalk.gray('(recommended)')} - Anthropic's official CLI`,
           value: 'single:claude',
         },
         {
