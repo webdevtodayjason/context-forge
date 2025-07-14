@@ -1,4 +1,4 @@
-import { exec, spawn } from 'child_process';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 import { TmuxWindowConfig, AgentSession } from '../types/orchestration';
 

@@ -7,7 +7,6 @@ import {
   AgentRole,
   TeamStructure,
 } from '../../types/orchestration';
-import path from 'path';
 import fs from 'fs-extra';
 
 // Mock dependencies
@@ -214,7 +213,6 @@ describe('OrchestrationService', () => {
 
       await orchestrationService.monitorAgents();
 
-      const status = await orchestrationService.getStatus();
       const agents = Array.from((orchestrationService as any).agents.values());
       expect(agents.some((a) => a.status === 'error')).toBe(true);
     });
@@ -231,7 +229,7 @@ describe('OrchestrationService', () => {
 
       // Set last activity to 31 minutes ago
       const agents = (orchestrationService as any).agents;
-      for (const [id, agent] of agents) {
+      for (const [, agent] of agents) {
         agent.lastActivity = new Date(Date.now() - 31 * 60 * 1000);
       }
 

@@ -101,7 +101,7 @@ export class ErrorRecoveryService {
         JSON.stringify(context, null, 2),
         context.projectPath
       );
-    } catch (aiError) {
+    } catch {
       console.log(chalk.gray('Note: AI suggestions unavailable, using fallback analysis.'));
       return [];
     }
@@ -210,7 +210,7 @@ export class ErrorRecoveryService {
 
       await execAsync(`chmod -R 755 "${projectPath}"`);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -220,7 +220,7 @@ export class ErrorRecoveryService {
       const fs = await import('fs-extra');
       await fs.ensureDir(projectPath);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -240,7 +240,7 @@ export class ErrorRecoveryService {
         return true;
       }
       return false;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -262,7 +262,7 @@ export class ErrorRecoveryService {
         }
       }
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -282,7 +282,7 @@ export class ErrorRecoveryService {
     }
   }
 
-  private showAdditionalHelp(error: Error, context: ErrorContext): void {
+  private showAdditionalHelp(_error: Error, _context: ErrorContext): void {
     console.log(chalk.blue('💡 Additional resources:'));
     console.log(
       chalk.gray('• Documentation: https://github.com/webdevtodayjason/context-forge#readme')

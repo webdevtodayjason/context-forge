@@ -6,7 +6,7 @@ import { promisify } from 'util';
 jest.mock('child_process');
 jest.mock('util', () => ({
   ...jest.requireActual('util'),
-  promisify: jest.fn((fn) => jest.fn()),
+  promisify: jest.fn((_fn) => jest.fn()),
 }));
 
 describe('TmuxManager', () => {

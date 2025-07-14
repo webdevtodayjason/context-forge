@@ -147,7 +147,7 @@ export class HookManager extends EventEmitter {
 
     // Test if hook responds to --help (timeout quickly)
     try {
-      const result = await Promise.race([
+      await Promise.race([
         execAsync(`python3 "${config.path}" --help`),
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
       ]);
@@ -170,7 +170,10 @@ export class HookManager extends EventEmitter {
     // Try to require/import the hook
     try {
       delete require.cache[config.path]; // Clear cache
-      require(config.path);
+      const hookModule = await import(config.path);
+      if (!hookModule) {
+        throw new Error('Hook module not found');
+      }
       console.log(chalk.green(`JavaScript hook ${config.name} validated`));
     } catch (error) {
       throw new Error(`Failed to load: ${error instanceof Error ? error.message : String(error)}`);
@@ -305,7 +308,7 @@ export class HookManager extends EventEmitter {
       // Clear require cache
       delete require.cache[config.path];
 
-      const hookModule = require(config.path);
+      const hookModule = await import(config.path);
       const hookFunction = hookModule.default || hookModule;
 
       if (typeof hookFunction !== 'function') {

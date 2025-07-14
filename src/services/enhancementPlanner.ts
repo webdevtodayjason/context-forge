@@ -70,7 +70,7 @@ export class EnhancementPlanner {
 
   private async createPhases(
     sortedFeatures: FeatureRequirement[],
-    basicAnalysis: BasicAnalysis
+    _basicAnalysis: BasicAnalysis
   ): Promise<EnhancementPhase[]> {
     const phases: EnhancementPhase[] = [];
 
@@ -217,7 +217,7 @@ export class EnhancementPlanner {
     );
   }
 
-  private createSetupPhase(features: FeatureRequirement[]): EnhancementPhase {
+  private createSetupPhase(_features: FeatureRequirement[]): EnhancementPhase {
     const setupTasks: ImplementationTask[] = [
       {
         id: 'setup-1',

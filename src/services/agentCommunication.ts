@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { AgentMessage, AgentSession, CommunicationModel, AgentRole } from '../types/orchestration';
+import { AgentMessage, CommunicationModel } from '../types/orchestration';
 import { v4 as uuidv4 } from 'uuid';
 import chalk from 'chalk';
 

@@ -1,5 +1,5 @@
 import { query, type SDKMessage } from '@anthropic-ai/claude-code';
-import { ProjectConfig, TechStackInfo } from '../types';
+import { ProjectConfig } from '../types';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -136,7 +136,7 @@ export class AIIntelligenceService {
   async generateErrorRecoverySuggestions(
     error: Error,
     context: string,
-    projectPath: string
+    _projectPath: string
   ): Promise<SmartSuggestion[]> {
     if (!this.aiEnabled) {
       return this.getFallbackErrorSuggestions(error);
@@ -180,7 +180,7 @@ export class AIIntelligenceService {
       try {
         const packageJson = await fs.readJson(packageJsonPath);
         context.push(`Package.json: ${JSON.stringify(packageJson, null, 2)}`);
-      } catch (error) {
+      } catch {
         context.push('Package.json: [Unable to read]');
       }
     }
@@ -189,7 +189,7 @@ export class AIIntelligenceService {
     try {
       const files = await fs.readdir(projectPath);
       context.push(`Root files: ${files.join(', ')}`);
-    } catch (error) {
+    } catch {
       context.push('Root files: [Unable to read]');
     }
 

@@ -96,7 +96,7 @@ export class GitDisciplineService extends EventEmitter {
       await execAsync('git config user.email "orchestrator@context-forge.ai"', {
         cwd: this.projectPath,
       });
-    } catch (error) {
+    } catch {
       // Ignore if already configured
     }
   }
@@ -412,7 +412,7 @@ exit 0
           const [hash, message, author, time] = line.split('|');
           return { hash, message, author, time };
         });
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -426,7 +426,7 @@ exit 0
         cwd: this.projectPath,
       });
       return stdout.trim();
-    } catch (error) {
+    } catch {
       return 'main';
     }
   }

@@ -609,7 +609,7 @@ Use \`tmux attach -t cf-${config.projectName}\` to view agents
 Ready to deploy your AI team!`;
 }
 
-function generateFeatureOrchestratorCommand(config: ProjectConfig): string {
+function generateFeatureOrchestratorCommand(_config: ProjectConfig): string {
   return `# Deploy Feature-Focused Orchestration: $ARGUMENTS
 
 Deploy a focused AI team to implement a specific feature.

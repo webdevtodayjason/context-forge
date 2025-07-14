@@ -46,7 +46,7 @@ describe('ProgressTracker', () => {
 
     it('should include metadata when provided', async () => {
       const metadata = { aiEnabled: true, targetIDEs: ['claude'] };
-      const operationId = await tracker.startOperation('enhance', 'Feature planning', metadata);
+      await tracker.startOperation('enhance', 'Feature planning', metadata);
 
       const progressData = await fs.readJson(progressFile);
       expect(progressData.entries[0].metadata).toEqual(metadata);
@@ -55,7 +55,7 @@ describe('ProgressTracker', () => {
 
   describe('addStep', () => {
     it('should add step to current operation', async () => {
-      const operationId = await tracker.startOperation('migrate', 'Migration planning');
+      await tracker.startOperation('migrate', 'Migration planning');
       await tracker.addStep('Analyzing source framework');
 
       const progressData = await fs.readJson(progressFile);
@@ -73,7 +73,7 @@ describe('ProgressTracker', () => {
 
   describe('completeOperation', () => {
     it('should mark operation as completed with success', async () => {
-      const operationId = await tracker.startOperation('analyze', 'Project analysis');
+      await tracker.startOperation('analyze', 'Project analysis');
       await tracker.completeOperation(true, { filesGenerated: 5 });
 
       const progressData = await fs.readJson(progressFile);
@@ -86,7 +86,7 @@ describe('ProgressTracker', () => {
     });
 
     it('should mark operation as failed with error details', async () => {
-      const operationId = await tracker.startOperation('init', 'Setup');
+      await tracker.startOperation('init', 'Setup');
       await tracker.completeOperation(false, undefined, 'Permission denied');
 
       const progressData = await fs.readJson(progressFile);
@@ -157,7 +157,7 @@ describe('ProgressTracker', () => {
     });
 
     it('should preserve in-progress operations regardless of age', async () => {
-      const operationId = await tracker.startOperation('ongoing', 'Long running');
+      await tracker.startOperation('ongoing', 'Long running');
 
       // Clear operations older than 0 days (should remove everything except in-progress)
       const removedCount = await tracker.clearOldOperations(0);
