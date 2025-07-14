@@ -109,7 +109,7 @@ export const initCommand = new Command('init')
         }
 
         // Generate smart default config
-        config = await generateSmartDefaultConfig(basicAnalysis, aiSuggestions);
+        config = await generateSmartDefaultConfig(basicAnalysis, aiSuggestions || null);
         await progressTracker.completeStep(operationId, stepId);
       } else {
         // Run interactive prompts with AI enhancement
@@ -242,14 +242,14 @@ async function loadPreset(presetName: string): Promise<ProjectConfig> {
 }
 
 async function generateSmartDefaultConfig(
-  basicAnalysis: any,
-  aiSuggestions: any
+  basicAnalysis: Record<string, unknown>,
+  aiSuggestions: Record<string, unknown> | null
 ): Promise<ProjectConfig> {
   const { projectInfo } = await import('../prompts/projectInfo');
   const basicInfo = await projectInfo();
 
   // Smart defaults based on analysis
-  const detectedTechStack = basicAnalysis.techStack || [];
+  const detectedTechStack = Array.isArray(basicAnalysis.techStack) ? basicAnalysis.techStack : [];
   const smartDefaults: Partial<ProjectConfig> = {
     projectType: detectProjectType(detectedTechStack),
     techStack: {
@@ -274,12 +274,14 @@ async function generateSmartDefaultConfig(
   };
 
   // Apply AI suggestions if available
-  if (aiSuggestions?.suggestions) {
-    aiSuggestions.suggestions.forEach((suggestion: any) => {
-      if (suggestion.suggestedConfig) {
-        Object.assign(smartDefaults, suggestion.suggestedConfig);
+  if (aiSuggestions && aiSuggestions.suggestions) {
+    (aiSuggestions.suggestions as Array<Record<string, unknown>>).forEach(
+      (suggestion: Record<string, unknown>) => {
+        if (suggestion.suggestedConfig) {
+          Object.assign(smartDefaults, suggestion.suggestedConfig);
+        }
       }
-    });
+    );
   }
 
   return {

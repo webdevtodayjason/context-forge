@@ -3,7 +3,7 @@ import { ProgressTracker } from '../services/progressTracker';
 export interface CommandExecutionOptions {
   command: string;
   operation: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   onError?: (error: Error, operationId: string) => Promise<void>;
 }
 

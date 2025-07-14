@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import path from 'path';
-import chalk from 'chalk';
 
 export interface ProgressEntry {
   id: string;
@@ -30,7 +29,7 @@ export interface ProgressStep {
   startTime?: Date;
   endTime?: Date;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProgressSummary {
@@ -130,7 +129,7 @@ export class ProgressTracker {
     operationId: string,
     stepId: string,
     status: 'completed' | 'failed' = 'completed',
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     if (this.currentEntry && this.currentEntry.id === operationId) {
       const step = this.currentEntry.steps!.find((s) => s.id === stepId);
@@ -246,16 +245,26 @@ export class ProgressTracker {
     }
   }
 
-  private deserializeEntry(data: any): ProgressEntry {
+  private deserializeEntry(data: Record<string, unknown>): ProgressEntry {
     return {
-      ...data,
-      startTime: new Date(data.startTime),
-      endTime: data.endTime ? new Date(data.endTime) : undefined,
+      id: data.id as string,
+      command: data.command as string,
+      operation: data.operation as string,
+      status: data.status as ProgressEntry['status'],
+      projectPath: data.projectPath as string,
+      startTime: new Date(data.startTime as string),
+      endTime: data.endTime ? new Date(data.endTime as string) : undefined,
+      duration: data.duration as number | undefined,
+      metadata: data.metadata as ProgressEntry['metadata'],
       steps:
-        data.steps?.map((step: any) => ({
-          ...step,
-          startTime: step.startTime ? new Date(step.startTime) : undefined,
-          endTime: step.endTime ? new Date(step.endTime) : undefined,
+        (data.steps as Record<string, unknown>[])?.map((step: Record<string, unknown>) => ({
+          id: step.id as string,
+          name: step.name as string,
+          status: step.status as ProgressStep['status'],
+          startTime: step.startTime ? new Date(step.startTime as string) : undefined,
+          endTime: step.endTime ? new Date(step.endTime as string) : undefined,
+          description: step.description as string | undefined,
+          metadata: step.metadata as Record<string, unknown> | undefined,
         })) || [],
     };
   }

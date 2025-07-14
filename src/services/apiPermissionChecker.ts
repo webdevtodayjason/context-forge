@@ -120,11 +120,11 @@ export class APIPermissionChecker extends EventEmitter {
    * Create permission middleware for express-like APIs
    */
   createMiddleware() {
-    return (req: any, res: any, next: any) => {
-      const result = this.checkPermission(req.method, req.path);
+    return (req: Record<string, unknown>, res: Record<string, unknown>, next: () => void) => {
+      const result = this.checkPermission(req.method as string, req.path as string);
 
       if (!result.hasPermission) {
-        return res.status(403).json({
+        return (res as any).status(403).json({
           error: 'Insufficient permissions',
           required: result.missingPermissions,
           endpoint: result.endpoint,

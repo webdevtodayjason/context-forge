@@ -101,22 +101,26 @@ export class ValidationExecutor {
       if (stdout && process.env.VERBOSE) {
         console.log(chalk.gray(stdout));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorOutput = error instanceof Error && 'stdout' in error ? (error as any).stdout : '';
 
       this.results.push({
         level,
         command,
         success: false,
-        error: error.message,
-        output: error.stdout,
+        error: errorMessage,
+        output: errorOutput,
         duration,
       });
 
       spinner.fail(chalk.red(`✗ ${level} failed (${duration}ms)`));
 
-      if (error.stdout || error.stderr) {
-        console.log(chalk.red(error.stdout || error.stderr));
+      if (errorOutput || (error instanceof Error && 'stderr' in error)) {
+        const errorOutput2 =
+          error instanceof Error && 'stderr' in error ? (error as any).stderr : '';
+        console.log(chalk.red(errorOutput || errorOutput2));
       }
 
       // Only throw for critical errors

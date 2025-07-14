@@ -5,6 +5,7 @@ import {
   FeatureRequirement,
   CheckpointTrigger,
   RollbackStrategy,
+  CheckpointItem,
 } from '../types';
 import { BasicAnalysis } from './projectAnalyzer';
 
@@ -31,7 +32,7 @@ export class EnhancementPlanner {
     return {
       ...this.config,
       enhancementPhases: phases,
-      checkpoints,
+      checkpoints: checkpoints as EnhancementConfig['checkpoints'], // Type conversion needed due to interface mismatch
       estimatedDuration: this.calculateTotalDuration(phases),
     };
   }
@@ -670,15 +671,13 @@ export class EnhancementPlanner {
     };
   }
 
-  private generateCheckpoints(phases: EnhancementPhase[]): any[] {
+  private generateCheckpoints(phases: EnhancementPhase[]): CheckpointItem[] {
     return phases.flatMap((phase) =>
       phase.checkpoints.map((checkpoint) => ({
         phaseId: phase.id,
         name: checkpoint.name,
         description: checkpoint.description,
         validationSteps: phase.validationCriteria,
-        requiresReview: checkpoint.category === 'critical',
-        successCriteria: phase.validationCriteria,
       }))
     );
   }

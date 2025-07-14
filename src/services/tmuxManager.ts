@@ -63,9 +63,14 @@ export class TmuxManager {
       }
 
       return sessions;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // No sessions exist
-      if (error.code === 1 && error.message.includes('no server running')) {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        (error as any).code === 1 &&
+        error.message.includes('no server running')
+      ) {
         return [];
       }
       throw error;

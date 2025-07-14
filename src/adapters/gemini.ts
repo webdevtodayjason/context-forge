@@ -1,4 +1,5 @@
 import { IDEAdapter, GeneratedFile } from './base';
+import { Feature } from '../types';
 import path from 'path';
 
 export class GeminiAdapter extends IDEAdapter {
@@ -1274,7 +1275,7 @@ telemetry: false
 `;
   }
 
-  private generateAcceptanceCriteria(feature: any): string {
+  private generateAcceptanceCriteria(feature: Feature): string {
     // Generate specific acceptance criteria based on feature type
     const criteria = [
       '- [ ] Feature is fully functional',

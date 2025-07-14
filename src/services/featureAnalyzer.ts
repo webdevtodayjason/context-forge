@@ -1,5 +1,3 @@
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import { glob } from 'glob';
 import { FeatureRequirement, IntegrationPoint } from '../types';
 import { BasicAnalysis } from './projectAnalyzer';
@@ -272,7 +270,7 @@ export class FeatureAnalyzer {
 
   private async estimateImpact(
     feature: FeatureRequirement,
-    basicAnalysis: BasicAnalysis
+    _basicAnalysis: BasicAnalysis
   ): Promise<{ files: number; components: number; tests: number }> {
     // Base estimates
     let files = 0;

@@ -257,7 +257,7 @@ export const enhanceCommand = new Command('enhance')
 
 async function generateEnhancementSummary(
   config: ProjectConfig,
-  basicAnalysis: any
+  basicAnalysis: Record<string, unknown>
 ): Promise<string> {
   const enhancement = config.enhancementConfig;
   if (!enhancement) {
@@ -278,7 +278,7 @@ Generated on: ${new Date().toLocaleString()}
 ## Executive Summary
 
 **Project**: ${enhancement.projectName}  
-**Current Stack**: ${enhancement.existingStack.name} (${basicAnalysis.techStack.join(', ')})  
+**Current Stack**: ${enhancement.existingStack.name} (${Array.isArray(basicAnalysis.techStack) ? basicAnalysis.techStack.join(', ') : 'Unknown'})  
 **Features Planned**: ${enhancement.features.length}  
 **Implementation Strategy**: ${enhancement.implementationStrategy}  
 **Estimated Duration**: ${enhancement.estimatedDuration}

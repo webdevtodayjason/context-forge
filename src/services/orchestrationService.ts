@@ -8,10 +8,7 @@ import {
   AgentSession,
   AgentConfig,
   AgentBriefing,
-  OrchestrationPhase,
-  OrchestrationTask,
   OrchestrationError,
-  TeamStructure,
   TmuxWindowConfig,
   AgentRole,
   AgentMessage,
@@ -1100,7 +1097,7 @@ echo "Scheduled check in \$MINUTES minutes"
   private calculateTeamComposition(): Array<{ role: string; count: number }> {
     const composition: Record<string, number> = {};
 
-    for (const [_, session] of this.agents) {
+    for (const [, session] of this.agents) {
       const config = this.getAgentConfig(session.agentId);
       if (config) {
         composition[config.role] = (composition[config.role] || 0) + 1;
@@ -1211,7 +1208,7 @@ echo "Scheduled check in \$MINUTES minutes"
   /**
    * Format current phase info
    */
-  private formatCurrentPhase(): any | null {
+  private formatCurrentPhase(): Record<string, unknown> | null {
     // This would track actual phase progress
     // For now, return placeholder
     if (this.status.completedPhases.length === 0) {

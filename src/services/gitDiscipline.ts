@@ -223,10 +223,11 @@ exit 0
         timestamp: new Date(),
         changes: changes.length,
       });
-    } catch (error: any) {
-      if (!error.message.includes('nothing to commit')) {
-        console.error(chalk.red(`Auto-commit failed for ${agentId}: ${error.message}`));
-        this.emit('commit-failed', { agentId, error });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('nothing to commit')) {
+        console.error(chalk.red(`Auto-commit failed for ${agentId}: ${errorMessage}`));
+        this.emit('commit-failed', { agentId, error: errorMessage });
       }
     }
   }
@@ -288,8 +289,9 @@ exit 0
       });
 
       return fullBranchName;
-    } catch (error: any) {
-      if (error.message.includes('already exists')) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('already exists')) {
         // Switch to existing branch
         await execAsync(`git checkout ${fullBranchName}`, {
           cwd: this.projectPath,

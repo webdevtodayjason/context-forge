@@ -10,6 +10,7 @@ import {
   AgentConfig,
   OrchestrationStrategy,
   CommunicationModel,
+  TeamStructure,
 } from '../../types/orchestration';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -192,7 +193,7 @@ function createOrchestrationConfig(
 /**
  * Create team structure based on size
  */
-function createTeamStructure(size: string, projectName: string): any {
+function createTeamStructure(size: string, projectName: string): TeamStructure {
   const orchestratorId = uuidv4();
 
   const orchestrator: AgentConfig = {
@@ -214,7 +215,7 @@ function createTeamStructure(size: string, projectName: string): any {
     ],
   };
 
-  let team: any = {
+  const team: TeamStructure = {
     orchestrator,
     projectManagers: [],
     developers: [],

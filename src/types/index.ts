@@ -16,7 +16,7 @@ export interface IDEInfo {
   supportsPRP: boolean;
 }
 
-export interface ProjectConfig {
+export interface ProjectConfig extends Record<string, unknown> {
   // Basic project info
   projectName: string;
   projectType: 'web' | 'mobile' | 'desktop' | 'api' | 'fullstack';
@@ -96,6 +96,256 @@ export interface Feature {
   category: 'auth' | 'ui' | 'data' | 'integration' | 'infrastructure';
   subtasks?: string[];
   dependencies?: string[];
+}
+
+// Define specific types for PRPContext array fields
+export interface AIDocItem {
+  type: 'url' | 'file' | 'doc' | 'docfile';
+  url?: string;
+  filename?: string;
+  reason: string;
+  content?: string;
+}
+
+export interface DatabaseItem {
+  type: 'table' | 'model' | 'migration' | 'seed' | 'index';
+  name: string;
+  description: string;
+  schema?: string;
+  relationships?: string[];
+}
+
+export interface ConfigItem {
+  key: string;
+  value: string | number | boolean;
+  environment?: string;
+  description?: string;
+  required?: boolean;
+}
+
+export interface RouteItem {
+  path: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  description: string;
+  parameters?: string[];
+  authentication?: boolean;
+  responses?: ResponseItem[];
+}
+
+export interface ResponseItem {
+  status: number;
+  description: string;
+  schema?: string;
+}
+
+export interface EnvironmentItem {
+  name: string;
+  value: string;
+  description?: string;
+  required?: boolean;
+}
+
+export interface TestCaseItem {
+  name: string;
+  description: string;
+  type: 'unit' | 'integration' | 'e2e';
+  file?: string;
+  assertions?: string[];
+}
+
+export interface ValidationItem {
+  type: 'syntax' | 'test' | 'integration' | 'deployment';
+  command: string;
+  description: string;
+  expected?: string;
+}
+
+export interface ComponentItem {
+  name: string;
+  type: 'component' | 'service' | 'utility' | 'hook' | 'store';
+  description: string;
+  dependencies?: string[];
+  props?: string[];
+  methods?: string[];
+}
+
+export interface DecisionItem {
+  title: string;
+  description: string;
+  options: string[];
+  chosen: string;
+  rationale: string;
+  impact: 'low' | 'medium' | 'high';
+}
+
+export interface PhaseItem {
+  name: string;
+  description: string;
+  duration: string;
+  tasks: string[];
+  dependencies?: string[];
+  deliverables?: string[];
+}
+
+export interface RiskItem {
+  title: string;
+  description: string;
+  probability: 'low' | 'medium' | 'high';
+  impact: 'low' | 'medium' | 'high';
+  mitigation: string;
+  owner?: string;
+}
+
+export interface OptimizationItem {
+  area: string;
+  description: string;
+  technique: string;
+  impact: string;
+  effort: 'low' | 'medium' | 'high';
+}
+
+export interface BenchmarkItem {
+  name: string;
+  metric: string;
+  target: string;
+  current?: string;
+  tool?: string;
+}
+
+export interface AttackVectorItem {
+  name: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  mitigation: string;
+  status: 'open' | 'mitigated' | 'accepted';
+}
+
+export interface MetricItem {
+  name: string;
+  type: 'counter' | 'gauge' | 'histogram' | 'summary';
+  description: string;
+  unit?: string;
+  tags?: string[];
+}
+
+export interface LoggingItem {
+  level: 'debug' | 'info' | 'warn' | 'error';
+  location: string;
+  message: string;
+  context?: string[];
+}
+
+export interface DocumentationItem {
+  title: string;
+  type: 'readme' | 'api' | 'guide' | 'reference' | 'tutorial';
+  description: string;
+  audience: 'user' | 'developer' | 'admin';
+  format: 'markdown' | 'html' | 'pdf';
+}
+
+export interface CodeExampleItem {
+  title: string;
+  description: string;
+  language: string;
+  code: string;
+  explanation?: string;
+}
+
+export interface MilestoneItem {
+  name: string;
+  description: string;
+  dueDate?: string;
+  deliverables: string[];
+  criteria: string[];
+  dependencies?: string[];
+}
+
+export interface TechStackItem {
+  name: string;
+  category: 'frontend' | 'backend' | 'database' | 'devops' | 'testing' | 'monitoring';
+  version?: string;
+  description: string;
+  rationale: string;
+  alternatives?: string[];
+}
+
+export interface RequirementItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'must-have' | 'should-have' | 'nice-to-have';
+  acceptance: string[];
+  dependencies?: string[];
+}
+
+export interface EndpointItem {
+  path: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  description: string;
+  parameters?: ParameterItem[];
+  requestBody?: SchemaItem;
+  responses: ResponseItem[];
+  authentication?: boolean;
+  rateLimit?: number;
+  requestExample?: string;
+  responseExample?: string;
+  statusCodes?: { code: number; description: string }[];
+}
+
+export interface ParameterItem {
+  name: string;
+  type: 'query' | 'path' | 'header' | 'cookie';
+  dataType: string;
+  required: boolean;
+  description: string;
+  example?: string;
+}
+
+export interface SchemaItem {
+  type: string;
+  properties?: Record<string, PropertyItem>;
+  required?: string[];
+  example?: unknown;
+}
+
+export interface PropertyItem {
+  type: string;
+  description?: string;
+  format?: string;
+  enum?: string[];
+  example?: unknown;
+}
+
+export interface EntityItem {
+  name: string;
+  description: string;
+  attributes: AttributeItem[];
+  relationships?: RelationshipItem[];
+  constraints?: string[];
+}
+
+export interface AttributeItem {
+  name: string;
+  type: string;
+  required: boolean;
+  description?: string;
+  constraints?: string[];
+}
+
+export interface RelationshipItem {
+  type: 'one-to-one' | 'one-to-many' | 'many-to-many';
+  entity: string;
+  description: string;
+  foreignKey?: string;
+}
+
+export interface CheckpointItem {
+  phaseId: string;
+  name: string;
+  description: string;
+  validationSteps: string[];
+  dependencies?: string[];
+  estimatedTime?: string;
 }
 
 export interface TechStackInfo {
@@ -181,7 +431,7 @@ export interface PRPContext {
     deployment: string[];
     logs?: string;
   };
-  integrationTests: string[] | any[];
+  integrationTests: TestCaseItem[];
   expectedResult: string;
   customValidation: string[];
   checklist: string[];
@@ -189,17 +439,17 @@ export interface PRPContext {
 
   // Enhanced base template fields
   hasAiDocs?: boolean;
-  aiDocs?: any[];
+  aiDocs?: AIDocItem[];
   versionNotes?: string[];
   modelPath?: string;
-  database?: any[];
-  config?: any[];
-  routes?: any[];
-  environment?: any[];
-  testCases?: any[];
+  database?: DatabaseItem[];
+  config?: ConfigItem[];
+  routes?: RouteItem[];
+  environment?: EnvironmentItem[];
+  testCases?: TestCaseItem[];
   edgeCases?: string[];
   logPath?: string;
-  creativeValidation?: any[];
+  creativeValidation?: ValidationItem[];
   commonFixes?: {
     syntax: string[];
     tests: string[];
@@ -209,56 +459,56 @@ export interface PRPContext {
   summary?: string;
   executiveSummary?: string;
   problemStatement?: string;
-  subProblems?: any[];
-  constraints?: any[];
+  subProblems?: string[];
+  constraints?: string[];
   architectureDiagram?: string;
-  components?: any[];
+  components?: ComponentItem[];
   dataFlowDiagram?: string;
-  decisions?: any[];
-  phases?: any[];
+  decisions?: DecisionItem[];
+  phases?: PhaseItem[];
   phase1Duration?: string;
   phase1Tasks?: string[];
   phase2Duration?: string;
   phase2Tasks?: string[];
   phase3Duration?: string;
   phase3Tasks?: string[];
-  risks?: any[];
+  risks?: RiskItem[];
   expectedUsers?: string;
   expectedRPS?: string;
   dataVolume?: string;
-  optimizations?: any[];
-  benchmarks?: any[];
-  attackVectors?: any[];
+  optimizations?: OptimizationItem[];
+  benchmarks?: BenchmarkItem[];
+  attackVectors?: AttackVectorItem[];
   securityMeasures?: string[];
   coverageTarget?: number;
   unitTestAreas?: string[];
-  performanceTests?: any[];
-  securityTests?: any[];
-  metrics?: any[];
-  loggingPoints?: any[];
+  performanceTests?: TestCaseItem[];
+  securityTests?: TestCaseItem[];
+  metrics?: MetricItem[];
+  loggingPoints?: LoggingItem[];
   traces?: string[];
   apiDocFormat?: string;
   apiDocLocation?: string;
-  userDocs?: any[];
-  devDocs?: any[];
-  externalResources?: any[];
-  codeExamples?: any[];
-  proofOfConcepts?: any[];
-  successMetrics?: any[];
-  milestones?: any[];
-  openQuestions?: any[];
+  userDocs?: DocumentationItem[];
+  devDocs?: DocumentationItem[];
+  externalResources?: DocumentationItem[];
+  codeExamples?: CodeExampleItem[];
+  proofOfConcepts?: CodeExampleItem[];
+  successMetrics?: MetricItem[];
+  milestones?: MilestoneItem[];
+  openQuestions?: string[];
   researchNotes?: string;
   security?: string[];
-  performance?: any[];
-  monitoring?: any[];
+  performance?: MetricItem[];
+  monitoring?: MetricItem[];
   future?: string[];
 
   // Additional planning fields used in prp.ts
-  technicalDecisions?: any[];
-  implementationPhases?: any[];
-  securityConsiderations?: any[];
-  performanceRequirements?: any[];
-  monitoringStrategy?: any[];
+  technicalDecisions?: DecisionItem[];
+  implementationPhases?: PhaseItem[];
+  securityConsiderations?: string[];
+  performanceRequirements?: RequirementItem[];
+  monitoringStrategy?: MetricItem[];
 
   // Spec-specific fields
   version?: string;
@@ -269,72 +519,72 @@ export interface PRPContext {
   lastUpdated?: string;
   reviewers?: string;
   objective?: string;
-  primaryObjectives?: any[];
+  primaryObjectives?: string[];
   secondaryObjectives?: string[];
   inScope?: string[];
   outOfScope?: string[];
   futureConsiderations?: string[];
   systemContextDiagram?: string;
   componentDiagram?: string;
-  techStack?: any[];
-  functionalRequirements?: any[];
-  nonFunctionalRequirements?: any[];
-  nfrs?: any[];
-  endpoints?: any[];
+  techStack?: TechStackItem[];
+  functionalRequirements?: RequirementItem[];
+  nonFunctionalRequirements?: RequirementItem[];
+  nfrs?: RequirementItem[];
+  endpoints?: EndpointItem[];
   hasGraphQL?: boolean;
   hasWebSocket?: boolean;
-  websocketEvents?: any[];
-  domainModels?: any[];
+  websocketEvents?: RouteItem[];
+  domainModels?: EntityItem[];
   databaseSchema?: string;
-  indexes?: any[];
+  indexes?: string[];
   hasMigration?: boolean;
   migrationScript?: string;
   rollbackScript?: string;
-  algorithms?: any[];
+  algorithms?: string[];
   stateDiagram?: string;
-  businessRules?: any[];
-  integrations?: any[];
+  businessRules?: string[];
+  integrations?: string[];
   hasMessageQueue?: boolean;
   authMethod?: string;
-  roles?: any[];
-  resources?: any[];
-  securityControls?: any[];
-  dataProtection?: any[];
-  performanceTargets?: any[];
-  cachingLayers?: any[];
+  roles?: string[];
+  resources?: string[];
+  securityControls?: string[];
+  dataProtection?: string[];
+  performanceTargets?: string[];
+  cachingLayers?: string[];
   testPyramid?: string;
-  unitTestSuites?: any[];
+  unitTestSuites?: TestCaseItem[];
   deploymentDiagram?: string;
-  environments?: any[];
+  environments?: EnvironmentItem[];
   pipelineDiagram?: string;
-  pipelineStages?: any[];
-  logLevels?: any[];
-  healthChecks?: any[];
-  dependencies?: any[];
-  documentationDeliverables?: any[];
-  training?: any[];
+  pipelineStages?: string[];
+  logLevels?: string[];
+  healthChecks?: string[];
+  dependencies?: string[];
+  documentationDeliverables?: DocumentationItem[];
+  training?: DocumentationItem[];
   techLead?: string;
   productOwner?: string;
   securityLead?: string;
   architect?: string;
-  glossary?: any[];
-  references?: any[];
-  changelog?: any[];
-  entities?: any[];
-  errorScenarios?: any[];
-  unitTests?: any[];
-  securityRequirements?: any[];
-  externalDependencies?: any[];
-  libraries?: any[];
+  glossary?: string[];
+  references?: string[];
+  changelog?: string[];
+  entities?: EntityItem[];
+  errorScenarios?: TestCaseItem[];
+  unitTests?: TestCaseItem[];
+  securityRequirements?: RequirementItem[];
+  externalDependencies?: string[];
+  libraries?: string[];
   migrationRequired?: boolean;
   migrationSteps?: string[];
   rollbackStrategy?: string;
 
   // Additional spec fields used in prp.ts
-  apiEndpoints?: any[];
-  dataEntities?: any[];
-  unitTestStrategy?: any[];
-  integrationTestScenarios?: any[];
+  apiEndpoints?: EndpointItem[];
+  dataEntities?: EntityItem[];
+  unitTestStrategy?: string[];
+  integrationTestScenarios?: TestCaseItem[];
 
   // Task template fields
   taskName?: string;
@@ -349,9 +599,9 @@ export interface PRPContext {
   severity?: string;
   businessImpact?: string;
   solutionSummary?: string;
-  implementationSteps?: any[];
-  keyFiles?: any[];
-  patterns?: any[];
+  implementationSteps?: string[];
+  keyFiles?: string[];
+  patterns?: string[];
   manualTests?: string[];
   syntaxCommand?: string;
   testCommand?: string;
@@ -359,9 +609,9 @@ export interface PRPContext {
   verificationSteps?: string[];
   rollbackSteps?: string[];
   documentationNeeded?: boolean;
-  documentationFiles?: any[];
+  documentationFiles?: DocumentationItem[];
   changelogEntry?: string;
-  relatedItems?: any[];
+  relatedItems?: string[];
   notes?: string;
   lintCommand?: string;
   devCommand?: string;

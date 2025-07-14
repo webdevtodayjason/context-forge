@@ -1,5 +1,5 @@
 import { IDEAdapter, GeneratedFile } from './base';
-import { Feature } from '../types';
+import { Feature, ProjectConfig } from '../types';
 import path from 'path';
 
 export class CopilotAdapter extends IDEAdapter {
@@ -1236,7 +1236,7 @@ Use Copilot to:
     return gotchas.join('\n');
   }
 
-  private generateFeatureTasks(feature: Feature, techStack: any): string {
+  private generateFeatureTasks(feature: Feature, techStack: ProjectConfig['techStack']): string {
     const tasks = [];
 
     // Backend tasks
@@ -1290,7 +1290,7 @@ Use Copilot to:
     return criteria.join('\n');
   }
 
-  private generateValidationCommands(techStack: any, stage: number): string {
+  private generateValidationCommands(techStack: ProjectConfig['techStack'], stage: number): string {
     const commands = [];
 
     commands.push('```bash');

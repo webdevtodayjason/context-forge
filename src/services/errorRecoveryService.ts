@@ -1,11 +1,12 @@
 import chalk from 'chalk';
 import { AIIntelligenceService, SmartSuggestion } from './aiIntelligenceService';
+import { ProjectConfig } from '../types';
 
 export interface ErrorContext {
   command: string;
   operation: string;
   projectPath: string;
-  config?: any;
+  config?: ProjectConfig | Record<string, unknown>;
   stackTrace?: string;
 }
 

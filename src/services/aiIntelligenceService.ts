@@ -3,7 +3,7 @@ import { ProjectConfig, TechStackInfo } from '../types';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-export interface AIAnalysisResult {
+export interface AIAnalysisResult extends Record<string, unknown> {
   suggestions: SmartSuggestion[];
   confidence: number;
   reasoning: string;
@@ -64,7 +64,7 @@ export class AIIntelligenceService {
 
   async generateSmartDefaults(
     projectPath: string,
-    basicAnalysis: any,
+    basicAnalysis: Record<string, unknown>,
     options: AIGenerationOptions = { projectPath }
   ): Promise<AIAnalysisResult> {
     if (!this.aiEnabled) {
@@ -201,7 +201,10 @@ export class AIIntelligenceService {
     return context.join('\n\n');
   }
 
-  private buildSmartDefaultsPrompt(projectContext: string, basicAnalysis: any): string {
+  private buildSmartDefaultsPrompt(
+    projectContext: string,
+    basicAnalysis: Record<string, unknown>
+  ): string {
     return `
 You are an expert software development consultant analyzing a project to provide intelligent configuration suggestions.
 
@@ -334,11 +337,11 @@ Provide actionable, specific solutions.`;
     }
   }
 
-  private getFallbackSuggestions(basicAnalysis: any): AIAnalysisResult {
+  private getFallbackSuggestions(basicAnalysis: Record<string, unknown>): AIAnalysisResult {
     const suggestions: SmartSuggestion[] = [];
 
     // Analyze tech stack for basic suggestions
-    if (basicAnalysis.techStack?.includes('React')) {
+    if (Array.isArray(basicAnalysis.techStack) && basicAnalysis.techStack.includes('React')) {
       suggestions.push({
         type: 'config',
         title: 'React Development Setup',
@@ -356,7 +359,7 @@ Provide actionable, specific solutions.`;
       });
     }
 
-    if (basicAnalysis.techStack?.includes('TypeScript')) {
+    if (Array.isArray(basicAnalysis.techStack) && basicAnalysis.techStack.includes('TypeScript')) {
       suggestions.push({
         type: 'optimization',
         title: 'TypeScript Optimization',

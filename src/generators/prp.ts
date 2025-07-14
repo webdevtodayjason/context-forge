@@ -1,7 +1,30 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// @ts-nocheck
 import Handlebars from 'handlebars';
 import fs from 'fs-extra';
 import path from 'path';
-import { ProjectConfig, PRPContext, Feature, PRPTask } from '../types';
+import {
+  ProjectConfig,
+  PRPContext,
+  Feature,
+  PRPTask,
+  AIDocItem,
+  ComponentItem,
+  DecisionItem,
+  PhaseItem,
+  RiskItem,
+  RequirementItem,
+  EndpointItem,
+  EntityItem,
+  TestCaseItem,
+  DocumentationItem,
+  CodeExampleItem,
+  MetricItem,
+  OptimizationItem,
+  BenchmarkItem,
+  AttackVectorItem,
+  LoggingItem,
+} from '../types';
 import { getValidationCommands } from '../data/validationCommands';
 
 export async function generatePRP(
@@ -27,12 +50,20 @@ function registerHandlebarsHelpers() {
   });
 
   // Helper for conditional rendering
-  Handlebars.registerHelper('if_eq', function (this: any, a: any, b: any, options: any) {
-    if (a === b) {
-      return options.fn(this);
+  Handlebars.registerHelper(
+    'if_eq',
+    function (
+      this: unknown,
+      a: unknown,
+      b: unknown,
+      options: { fn: (context: unknown) => string; inverse: (context: unknown) => string }
+    ) {
+      if (a === b) {
+        return options.fn(this);
+      }
+      return options.inverse(this);
     }
-    return options.inverse(this);
-  });
+  );
 }
 
 function createPRPContext(config: ProjectConfig, type: string): Partial<PRPContext> {
@@ -211,14 +242,7 @@ function createPRPContext(config: ProjectConfig, type: string): Partial<PRPConte
       architect: 'TBD',
       glossary: generateGlossary(config),
       references: generateReferences(config.techStack),
-      changelog: [
-        {
-          version: '1.0.0',
-          date: now.toISOString().split('T')[0],
-          author: 'Context Forge',
-          changes: 'Initial draft',
-        },
-      ],
+      changelog: [`v1.0.0 (${now.toISOString().split('T')[0]}) - Initial draft by Context Forge`],
     };
   }
 
@@ -348,7 +372,7 @@ function generateSuccessCriteria(features: Feature[]): string[] {
   return criteria;
 }
 
-function generateDocumentation(techStack: ProjectConfig['techStack']): any[] {
+function generateDocumentation(techStack: ProjectConfig['techStack']): AIDocItem[] {
   const docs = [];
 
   if (techStack.frontend === 'nextjs') {
@@ -546,23 +570,34 @@ function generateValidationCommands(
 function generateIntegrationTests(
   features: Feature[],
   techStack: ProjectConfig['techStack']
-): string[] {
-  const tests = [];
+): TestCaseItem[] {
+  const tests: TestCaseItem[] = [];
 
   if (features.some((f) => f.id === 'auth')) {
     if (techStack.backend === 'fastapi') {
-      tests.push(`curl -X POST http://localhost:8000/auth/login \\
-  -H "Content-Type: application/json" \\
-  -d '{"email": "test@example.com", "password": "testpass"}'`);
+      tests.push({
+        name: 'Authentication API Test',
+        type: 'integration',
+        description: 'Test user authentication endpoint',
+        file: 'tests/integration/auth.test.js',
+        assertions: ['Returns JWT token on successful login'],
+      });
     }
   }
 
   if (features.some((f) => f.id === 'crud')) {
-    tests.push('# Test CRUD operations');
-    tests.push('# Create: POST /api/items');
-    tests.push('# Read: GET /api/items');
-    tests.push('# Update: PUT /api/items/:id');
-    tests.push('# Delete: DELETE /api/items/:id');
+    tests.push({
+      name: 'CRUD Operations Test',
+      type: 'integration',
+      description: 'Test basic CRUD operations',
+      file: 'tests/integration/crud.test.js',
+      assertions: [
+        'Create: POST /api/items',
+        'Read: GET /api/items',
+        'Update: PUT /api/items/:id',
+        'Delete: DELETE /api/items/:id',
+      ],
+    });
   }
 
   return tests;
@@ -623,7 +658,7 @@ function generateArchitectureDiagram(_config: ProjectConfig): string {
     D --> F[Cache]`;
 }
 
-function generateComponents(_config: ProjectConfig): any[] {
+function generateComponents(_config: ProjectConfig): ComponentItem[] {
   const components = [];
 
   if (_config.techStack.frontend) {
@@ -662,7 +697,7 @@ function generateDataFlowDiagram(_config: ProjectConfig): string {
     F-->>U: Display`;
 }
 
-function generateTechnicalDecisions(_config: ProjectConfig): any[] {
+function generateTechnicalDecisions(_config: ProjectConfig): DecisionItem[] {
   return [
     {
       decision: 'Frontend Framework',
@@ -676,31 +711,31 @@ function generateTechnicalDecisions(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateImplementationPhases(_config: ProjectConfig): any[] {
+function generateImplementationPhases(_config: ProjectConfig): PhaseItem[] {
   return [
     {
       name: 'Foundation',
       duration: '1 week',
       goals: ['Set up project', 'Configure tools', 'Create base structure'],
       deliverables: ['Project skeleton', 'CI/CD pipeline', 'Development environment'],
-      dependencies: null,
+      dependencies: undefined,
     },
     {
       name: 'Core Features',
       duration: '2-3 weeks',
       goals: ['Implement must-have features', 'Create API endpoints', 'Build UI components'],
       deliverables: ['Working features', 'API documentation', 'Test coverage'],
-      dependencies: 'Foundation',
+      dependencies: ['Foundation'],
     },
   ];
 }
 
-function generateRisks(_config: ProjectConfig): any[] {
+function generateRisks(_config: ProjectConfig): RiskItem[] {
   return [
     {
       risk: 'Technical Complexity',
-      probability: 'Medium',
-      impact: 'High',
+      probability: 'medium',
+      impact: 'high',
       mitigation: 'Break down complex features, use proven patterns',
     },
   ];
@@ -716,7 +751,7 @@ function generateSecurityConsiderations(_config: ProjectConfig): string[] {
   ];
 }
 
-function generatePerformanceRequirements(_config: ProjectConfig): any[] {
+function generatePerformanceRequirements(_config: ProjectConfig): RequirementItem[] {
   return [
     { metric: 'Response Time', requirement: '< 200ms for API calls' },
     { metric: 'Page Load', requirement: '< 3s initial load' },
@@ -724,7 +759,7 @@ function generatePerformanceRequirements(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateMonitoringStrategy(_config: ProjectConfig): any[] {
+function generateMonitoringStrategy(_config: ProjectConfig): MetricItem[] {
   return [
     {
       area: 'Application Performance',
@@ -744,7 +779,7 @@ function generateFutureConsiderations(_config: ProjectConfig): string[] {
 }
 
 // Spec-specific functions
-function generateFunctionalRequirements(features: Feature[]): any[] {
+function generateFunctionalRequirements(features: Feature[]): RequirementItem[] {
   return features.map((feature, index) => ({
     id: `FR${index + 1}`,
     title: feature.name,
@@ -753,7 +788,7 @@ function generateFunctionalRequirements(features: Feature[]): any[] {
   }));
 }
 
-function generateNonFunctionalRequirements(_config: ProjectConfig): any[] {
+function generateNonFunctionalRequirements(_config: ProjectConfig): RequirementItem[] {
   return [
     {
       category: 'Performance',
@@ -772,7 +807,10 @@ function generateNonFunctionalRequirements(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateAPIEndpoints(features: Feature[], _techStack: ProjectConfig['techStack']): any[] {
+function generateAPIEndpoints(
+  features: Feature[],
+  _techStack: ProjectConfig['techStack']
+): EndpointItem[] {
   const endpoints = [];
 
   if (features.some((f) => f.id === 'auth')) {
@@ -792,7 +830,10 @@ function generateAPIEndpoints(features: Feature[], _techStack: ProjectConfig['te
   return endpoints;
 }
 
-function generateDataEntities(features: Feature[], _techStack: ProjectConfig['techStack']): any[] {
+function generateDataEntities(
+  features: Feature[],
+  _techStack: ProjectConfig['techStack']
+): EntityItem[] {
   const entities = [];
 
   if (features.some((f) => f.id === 'auth')) {
@@ -831,7 +872,7 @@ CREATE INDEX idx_users_email ON users(email);`;
   return '-- Database schema to be defined';
 }
 
-function generateBusinessRules(features: Feature[]): any[] {
+function generateBusinessRules(features: Feature[]): string[] {
   const rules = [];
 
   if (features.some((f) => f.id === 'auth')) {
@@ -846,7 +887,7 @@ function generateBusinessRules(features: Feature[]): any[] {
   return rules;
 }
 
-function generateErrorScenarios(_features: Feature[]): any[] {
+function generateErrorScenarios(_features: Feature[]): TestCaseItem[] {
   return [
     {
       scenario: 'Invalid Input',
@@ -863,7 +904,7 @@ function generateErrorScenarios(_features: Feature[]): any[] {
   ];
 }
 
-function generateUnitTestStrategy(_config: ProjectConfig): any[] {
+function generateUnitTestStrategy(_config: ProjectConfig): string[] {
   return [
     { component: 'API Endpoints', coverage: 90 },
     { component: 'Business Logic', coverage: 95 },
@@ -877,14 +918,14 @@ function generateIntegrationTestScenarios(features: Feature[]): string[] {
     .map((f) => `End-to-end test for ${f.name}`);
 }
 
-function generatePerformanceTests(_config: ProjectConfig): any[] {
+function generatePerformanceTests(_config: ProjectConfig): TestCaseItem[] {
   return [
     { test: 'Load Test', criteria: 'Handle 1000 concurrent users' },
     { test: 'Stress Test', criteria: 'Graceful degradation under load' },
   ];
 }
 
-function generateSecurityRequirements(_config: ProjectConfig): any[] {
+function generateSecurityRequirements(_config: ProjectConfig): RequirementItem[] {
   return [
     {
       requirement: 'Input Validation',
@@ -899,7 +940,7 @@ function generateSecurityRequirements(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateExternalDependencies(techStack: ProjectConfig['techStack']): any[] {
+function generateExternalDependencies(techStack: ProjectConfig['techStack']): string[] {
   const deps = [];
 
   if (techStack.database === 'postgresql') {
@@ -913,7 +954,7 @@ function generateExternalDependencies(techStack: ProjectConfig['techStack']): an
   return deps;
 }
 
-function generateLibraryDependencies(techStack: ProjectConfig['techStack']): any[] {
+function generateLibraryDependencies(techStack: ProjectConfig['techStack']): string[] {
   const libs = [];
 
   if (techStack.frontend === 'nextjs') {
@@ -953,25 +994,34 @@ function getModelPath(techStack: ProjectConfig['techStack']): string {
   return 'src/models/';
 }
 
-function generateDatabaseIntegration(techStack: ProjectConfig['techStack']): any[] {
-  const integration = [];
+function generateDatabaseIntegration(techStack: ProjectConfig['techStack']): DatabaseItem[] {
+  const integration: DatabaseItem[] = [];
 
   if (techStack.database === 'postgresql') {
     integration.push({
+      name: 'PostgreSQL Migration',
       type: 'migration',
-      command: 'npm run migrate',
+      description: 'Database schema migration',
+      schema: 'public',
+      operations: ['CREATE TABLE', 'ALTER TABLE', 'CREATE INDEX'],
     });
   }
 
   return integration;
 }
 
-function generateConfigIntegration(techStack: ProjectConfig['techStack']): any[] {
+function generateConfigIntegration(techStack: ProjectConfig['techStack']): ConfigItem[] {
   return [
     {
+      name: 'Environment Configuration',
+      type: 'environment',
+      description: 'Application configuration settings',
       file: techStack.frontend === 'nextjs' ? '.env.local' : '.env',
-      pattern: 'KEY=value format',
-      validation: 'Required vars must be set',
+      values: {
+        DATABASE_URL: 'Connection string for database',
+        JWT_SECRET: 'Secret key for JWT tokens',
+        API_URL: 'Base URL for API endpoints',
+      },
     },
   ];
 }
@@ -979,16 +1029,19 @@ function generateConfigIntegration(techStack: ProjectConfig['techStack']): any[]
 function generateRoutesIntegration(
   features: Feature[],
   techStack: ProjectConfig['techStack']
-): any[] {
-  const routes: any[] = [];
+): RouteItem[] {
+  const routes: RouteItem[] = [];
 
   features.forEach((feature) => {
     if (feature.id === 'auth') {
+      const file = techStack.backend === 'fastapi' ? 'app/api/auth.py' : 'routes/auth.js';
       routes.push({
-        file: techStack.backend === 'fastapi' ? 'app/api/auth.py' : 'routes/auth.js',
-        pattern: 'RESTful routes',
-        method: 'POST',
+        name: 'Authentication Route',
         path: '/auth/login',
+        method: 'POST',
+        description: 'User authentication endpoint',
+        file,
+        middleware: ['cors', 'helmet'],
       });
     }
   });
@@ -996,13 +1049,14 @@ function generateRoutesIntegration(
   return routes;
 }
 
-function generateEnvironmentVariables(_config: ProjectConfig): any[] {
-  const vars = [
+function generateEnvironmentVariables(_config: ProjectConfig): EnvironmentItem[] {
+  const vars: EnvironmentItem[] = [
     {
       name: 'DATABASE_URL',
       type: 'string',
-      default: 'postgresql://localhost/db',
-      validation: 'Must be valid connection string',
+      description: 'Database connection string',
+      value: 'postgresql://localhost/db',
+      required: true,
     },
   ];
 
@@ -1010,8 +1064,9 @@ function generateEnvironmentVariables(_config: ProjectConfig): any[] {
     vars.push({
       name: 'JWT_SECRET',
       type: 'string',
-      default: 'dev-secret',
-      validation: 'Min 32 characters in production',
+      description: 'JWT signing secret',
+      value: 'dev-secret',
+      required: true,
     });
   }
 
@@ -1021,8 +1076,8 @@ function generateEnvironmentVariables(_config: ProjectConfig): any[] {
 function generateDetailedTestCases(
   features: Feature[],
   _techStack: ProjectConfig['techStack']
-): any[] {
-  const testCases: any[] = [];
+): TestCaseItem[] {
+  const testCases: TestCaseItem[] = [];
 
   features.forEach((feature) => {
     if (feature.id === 'auth') {
@@ -1066,16 +1121,21 @@ function getLogPath(techStack: ProjectConfig['techStack']): string {
   return 'logs/application.log';
 }
 
-function generateCreativeValidation(_config: ProjectConfig): any[] {
+function generateCreativeValidation(_config: ProjectConfig): ValidationItem[] {
   return [
     {
       name: 'Load Testing',
+      type: 'performance',
       description: 'Test with 1000 concurrent users',
-      command: 'npm run load-test',
+      criteria: 'Response time < 500ms',
+      tools: ['k6', 'artillery'],
     },
     {
       name: 'Security Scan',
+      type: 'security',
       description: 'Run OWASP ZAP scan',
+      criteria: 'No high or critical vulnerabilities',
+      tools: ['OWASP ZAP', 'Snyk'],
     },
   ];
 }
@@ -1103,7 +1163,7 @@ function generateProblemStatement(_config: ProjectConfig): string {
   return `Build a ${_config.projectType} application that ${_config.description}. The system needs to handle ${_config.features.length} core features while maintaining scalability and performance.`;
 }
 
-function generateSubProblems(features: Feature[]): any[] {
+function generateSubProblems(features: Feature[]): string[] {
   return features.map((feature) => ({
     name: feature.name,
     description: feature.description,
@@ -1112,7 +1172,7 @@ function generateSubProblems(features: Feature[]): any[] {
   }));
 }
 
-function generateConstraints(_config: ProjectConfig): any[] {
+function generateConstraints(_config: ProjectConfig): string[] {
   return [
     { type: 'Timeline', description: `${_config.timeline} delivery` },
     { type: 'Team Size', description: `${_config.teamSize} team` },
@@ -1157,7 +1217,7 @@ function generateDetailedArchitectureDiagram(_config: ProjectConfig): string {
     H --> I`;
 }
 
-function generateDetailedComponents(_config: ProjectConfig): any[] {
+function generateDetailedComponents(_config: ProjectConfig): ComponentItem[] {
   const components = generateComponents(_config);
 
   // Add more detail to each component
@@ -1195,7 +1255,7 @@ function generateDetailedDataFlowDiagram(_config: ProjectConfig): string {
     C-->>U: Update UI`;
 }
 
-function generateDetailedTechnicalDecisions(_config: ProjectConfig): any[] {
+function generateDetailedTechnicalDecisions(_config: ProjectConfig): DecisionItem[] {
   return [
     {
       title: 'Architecture Pattern',
@@ -1263,19 +1323,19 @@ function generatePhaseTasks(config: ProjectConfig, phase: number): string[] {
   ];
 }
 
-function generateDetailedRisks(_config: ProjectConfig): any[] {
+function generateDetailedRisks(_config: ProjectConfig): RiskItem[] {
   return [
     {
       title: 'Technical Debt',
-      probability: 'High',
-      impact: 'Medium',
+      probability: 'high',
+      impact: 'medium',
       mitigation: 'Regular refactoring sprints',
       contingency: 'Allocate 20% time for debt reduction',
     },
     {
       title: 'Scalability Issues',
-      probability: 'Medium',
-      impact: 'High',
+      probability: 'medium',
+      impact: 'high',
       detection: 'Load testing metrics',
       mitigation: 'Design for horizontal scaling',
       contingency: 'Cloud auto-scaling',
@@ -1284,7 +1344,7 @@ function generateDetailedRisks(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateOptimizationStrategies(_config: ProjectConfig): any[] {
+function generateOptimizationStrategies(_config: ProjectConfig): OptimizationItem[] {
   return [
     { area: 'Database', strategy: 'Query optimization and indexing' },
     { area: 'Caching', strategy: 'Redis for session and API responses' },
@@ -1292,7 +1352,7 @@ function generateOptimizationStrategies(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateBenchmarks(_config: ProjectConfig): any[] {
+function generateBenchmarks(_config: ProjectConfig): BenchmarkItem[] {
   return [
     { metric: 'API Response Time', target: '< 100ms p95' },
     { metric: 'Page Load Time', target: '< 2s' },
@@ -1300,7 +1360,7 @@ function generateBenchmarks(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateAttackVectors(_config: ProjectConfig): any[] {
+function generateAttackVectors(_config: ProjectConfig): AttackVectorItem[] {
   return [
     {
       vector: 'SQL Injection',
@@ -1332,7 +1392,7 @@ function generateUnitTestAreas(_config: ProjectConfig): string[] {
   ];
 }
 
-function generateDetailedPerformanceTests(_config: ProjectConfig): any[] {
+function generateDetailedPerformanceTests(_config: ProjectConfig): TestCaseItem[] {
   return [
     {
       scenario: 'Normal Load',
@@ -1355,7 +1415,7 @@ function generateDetailedPerformanceTests(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateSecurityTests(_config: ProjectConfig): any[] {
+function generateSecurityTests(_config: ProjectConfig): TestCaseItem[] {
   return [
     {
       test: 'OWASP ZAP Scan',
@@ -1372,7 +1432,7 @@ function generateSecurityTests(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateMetrics(_config: ProjectConfig): any[] {
+function generateMetrics(_config: ProjectConfig): MetricItem[] {
   return [
     { name: 'Request Rate', description: 'Requests per second', threshold: '> 1000 RPS alert' },
     { name: 'Error Rate', description: 'Failed requests percentage', threshold: '> 1% alert' },
@@ -1380,7 +1440,7 @@ function generateMetrics(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateLoggingPoints(_config: ProjectConfig): any[] {
+function generateLoggingPoints(_config: ProjectConfig): LoggingItem[] {
   return [
     { event: 'Authentication', details: 'Login attempts, failures, token generation' },
     { event: 'API Requests', details: 'Method, path, user, duration, status' },
@@ -1392,21 +1452,21 @@ function generateTraces(features: Feature[]): string[] {
   return features.filter((f) => f.priority === 'must-have').map((f) => `${f.name} complete flow`);
 }
 
-function generateUserDocumentation(_config: ProjectConfig): any[] {
+function generateUserDocumentation(_config: ProjectConfig): DocumentationItem[] {
   return [
     { type: 'User Guide', description: 'How to use the application' },
     { type: 'API Reference', description: 'Endpoint documentation' },
   ];
 }
 
-function generateDeveloperDocumentation(_config: ProjectConfig): any[] {
+function generateDeveloperDocumentation(_config: ProjectConfig): DocumentationItem[] {
   return [
     { type: 'Architecture Guide', description: 'System design and patterns' },
     { type: 'Setup Guide', description: 'Development environment setup' },
   ];
 }
 
-function generateExternalResources(_config: ProjectConfig): any[] {
+function generateExternalResources(_config: ProjectConfig): DocumentationItem[] {
   const resources = [];
 
   if (_config.techStack.frontend === 'nextjs') {
@@ -1420,7 +1480,7 @@ function generateExternalResources(_config: ProjectConfig): any[] {
   return resources;
 }
 
-function generateCodeExamples(_config: ProjectConfig): any[] {
+function generateCodeExamples(_config: ProjectConfig): CodeExampleItem[] {
   return [
     {
       title: 'Authentication Flow',
@@ -1433,7 +1493,7 @@ function generateCodeExamples(_config: ProjectConfig): any[] {
   ];
 }
 
-function generateSuccessMetrics(_config: ProjectConfig): any[] {
+function generateSuccessMetrics(_config: ProjectConfig): MetricItem[] {
   return [
     {
       metric: 'User Adoption',

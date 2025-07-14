@@ -4,7 +4,7 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { ApiConfig } from './apiKeyManager';
 
-export interface BasicAnalysis {
+export interface BasicAnalysis extends Record<string, unknown> {
   projectType: string;
   techStack: string[];
   fileStats: {
@@ -125,7 +125,7 @@ export class ProjectAnalyzer {
     return files;
   }
 
-  private async readPackageJson(): Promise<any> {
+  private async readPackageJson(): Promise<Record<string, unknown> | null> {
     try {
       const packagePath = path.join(this.projectPath, 'package.json');
       if (await fs.pathExists(packagePath)) {
@@ -137,9 +137,12 @@ export class ProjectAnalyzer {
     return null;
   }
 
-  private detectProjectType(files: string[], packageJson: any): string {
+  private detectProjectType(files: string[], packageJson: Record<string, unknown> | null): string {
     if (packageJson) {
-      const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      const deps = {
+        ...(packageJson.dependencies as Record<string, unknown>),
+        ...(packageJson.devDependencies as Record<string, unknown>),
+      };
 
       if (deps.next || deps['@next/core-web-vitals']) return 'Next.js';
       if (deps.react) return 'React';
@@ -163,11 +166,14 @@ export class ProjectAnalyzer {
     return 'Mixed/Unknown';
   }
 
-  private detectTechStack(files: string[], packageJson: any): string[] {
+  private detectTechStack(files: string[], packageJson: Record<string, unknown> | null): string[] {
     const stack: string[] = [];
 
     if (packageJson) {
-      const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      const deps = {
+        ...(packageJson.dependencies as Record<string, unknown>),
+        ...(packageJson.devDependencies as Record<string, unknown>),
+      };
 
       // Frontend frameworks
       if (deps.next) stack.push('Next.js');
@@ -248,11 +254,14 @@ export class ProjectAnalyzer {
     return managers.length > 0 ? managers : ['npm'];
   }
 
-  private detectFrameworks(files: string[], packageJson: any): string[] {
+  private detectFrameworks(files: string[], packageJson: Record<string, unknown> | null): string[] {
     const frameworks: string[] = [];
 
     if (packageJson) {
-      const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      const deps = {
+        ...(packageJson.dependencies as Record<string, unknown>),
+        ...(packageJson.devDependencies as Record<string, unknown>),
+      };
       Object.keys(deps).forEach((dep) => {
         if (dep.startsWith('@angular/')) frameworks.push('Angular');
         if (dep === 'vue') frameworks.push('Vue.js');
