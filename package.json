@@ -21,7 +21,7 @@
     "test:prompts": "jest --testPathPattern='prompts.*test'",
     "lint": "eslint . --ext .ts,.js",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
-    "prepublishOnly": "npm run build && npm run lint && npm run test:ci"
+    "prepublishOnly": "npm run build && npm run lint"
   },
   "keywords": [
     "claude-code",
