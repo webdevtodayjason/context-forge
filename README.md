@@ -66,7 +66,7 @@
         <p>Comprehensive command library:</p>
         <ul align="left">
           <li><strong>PRPs:</strong> create, execute, validate, parallel</li>
-          <li><strong>Dev:</strong> prime-context, debug-issue, review-code</li>
+          <li><strong>Dev:</strong> prime-context (NEW: architect mode), debug-issue, review-code</li>
           <li><strong>Git:</strong> smart-commit, create-pr</li>
           <li><strong>Orchestration:</strong> orchestrate-status, team-health</li>
           <li><strong>Enhancement:</strong> track-features, update-progress</li>
@@ -203,6 +203,8 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - ⚡ **Fast Setup** - Go from zero to AI-ready project in minutes
 - 🔄 **Technology Migration** - Safe migration planning between tech stacks
 - 🔧 **Retrofit Existing Projects** - Analyze and upgrade existing codebases with AI documentation
+- 🏗️ **Smart Project Detection** - Automatically detects new vs existing projects
+- 📊 **Transparent File Operations** - Shows actual file paths and comprehensive logging
 
 ### Advanced Features
 
@@ -427,7 +429,7 @@ Generated files:
 Next steps:
 1. cd analytics-dashboard
 2. Review CLAUDE.md for project rules
-3. Use /prime-context to load project knowledge
+3. Use /prime-context to load project knowledge and activate architect mode
 4. Start with Stage 1 in Docs/Implementation.md
 ```
 

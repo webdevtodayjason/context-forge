@@ -10,6 +10,7 @@ This directory contains comprehensive documentation for the advanced Claude Code
 
 1. **[Slash Commands](./slash-commands.md)**
    - 25+ pre-built commands for common development tasks
+   - **NEW: Smart project detection and architect mode**
    - Custom command creation
    - Command categories and usage patterns
    - Integration with development workflows
@@ -94,11 +95,14 @@ Intelligent coordination of:
 
 | Feature | Before | After |
 |---------|--------|-------|
-| Context Loading | Manual file selection | `/prime-context` auto-loads |
+| Context Loading | Manual file selection | `/prime-context` auto-loads with architect mode |
+| Project Detection | Manual analysis | Smart detection switches modes automatically |
 | PRP Creation | Write from scratch | `/prp-create` with research |
 | Implementation | Manual steps | Automated with validation |
 | Testing | Run separately | Integrated at each step |
 | Documentation | Update manually | Auto-generated |
+| File Operations | Misleading paths | Accurate paths with comprehensive logging |
+| Commit Messages | Manual cleanup | Automatic clean commit enforcement |
 
 ## Workflow Examples
 
@@ -109,7 +113,7 @@ Intelligent coordination of:
 context-forge init
 
 # 2. In Claude Code
-/prime-context
+/prime-context  # Activates architect mode for new projects
 /analyze-codebase existing-patterns
 /prp-create payment processing with Stripe
 /prp-execute payment-processing

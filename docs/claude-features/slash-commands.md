@@ -87,16 +87,28 @@ Add critical documentation to ai_docs for future reference.
 ### 📚 Context Commands
 
 #### `/prime-context`
-Load essential project knowledge into Claude's context.
+**NEW: Smart project detection and architect mode**
+
+Load essential project knowledge and automatically switch to appropriate mode.
 
 **Usage**: `/prime-context`
 
-**Loads**:
-- Project structure
-- Key configuration files
-- Architecture patterns
-- Testing conventions
-- Recent changes
+**Smart Features**:
+- **Project State Detection**: Automatically identifies new vs existing projects
+- **Mode Switching**: Different behavior based on project type
+- **Architect Mode**: For new projects, Claude becomes Lead Software Architect
+- **Analysis Mode**: For existing projects, provides comprehensive codebase analysis
+
+**New Project Mode**:
+- 🏗️ **Architect Mode Activated**: Claude takes charge as Lead Software Architect
+- 📋 **TodoWrite Integration**: Creates concrete development tasks
+- 🚀 **Immediate Implementation**: Starts building instead of just analyzing
+- 🚫 **Clean Commits**: Enforces proper commit message format
+
+**Existing Project Mode**:
+- 🔍 **Comprehensive Analysis**: Deep dive into codebase structure
+- 📊 **Strategic Recommendations**: Actionable improvement suggestions
+- 🎯 **Context Loading**: Project structure, patterns, and conventions
 
 #### `/analyze-codebase`
 Deep dive into specific codebase areas.

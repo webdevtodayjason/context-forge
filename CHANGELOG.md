@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.1] - 2025-07-15 - Smart Project Detection & Architect Mode
+
+### 🏗️ Enhanced Prime Context Command
+
+- **Smart Project Detection**: Automatically identifies new vs existing projects
+- **Architect Mode**: For new projects, Claude becomes Lead Software Architect
+- **TodoWrite Integration**: Creates concrete development tasks immediately
+- **Clean Commit Enforcement**: Prevents Claude Code signatures in commit messages
+
+### 📊 Transparent File Operations
+
+- **Accurate File Path Reporting**: Shows actual paths instead of misleading basenames
+- **Comprehensive Logging**: Generates detailed `context-forge.log` for all operations
+- **Operation Statistics**: Tracks created/updated/skipped/failed files
+- **FileLogger Service**: Centralized file operation tracking and logging
+
+### 🔧 Enhanced User Experience
+
+- **Before**: `✔ Created smart-commit.md` (misleading)
+- **After**: `✔ .claude/commands/git/smart-commit.md` (accurate)
+- **Project Summary**: Shows operation counts and success rates
+- **Error Handling**: Clear error messages with actionable feedback
+
+### 📝 Documentation Updates
+
+- Updated README.md with new features
+- Enhanced slash-commands.md with architect mode details
+- Updated claude-features documentation
+
 ## [3.2.0] - 2025-07-14 - Orchestration & UX Enhancement Release
 
 ### 🤖 Autonomous AI Orchestration
