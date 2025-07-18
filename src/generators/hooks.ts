@@ -178,13 +178,13 @@ function getCommonHooks(config: ProjectConfig): HookTemplate[] {
       content: generateDartProgressUpdaterHook(config),
       description: 'Updates Dart task progress based on code changes',
     });
-    
+
     hooks.push({
       filename: 'AutoTaskCommenter.py',
       content: generateAutoTaskCommenterHook(config),
       description: 'Adds detailed comments to Dart tasks',
     });
-    
+
     hooks.push({
       filename: 'TaskCodeMapper.py',
       content: generateTaskCodeMapperHook(config),
