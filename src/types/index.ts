@@ -67,6 +67,7 @@ export interface ProjectConfig extends Record<string, unknown> {
     claudeCommands?: boolean;
     hooks?: boolean;
     checkpoints?: boolean;
+    dartIntegration?: boolean;
   };
 
   // Checkpoint configuration
