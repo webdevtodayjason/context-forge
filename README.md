@@ -73,14 +73,16 @@
         </ul>
       </td>
       <td align="center" width="50%">
-        <h4>🪝 4 Claude Code Hooks</h4>
+        <h4>🪝 7 Claude Code Hooks</h4>
         <p><code>context-forge copy-hooks</code></p>
         <ul align="left">
           <li><strong>PreCompact:</strong> Preserve context</li>
           <li><strong>ContextRotation:</strong> Smart file switching</li>
           <li><strong>PreSubmit:</strong> Quality gates</li>
           <li><strong>PRPTracking:</strong> Progress monitoring</li>
-          <li>+ Migration-specific hooks</li>
+          <li><strong>DartProgressUpdater:</strong> Auto task progress</li>
+          <li><strong>AutoTaskCommenter:</strong> Smart task docs</li>
+          <li><strong>TaskCodeMapper:</strong> File-task mapping</li>
         </ul>
       </td>
     </tr>
@@ -113,6 +115,9 @@
           <li>PreCompact.py</li>
           <li>ContextRotation.py</li>
           <li>PreSubmit.py</li>
+          <li>DartProgressUpdater.py</li>
+          <li>AutoTaskCommenter.py</li>
+          <li>TaskCodeMapper.py</li>
           <li>MigrationHooks/</li>
         </ul>
       </td>
@@ -249,6 +254,43 @@ Tracks PRP implementation progress:
 - ⏱️ Time tracking per feature
 - 📋 Automatic status updates
 - 🎯 Milestone achievements
+
+### 🎯 NEW: Dart Integration Hooks (v3.2.1)
+
+When **Dart task management** is enabled, Context Forge generates additional hooks for comprehensive task tracking:
+
+#### 5. **DartProgressUpdater Hook** - Automatic Task Progress
+Automatically updates Dart task progress based on code changes:
+- 📁 Detects tasks from file path patterns
+- 🔄 Updates task status on file modifications
+- 📝 Tracks git commit messages for task completion
+- 📊 Maintains progress history and suggestions
+
+#### 6. **AutoTaskCommenter Hook** - Detailed Task Documentation
+Adds intelligent comments to Dart tasks with code analysis:
+- 🔧 Analyzes code structure and complexity
+- 📈 Tracks functions added/modified and line changes
+- 🎯 Categorizes changes by project area (auth, API, UI, etc.)
+- 📋 Creates milestone comments for builds/tests/commits
+
+#### 7. **TaskCodeMapper Hook** - Intelligent File-Task Mapping
+Maintains smart mapping between Dart tasks and code files:
+- 🧠 Infers task categories from file paths and content
+- 📊 Confidence-based task assignment suggestions
+- 🎯 Project-specific pattern recognition
+- 📈 Learning from successful mappings
+
+**Enable Dart Integration:**
+```bash
+context-forge init
+# Select "Enable Dart task integration? Yes"
+```
+
+**Generated Dart Integration Files:**
+- `.claude/dart_progress.json` - Task progress tracking
+- `.claude/task_mapping.json` - File-to-task relationships
+- `.claude/task_comments.json` - Automated task comments
+- `.claude/task_suggestions.json` - AI-generated task suggestions
 
 ### Setup
 
@@ -740,7 +782,10 @@ project-folder/
 │       ├── PreCompact.py      # Context preservation hook
 │       ├── ContextRotation.py # Smart file switching
 │       ├── PreSubmit.py       # Quality gates
-│       └── PRPTracking.py     # Progress monitoring
+│       ├── PRPTracking.py     # Progress monitoring
+│       ├── DartProgressUpdater.py # Dart task progress tracking
+│       ├── AutoTaskCommenter.py   # Automated task documentation
+│       └── TaskCodeMapper.py      # File-to-task mapping
 └── ai_docs/                   # AI documentation curation (if enabled)
     └── README.md              # Documentation guide
 ```
