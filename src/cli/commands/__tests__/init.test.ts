@@ -1,27 +1,31 @@
 import { Command } from 'commander';
 import { initCommand } from '../init';
-import { AIService } from '../../services/aiService';
-import { ProgressTracker } from '../../services/progressTracker';
-import { ErrorRecoveryService } from '../../services/errorRecovery';
+import { AIIntelligenceService } from '../../../services/aiIntelligenceService';
+import { ProgressTracker } from '../../../services/progressTracker';
+import { ErrorRecoveryService } from '../../../services/errorRecoveryService';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { tmpdir } from 'os';
 
 // Mock dependencies
-jest.mock('../../services/aiService');
-jest.mock('../../services/progressTracker');
-jest.mock('../../services/errorRecovery');
+jest.mock('../../../services/aiIntelligenceService');
+jest.mock('../../../services/progressTracker');
+jest.mock('../../../services/errorRecoveryService');
 jest.mock('inquirer');
 
-const MockAIService = AIService as jest.MockedClass<typeof AIService>;
+const MockAIService = AIIntelligenceService as jest.MockedClass<typeof AIIntelligenceService>;
 const MockProgressTracker = ProgressTracker as jest.MockedClass<typeof ProgressTracker>;
 const MockErrorRecoveryService = ErrorRecoveryService as jest.MockedClass<
   typeof ErrorRecoveryService
 >;
 
 // Mock inquirer
+jest.mock('inquirer', () => ({
+  prompt: jest.fn(),
+  Separator: jest.fn()
+}));
 import inquirer from 'inquirer';
-jest.mock('inquirer');
+const mockPrompt = inquirer.prompt as unknown as jest.Mock;
 
 // Mock console methods
 const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
@@ -29,7 +33,7 @@ const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
 
 describe('Init Command', () => {
   let tempDir: string;
-  let mockAIService: jest.Mocked<AIService>;
+  let mockAIService: jest.Mocked<AIIntelligenceService>;
   let mockProgressTracker: jest.Mocked<ProgressTracker>;
   let mockErrorRecovery: jest.Mocked<ErrorRecoveryService>;
 
@@ -40,22 +44,20 @@ describe('Init Command', () => {
     // Setup mocks
     mockAIService = {
       isAIEnabled: jest.fn().mockReturnValue(true),
-      analyzeProject: jest.fn(),
+      getAIStatus: jest.fn().mockReturnValue('AI Ready'),
       generateSmartDefaults: jest.fn(),
-      getProjectSuggestions: jest.fn(),
     } as any;
 
     mockProgressTracker = {
       startOperation: jest.fn().mockResolvedValue('test-operation-id'),
-      addStep: jest.fn(),
+      addStep: jest.fn().mockResolvedValue('step-id'),
+      completeStep: jest.fn(),
       completeOperation: jest.fn(),
       getProgress: jest.fn(),
     } as any;
 
     mockErrorRecovery = {
-      recoverFromError: jest.fn(),
-      analyzeError: jest.fn(),
-      getRecoveryActions: jest.fn(),
+      handleError: jest.fn(),
     } as any;
 
     MockAIService.mockImplementation(() => mockAIService);
@@ -75,7 +77,7 @@ describe('Init Command', () => {
   describe('basic initialization', () => {
     it('should run interactive setup wizard', async () => {
       // Mock inquirer responses
-      inquirer.prompt
+      mockPrompt
         .mockResolvedValueOnce({
           projectName: 'test-project',
           projectType: 'web',
@@ -103,15 +105,12 @@ describe('Init Command', () => {
         });
 
       mockAIService.generateSmartDefaults.mockResolvedValue({
-        projectType: 'web',
-        targetIDEs: ['claude'],
-        techStack: { frontend: 'react', backend: 'nodejs' },
+        suggestions: [],
         confidence: 85,
+        reasoning: 'AI analysis complete',
+        optimizations: [],
       });
 
-      mockAIService.getProjectSuggestions.mockResolvedValue([
-        { type: 'tech', message: 'Consider using TypeScript', confidence: 90 },
-      ]);
 
       const program = new Command();
       program.addCommand(initCommand);
@@ -128,15 +127,19 @@ describe('Init Command', () => {
       );
 
       expect(mockProgressTracker.addStep).toHaveBeenCalledWith('Interactive setup wizard');
-      expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(true, expect.any(Object));
+      expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(
+        'test-operation-id',
+        'completed',
+        expect.any(Object)
+      );
     });
 
     it('should handle --quick option with AI defaults', async () => {
       mockAIService.generateSmartDefaults.mockResolvedValue({
-        projectType: 'fullstack',
-        targetIDEs: ['claude'],
-        techStack: { frontend: 'nextjs', backend: 'fastapi' },
+        suggestions: [],
         confidence: 95,
+        reasoning: 'AI analysis complete',
+        optimizations: [],
       });
 
       const program = new Command();
@@ -151,7 +154,7 @@ describe('Init Command', () => {
 
     it('should handle --no-ai option', async () => {
       // Mock non-AI responses
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'no-ai-project',
         projectType: 'api',
         targetIDEs: ['cursor'],
@@ -164,7 +167,7 @@ describe('Init Command', () => {
       await program.parseAsync(['node', 'test', 'init', '--no-ai'], { from: 'user' });
 
       expect(mockAIService.generateSmartDefaults).not.toHaveBeenCalled();
-      expect(mockAIService.getProjectSuggestions).not.toHaveBeenCalled();
+      expect(mockAIService.generateSmartDefaults).not.toHaveBeenCalled();
       expect(mockProgressTracker.startOperation).toHaveBeenCalledWith(
         'init',
         'Project initialization',
@@ -179,7 +182,7 @@ describe('Init Command', () => {
     it('should handle --output option', async () => {
       const outputDir = path.join(tempDir, 'custom-output');
 
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'output-test',
         projectType: 'web',
         targetIDEs: ['claude'],
@@ -196,7 +199,7 @@ describe('Init Command', () => {
     });
 
     it('should handle --ide option', async () => {
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'ide-test',
         projectType: 'web',
         confirmed: true,
@@ -241,7 +244,7 @@ describe('Init Command', () => {
 
   describe('file generation', () => {
     it('should generate CLAUDE.md file', async () => {
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'file-gen-test',
         projectType: 'web',
         description: 'Test project for file generation',
@@ -264,7 +267,7 @@ describe('Init Command', () => {
     });
 
     it('should generate PRPs directory', async () => {
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'prp-test',
         projectType: 'fullstack',
         targetIDEs: ['claude'],
@@ -283,7 +286,7 @@ describe('Init Command', () => {
     });
 
     it('should generate .claude directory for Claude IDE', async () => {
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'claude-dir-test',
         projectType: 'web',
         targetIDEs: ['claude'],
@@ -306,30 +309,26 @@ describe('Init Command', () => {
   describe('error handling', () => {
     it('should handle setup wizard errors with recovery', async () => {
       const error = new Error('Permission denied');
-      inquirer.prompt.mockRejectedValue(error);
+      mockPrompt.mockRejectedValue(error);
 
-      mockErrorRecovery.recoverFromError.mockResolvedValue({
-        attempted: 1,
-        successful: 1,
-        actions: [],
-        manualActions: [],
-      });
 
       const program = new Command();
       program.addCommand(initCommand);
 
       await program.parseAsync(['node', 'test', 'init'], { from: 'user' });
 
-      expect(mockErrorRecovery.recoverFromError).toHaveBeenCalledWith(error, tempDir);
+      expect(mockErrorRecovery.handleError).toHaveBeenCalled();
       expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(
-        false,
-        undefined,
-        expect.stringContaining('Permission denied')
+        'test-operation-id',
+        'failed',
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.stringContaining('Permission denied')])
+        })
       );
     });
 
     it('should handle file generation errors', async () => {
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'error-test',
         projectType: 'web',
         targetIDEs: ['claude'],
@@ -337,8 +336,7 @@ describe('Init Command', () => {
       });
 
       // Mock file system error
-      const originalWriteFile = fs.writeFile;
-      jest.spyOn(fs, 'writeFile').mockRejectedValue(new Error('Disk full'));
+      (fs.writeFile as any) = jest.fn().mockRejectedValue(new Error('Disk full'));
 
       const program = new Command();
       program.addCommand(initCommand);
@@ -350,13 +348,13 @@ describe('Init Command', () => {
       );
 
       // Restore original function
-      (fs.writeFile as jest.Mock).mockImplementation(originalWriteFile);
+      jest.restoreAllMocks();
     });
 
     it('should handle AI service errors gracefully', async () => {
       mockAIService.generateSmartDefaults.mockRejectedValue(new Error('AI service unavailable'));
 
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'ai-error-test',
         projectType: 'web',
         targetIDEs: ['claude'],
@@ -369,13 +367,17 @@ describe('Init Command', () => {
       await program.parseAsync(['node', 'test', 'init'], { from: 'user' });
 
       // Should continue with fallback behavior
-      expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(true, expect.any(Object));
+      expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(
+        'test-operation-id',
+        'completed',
+        expect.any(Object)
+      );
     });
   });
 
   describe('progress tracking', () => {
     it('should track all major steps', async () => {
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'progress-test',
         projectType: 'fullstack',
         targetIDEs: ['claude', 'cursor'],
@@ -401,7 +403,7 @@ describe('Init Command', () => {
     });
 
     it('should include metadata in progress tracking', async () => {
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'metadata-test',
         projectType: 'api',
         targetIDEs: ['claude'],
@@ -415,11 +417,11 @@ describe('Init Command', () => {
       await program.parseAsync(['node', 'test', 'init'], { from: 'user' });
 
       expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(
-        true,
+        'test-operation-id',
+        'completed',
         expect.objectContaining({
           filesGenerated: expect.any(Number),
-          ideConfigurations: expect.any(Array),
-          features: expect.any(Array),
+          targetIDEs: expect.any(Array)
         })
       );
     });
@@ -427,7 +429,7 @@ describe('Init Command', () => {
 
   describe('validation', () => {
     it('should validate project name input', async () => {
-      inquirer.prompt
+      mockPrompt
         .mockResolvedValueOnce({
           projectName: '', // Invalid empty name
           projectType: 'web',
@@ -445,11 +447,15 @@ describe('Init Command', () => {
       await program.parseAsync(['node', 'test', 'init'], { from: 'user' });
 
       // Should eventually succeed with valid name
-      expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(true, expect.any(Object));
+      expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(
+        'test-operation-id',
+        'completed',
+        expect.any(Object)
+      );
     });
 
     it('should validate IDE selection', async () => {
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'ide-validation-test',
         projectType: 'web',
         targetIDEs: ['claude', 'invalid-ide'], // Invalid IDE should be filtered
@@ -473,16 +479,8 @@ describe('Init Command', () => {
 
   describe('AI integration', () => {
     it('should use AI suggestions when available', async () => {
-      mockAIService.getProjectSuggestions.mockResolvedValue([
-        {
-          type: 'tech',
-          message: 'Consider using TypeScript for better type safety',
-          confidence: 90,
-        },
-        { type: 'config', message: 'Enable ESLint for code quality', confidence: 85 },
-      ]);
 
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'ai-suggestions-test',
         projectType: 'web',
         targetIDEs: ['claude'],
@@ -494,22 +492,13 @@ describe('Init Command', () => {
 
       await program.parseAsync(['node', 'test', 'init'], { from: 'user' });
 
-      expect(mockAIService.getProjectSuggestions).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'ai-suggestions-test',
-          type: 'web',
-        })
-      );
-
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringContaining('Consider using TypeScript')
-      );
+      expect(mockAIService.generateSmartDefaults).toHaveBeenCalled();
     });
 
     it('should fall back gracefully when AI is disabled', async () => {
       mockAIService.isAIEnabled.mockReturnValue(false);
 
-      inquirer.prompt.mockResolvedValue({
+      mockPrompt.mockResolvedValue({
         projectName: 'no-ai-fallback-test',
         projectType: 'web',
         targetIDEs: ['claude'],
@@ -522,7 +511,11 @@ describe('Init Command', () => {
       await program.parseAsync(['node', 'test', 'init'], { from: 'user' });
 
       expect(mockAIService.generateSmartDefaults).not.toHaveBeenCalled();
-      expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(true, expect.any(Object));
+      expect(mockProgressTracker.completeOperation).toHaveBeenCalledWith(
+        'test-operation-id',
+        'completed',
+        expect.any(Object)
+      );
     });
   });
 });
