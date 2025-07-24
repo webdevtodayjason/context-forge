@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.4] - 2025-07-24 - Inquirer v12 Compatibility Fix
+
+### 🐛 Bug Fixes
+
+- **Fixed checkbox prompt error**: Resolved "No selectable choices. All choices are disabled" error in init command
+  - Added explicit `disabled: false` to all selectable checkbox choices for Inquirer v12 compatibility
+  - Fixed invalid `disabled` string values in IDE selection (changed to boolean)
+  - Updated all checkbox prompts across the codebase: features.ts, ideSelection.ts, projectConfig.ts, checkpointConfig.ts
+  - Users can now successfully run `context-forge init` and select features without errors
+
+### 🔧 Technical Details
+
+- Issue: Inquirer v12 requires explicit `disabled` property configuration for checkbox choices
+- Solution: Added `disabled: false` to all selectable choices and `disabled: true` for unavailable options
+- Affected files: features selection, IDE selection, project configuration extras, and checkpoint configuration
+
 ## [3.2.1] - 2025-07-15 - Smart Project Detection & Architect Mode
 
 ### 🏗️ Enhanced Prime Context Command

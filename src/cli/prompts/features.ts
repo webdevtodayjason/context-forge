@@ -5,6 +5,7 @@ interface FeatureChoice {
   name: string;
   value: string;
   checked?: boolean;
+  disabled?: boolean;
 }
 
 export async function features(projectType: string): Promise<Feature[]> {
@@ -52,44 +53,49 @@ export async function features(projectType: string): Promise<Feature[]> {
 
 function getFeatureChoices(projectType: string): FeatureChoice[] {
   const commonFeatures: FeatureChoice[] = [
-    { name: 'User Authentication & Authorization', value: 'auth', checked: true },
-    { name: 'User Dashboard', value: 'dashboard' },
-    { name: 'CRUD Operations', value: 'crud', checked: true },
-    { name: 'File Upload/Management', value: 'file-upload' },
-    { name: 'Real-time Updates (WebSocket)', value: 'realtime' },
-    { name: 'Email Notifications', value: 'email' },
-    { name: 'Search Functionality', value: 'search' },
-    { name: 'Data Export/Import', value: 'data-io' },
-    { name: 'Multi-language Support', value: 'i18n' },
-    { name: 'Dark Mode', value: 'dark-mode' },
-    { name: 'User Profile Management', value: 'profile' },
-    { name: 'Settings/Preferences', value: 'settings' },
+    { name: 'User Authentication & Authorization', value: 'auth', checked: true, disabled: false },
+    { name: 'User Dashboard', value: 'dashboard', disabled: false },
+    { name: 'CRUD Operations', value: 'crud', checked: true, disabled: false },
+    { name: 'File Upload/Management', value: 'file-upload', disabled: false },
+    { name: 'Real-time Updates (WebSocket)', value: 'realtime', disabled: false },
+    { name: 'Email Notifications', value: 'email', disabled: false },
+    { name: 'Search Functionality', value: 'search', disabled: false },
+    { name: 'Data Export/Import', value: 'data-io', disabled: false },
+    { name: 'Multi-language Support', value: 'i18n', disabled: false },
+    { name: 'Dark Mode', value: 'dark-mode', disabled: false },
+    { name: 'User Profile Management', value: 'profile', disabled: false },
+    { name: 'Settings/Preferences', value: 'settings', disabled: false },
   ];
 
   const apiFeatures: FeatureChoice[] = [
-    { name: 'RESTful API Endpoints', value: 'rest-api', checked: true },
-    { name: 'GraphQL API', value: 'graphql' },
-    { name: 'API Documentation (Swagger/OpenAPI)', value: 'api-docs', checked: true },
-    { name: 'API Rate Limiting', value: 'rate-limiting' },
-    { name: 'API Versioning', value: 'api-versioning' },
-    { name: 'Webhook Support', value: 'webhooks' },
+    { name: 'RESTful API Endpoints', value: 'rest-api', checked: true, disabled: false },
+    { name: 'GraphQL API', value: 'graphql', disabled: false },
+    {
+      name: 'API Documentation (Swagger/OpenAPI)',
+      value: 'api-docs',
+      checked: true,
+      disabled: false,
+    },
+    { name: 'API Rate Limiting', value: 'rate-limiting', disabled: false },
+    { name: 'API Versioning', value: 'api-versioning', disabled: false },
+    { name: 'Webhook Support', value: 'webhooks', disabled: false },
   ];
 
   const webFeatures: FeatureChoice[] = [
-    { name: 'Responsive Design', value: 'responsive', checked: true },
-    { name: 'Progressive Web App (PWA)', value: 'pwa' },
-    { name: 'SEO Optimization', value: 'seo' },
-    { name: 'Analytics Integration', value: 'analytics' },
-    { name: 'Social Media Integration', value: 'social' },
+    { name: 'Responsive Design', value: 'responsive', checked: true, disabled: false },
+    { name: 'Progressive Web App (PWA)', value: 'pwa', disabled: false },
+    { name: 'SEO Optimization', value: 'seo', disabled: false },
+    { name: 'Analytics Integration', value: 'analytics', disabled: false },
+    { name: 'Social Media Integration', value: 'social', disabled: false },
   ];
 
   const enterpriseFeatures: FeatureChoice[] = [
-    { name: 'Admin Panel', value: 'admin' },
-    { name: 'Role-Based Access Control (RBAC)', value: 'rbac' },
-    { name: 'Audit Logging', value: 'audit' },
-    { name: 'Payment Processing', value: 'payment' },
-    { name: 'Subscription Management', value: 'subscription' },
-    { name: 'Multi-tenancy', value: 'multi-tenant' },
+    { name: 'Admin Panel', value: 'admin', disabled: false },
+    { name: 'Role-Based Access Control (RBAC)', value: 'rbac', disabled: false },
+    { name: 'Audit Logging', value: 'audit', disabled: false },
+    { name: 'Payment Processing', value: 'payment', disabled: false },
+    { name: 'Subscription Management', value: 'subscription', disabled: false },
+    { name: 'Multi-tenancy', value: 'multi-tenant', disabled: false },
   ];
 
   // Return features based on project type

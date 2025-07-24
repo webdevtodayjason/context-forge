@@ -32,14 +32,14 @@ export async function ideSelection(): Promise<SupportedIDE[]> {
           value: 'single:cline',
         },
         {
-          name: 'Windsurf IDE - IDE with Cascade AI integration',
+          name: 'Windsurf IDE - IDE with Cascade AI integration (Coming soon)',
           value: 'single:windsurf',
-          disabled: '(Coming soon)',
+          disabled: true,
         },
         {
-          name: 'GitHub Copilot - AI pair programmer',
+          name: 'GitHub Copilot - AI pair programmer (Coming soon)',
           value: 'single:copilot',
-          disabled: '(Coming soon)',
+          disabled: true,
         },
         {
           name: "Gemini - Google's AI tools (CLI & Code Assist)",
@@ -72,32 +72,37 @@ export async function ideSelection(): Promise<SupportedIDE[]> {
           name: `Claude Code - ${IDE_INFO.claude.description}`,
           value: 'claude',
           checked: true,
+          disabled: false,
         },
         {
           name: `Cursor IDE - ${IDE_INFO.cursor.description}`,
           value: 'cursor',
+          disabled: false,
         },
         {
           name: `Roo Code - ${IDE_INFO.roo.description}`,
           value: 'roo',
+          disabled: false,
         },
         {
           name: `Cline - ${IDE_INFO.cline.description}`,
           value: 'cline',
+          disabled: false,
         },
         {
-          name: `Windsurf IDE - ${IDE_INFO.windsurf.description}`,
+          name: `Windsurf IDE - ${IDE_INFO.windsurf.description} (Coming soon)`,
           value: 'windsurf',
-          disabled: '(Coming soon)',
+          disabled: true,
         },
         {
-          name: `GitHub Copilot - ${IDE_INFO.copilot.description}`,
+          name: `GitHub Copilot - ${IDE_INFO.copilot.description} (Coming soon)`,
           value: 'copilot',
-          disabled: '(Coming soon)',
+          disabled: true,
         },
         {
           name: `Gemini - ${IDE_INFO.gemini.description}`,
           value: 'gemini',
+          disabled: false,
         },
       ],
       validate: (answers) => {

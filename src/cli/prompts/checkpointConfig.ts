@@ -31,26 +31,31 @@ export async function checkpointConfig(projectType: string): Promise<CheckpointC
           name: 'Database connections and schema changes',
           value: 'database-connection',
           checked: true,
+          disabled: false,
         },
         {
           name: 'Authentication and security implementations',
           value: 'authentication-setup',
           checked: true,
+          disabled: false,
         },
         {
           name: 'API endpoints that modify data',
           value: 'api-endpoints',
           checked: true,
+          disabled: false,
         },
         {
           name: 'External service integrations',
           value: 'integration-setup',
           checked: false,
+          disabled: false,
         },
         {
           name: 'Production deployment configurations',
           value: 'production-deployment',
           checked: true,
+          disabled: false,
         },
         ...(projectType === 'fullstack' || projectType === 'api'
           ? [
@@ -58,6 +63,7 @@ export async function checkpointConfig(projectType: string): Promise<CheckpointC
                 name: 'Data migrations and transformations',
                 value: 'data-migration',
                 checked: true,
+                disabled: false,
               },
             ]
           : []),
