@@ -102,6 +102,27 @@ export class ClaudeAdapter extends IDEAdapter {
           description: 'Base implementation PRP',
         });
 
+        // Generate PRPs for each selected feature
+        if (this.config.features && this.config.features.length > 0) {
+          for (const feature of this.config.features) {
+            const featureSlug = feature.id || feature.name.toLowerCase().replace(/\s+/g, '-');
+            files.push({
+              path: path.join(prpPath, `feature-${featureSlug}-prp.md`),
+              content: await generatePRP(
+                {
+                  ...this.config,
+                  prd: {
+                    ...this.config.prd,
+                    content: `Feature: ${feature.name}\nDescription: ${feature.description}\nPriority: ${feature.priority}\nComplexity: ${feature.complexity}`,
+                  },
+                },
+                'base'
+              ),
+              description: `PRP for ${feature.name} feature`,
+            });
+          }
+        }
+
         // Add planning PRP for complex projects
         if (this.config.timeline === 'enterprise' || this.config.teamSize !== 'solo') {
           files.push({

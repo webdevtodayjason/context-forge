@@ -1,0 +1,17 @@
+[
+  {
+    "id": "mdm6ha4k6q68hyuz9",
+    "command": "init",
+    "operation": "Project initialization",
+    "status": "in_progress",
+    "startTime": "2025-07-27T21:15:20.324Z",
+    "projectPath": "/Users/sem/code/context-forge",
+    "metadata": {
+      "aiEnabled": false,
+      "targetIDEs": [
+        "claude"
+      ]
+    },
+    "steps": []
+  }
+]

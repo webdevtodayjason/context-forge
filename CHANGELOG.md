@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.6] - 2025-07-27 - Feature PRP Generation Fix
+
+### 🐛 Bug Fixes
+
+- **Fixed missing feature PRPs**: Individual PRPs are now generated for each selected feature during init
+  - Added feature PRP generation logic to Claude adapter
+  - Each feature gets its own PRP file with feature-specific context
+  - PRPs include feature name, description, priority, and complexity
+
+## [3.2.5] - 2025-07-27 - Feature Prioritization Checkbox Fix
+
+### 🐛 Bug Fixes
+
+- **Fixed feature prioritization checkbox error**: Resolved "No selectable choices. All choices are disabled" error during feature prioritization step in init command
+  - Added explicit `disabled: false` to priorityChoices in prioritizeFeatures function
+  - Fixed both must-have and nice-to-have feature selection prompts
+  - Resolves GitHub issue #6
+
 ## [3.2.4] - 2025-07-24 - Inquirer v12 Compatibility Fix
 
 ### 🐛 Bug Fixes
