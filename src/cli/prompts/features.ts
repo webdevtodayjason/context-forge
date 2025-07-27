@@ -366,6 +366,7 @@ async function prioritizeFeatures(features: Feature[]): Promise<Feature[]> {
   const priorityChoices = features.map((f) => ({
     name: `${f.name} (${f.complexity})`,
     value: f.id,
+    disabled: false,
   }));
 
   const { mustHaveFeatures } = await inquirer.prompt([
@@ -383,7 +384,9 @@ async function prioritizeFeatures(features: Feature[]): Promise<Feature[]> {
       type: 'checkbox',
       name: 'niceToHaveFeatures',
       message: 'Which features are NICE-TO-HAVE (can be added later)?',
-      choices: priorityChoices.filter((c) => !mustHaveFeatures.includes(c.value)),
+      choices: priorityChoices
+        .filter((c) => !mustHaveFeatures.includes(c.value))
+        .map((c) => ({ ...c, disabled: false })),
     },
   ]);
 
