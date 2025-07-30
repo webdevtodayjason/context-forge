@@ -376,19 +376,33 @@ async function prioritizeFeatures(features: Feature[]): Promise<Feature[]> {
       message: 'Which features are MUST-HAVE for the MVP?',
       choices: priorityChoices,
       default: features.filter((f) => f.priority === 'must-have').map((f) => f.id),
+      validate: (input) => {
+        if (input.length === 0) {
+          return 'Please select at least one must-have feature';
+        }
+        if (input.length === features.length) {
+          return 'Please leave some features for later phases. Not all features can be must-have for MVP.';
+        }
+        return true;
+      },
     },
   ]);
 
-  const { niceToHaveFeatures } = await inquirer.prompt([
-    {
-      type: 'checkbox',
-      name: 'niceToHaveFeatures',
-      message: 'Which features are NICE-TO-HAVE (can be added later)?',
-      choices: priorityChoices
-        .filter((c) => !mustHaveFeatures.includes(c.value))
-        .map((c) => ({ ...c, disabled: false })),
-    },
-  ]);
+  const remainingChoices = priorityChoices.filter((c) => !mustHaveFeatures.includes(c.value));
+
+  let niceToHaveFeatures: string[] = [];
+
+  if (remainingChoices.length > 0) {
+    const response = await inquirer.prompt([
+      {
+        type: 'checkbox',
+        name: 'niceToHaveFeatures',
+        message: 'Which features are NICE-TO-HAVE (can be added later)?',
+        choices: remainingChoices,
+      },
+    ]);
+    niceToHaveFeatures = response.niceToHaveFeatures;
+  }
 
   // Update priorities based on user selection
   return features.map((feature) => ({
