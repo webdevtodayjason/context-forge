@@ -8,9 +8,7 @@
     "startTime": "2025-07-27T21:15:20.324Z",
     "metadata": {
       "aiEnabled": false,
-      "targetIDEs": [
-        "claude"
-      ]
+      "targetIDEs": ["claude"]
     },
     "steps": []
   },
@@ -23,9 +21,7 @@
     "startTime": "2025-08-20T13:59:05.203Z",
     "metadata": {
       "aiEnabled": false,
-      "targetIDEs": [
-        "claude"
-      ]
+      "targetIDEs": ["claude"]
     },
     "steps": []
   },
@@ -38,12 +34,8 @@
     "projectPath": "/Users/sem/code/context-forge",
     "metadata": {
       "aiEnabled": false,
-      "targetIDEs": [
-        "claude"
-      ],
-      "errors": [
-        "Cannot read properties of undefined (reading 'length')"
-      ]
+      "targetIDEs": ["claude"],
+      "errors": ["Cannot read properties of undefined (reading 'length')"]
     },
     "steps": [
       {

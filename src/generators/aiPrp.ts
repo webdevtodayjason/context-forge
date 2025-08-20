@@ -1,5 +1,9 @@
 import { ProjectConfig, Feature } from '../types';
-import { AIIntelligenceService, AIFeaturePRP, FeaturePRPRequest } from '../services/aiIntelligenceService';
+import {
+  AIIntelligenceService,
+  AIFeaturePRP,
+  FeaturePRPRequest,
+} from '../services/aiIntelligenceService';
 import { generatePRP } from './prp';
 import fs from 'fs-extra';
 import path from 'path';
@@ -68,7 +72,7 @@ export class AIPRPGenerator {
         content: templateContent,
         wasAIGenerated: false,
         generationTime: Date.now() - startTime,
-        fallbackReason: options.useAI 
+        fallbackReason: options.useAI
           ? 'AI generation failed or unavailable'
           : 'AI generation not requested',
       };
@@ -86,7 +90,7 @@ export class AIPRPGenerator {
     type: string
   ): Promise<{ content: string; provider: string } | null> {
     console.log(`🤖 Generating AI PRP for: ${targetFeature.name}...`);
-    
+
     try {
       const request: FeaturePRPRequest = {
         feature: targetFeature,
@@ -99,9 +103,9 @@ export class AIPRPGenerator {
       // Add timeout to AI generation
       const aiPRP = await Promise.race([
         this.aiService.generateFeaturePRP(request),
-        new Promise<null>((_, reject) => 
+        new Promise<null>((_, reject) =>
           setTimeout(() => reject(new Error('AI generation timeout')), 30000)
-        )
+        ),
       ]);
 
       if (!aiPRP) {
@@ -113,14 +117,21 @@ export class AIPRPGenerator {
 
       // Load the appropriate template and merge with AI content
       const template = await this.loadPRPTemplate(type);
-      const enhancedContent = await this.mergeAIWithTemplate(template, aiPRP, config, targetFeature);
+      const enhancedContent = await this.mergeAIWithTemplate(
+        template,
+        aiPRP,
+        config,
+        targetFeature
+      );
 
       return {
         content: enhancedContent,
         provider: await this.detectProvider(),
       };
     } catch (error) {
-      console.log(`⚠️  AI generation error for ${targetFeature.name}: ${error}, falling back to template`);
+      console.log(
+        `⚠️  AI generation error for ${targetFeature.name}: ${error}, falling back to template`
+      );
       return null;
     }
   }
@@ -130,11 +141,11 @@ export class AIPRPGenerator {
    */
   private async loadPRPTemplate(type: string): Promise<string> {
     const templatePath = path.join(__dirname, '../../templates/prp', `${type}.md`);
-    
+
     if (await fs.pathExists(templatePath)) {
       return await fs.readFile(templatePath, 'utf-8');
     }
-    
+
     // Fallback to base template
     const basePath = path.join(__dirname, '../../templates/prp', 'base.md');
     return await fs.readFile(basePath, 'utf-8');
@@ -154,16 +165,16 @@ export class AIPRPGenerator {
       projectName: config.projectName,
       featureName: targetFeature.name,
       goal: `Implement ${targetFeature.name} for ${config.projectName}`,
-      
+
       // AI-enhanced content
       reasons: [
         aiPRP.implementationStrategy,
         `${targetFeature.name} provides value to end users`,
         'Foundation for future enhancements',
       ],
-      
+
       description: `${config.description}\n\n**AI-Generated Implementation Strategy:**\n${aiPRP.implementationStrategy}`,
-      
+
       // AI-specific sections
       aiImplementationStrategy: aiPRP.implementationStrategy,
       aiTechnicalApproach: aiPRP.technicalApproach,
@@ -174,18 +185,18 @@ export class AIPRPGenerator {
       aiTestingStrategy: aiPRP.testingStrategy,
       aiDependencies: aiPRP.dependencies,
       aiComplexity: aiPRP.estimatedComplexity,
-      
+
       // Standard template fields
       successCriteria: [
         `${targetFeature.name} is fully functional`,
         'All AI-recommended validation gates pass',
         'Implementation follows AI-suggested best practices',
       ],
-      
+
       // Merge with existing template data
       language: this.getLanguageFromTechStack(config.techStack),
       testLanguage: this.getTestLanguageFromTechStack(config.techStack),
-      
+
       // AI metadata
       aiGenerated: true,
       aiProvider: await this.detectProvider(),
@@ -195,7 +206,7 @@ export class AIPRPGenerator {
     // Use enhanced template that includes AI sections
     const enhancedTemplate = this.createAIEnhancedTemplate(template);
     const compiledTemplate = Handlebars.compile(enhancedTemplate);
-    
+
     return compiledTemplate(context);
   }
 
@@ -263,9 +274,11 @@ export class AIPRPGenerator {
     // Insert AI sections after the main content but before the checklist
     const checklistIndex = baseTemplate.indexOf('## Checklist');
     if (checklistIndex !== -1) {
-      return baseTemplate.slice(0, checklistIndex) + aiSections + baseTemplate.slice(checklistIndex);
+      return (
+        baseTemplate.slice(0, checklistIndex) + aiSections + baseTemplate.slice(checklistIndex)
+      );
     }
-    
+
     // If no checklist found, append at the end
     return baseTemplate + aiSections;
   }
@@ -275,39 +288,42 @@ export class AIPRPGenerator {
    */
   private async detectExistingPatterns(config: ProjectConfig): Promise<string[]> {
     const patterns: string[] = [];
-    
+
     // This would analyze the existing codebase to find patterns
     // For now, return patterns based on tech stack
     if (config.techStack.frontend === 'nextjs') {
       patterns.push('Next.js App Router patterns');
       patterns.push('Server Components');
     }
-    
+
     if (config.techStack.backend === 'fastapi') {
       patterns.push('FastAPI async patterns');
       patterns.push('Pydantic models');
     }
-    
+
     return patterns;
   }
 
   /**
    * Gather related documentation for the feature
    */
-  private async gatherRelatedDocumentation(config: ProjectConfig, feature: Feature): Promise<string[]> {
+  private async gatherRelatedDocumentation(
+    config: ProjectConfig,
+    feature: Feature
+  ): Promise<string[]> {
     const docs: string[] = [];
-    
+
     // Look for existing documentation based on feature type
     if (feature.category === 'auth') {
       docs.push('Authentication best practices');
       docs.push('JWT token management');
     }
-    
+
     if (feature.category === 'ui') {
       docs.push('Component design patterns');
       docs.push('Accessibility guidelines');
     }
-    
+
     return docs;
   }
 
@@ -318,10 +334,8 @@ export class AIPRPGenerator {
     // This would check which provider is actually being used
     if (process.env.ANTHROPIC_API_KEY) return 'Anthropic Claude';
     if (process.env.OPENAI_API_KEY) return 'OpenAI GPT-4';
-    
-    // Check stored keys
-    const aiService = new AIIntelligenceService();
-    // Would need to expose the provider detection method
+
+    // Check stored keys (future implementation)
     return 'AI Provider';
   }
 
@@ -374,6 +388,6 @@ export async function generateAIEnhancedPRP(
     fallbackToTemplate: true,
     includeAIMetadata: true,
   });
-  
+
   return result.content;
 }

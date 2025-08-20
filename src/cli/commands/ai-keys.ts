@@ -46,7 +46,7 @@ export const aiKeysCommand = new Command('ai-keys')
 
 async function interactiveKeySetup(): Promise<void> {
   console.log(chalk.gray('Set up API keys for AI-powered PRP generation.\n'));
-  
+
   // Show current status
   const availableProviders = await KeyManager.getAvailableProviders();
   if (availableProviders.length > 0) {
@@ -110,7 +110,9 @@ async function addApiKey(provider: AIProvider): Promise<void> {
 
   // Show instructions for getting API key
   if (provider === 'openai') {
-    console.log(chalk.gray('💡 Get your OpenAI API key from: https://platform.openai.com/api-keys'));
+    console.log(
+      chalk.gray('💡 Get your OpenAI API key from: https://platform.openai.com/api-keys')
+    );
   } else if (provider === 'anthropic') {
     console.log(chalk.gray('💡 Get your Anthropic API key from: https://console.anthropic.com/'));
   }
@@ -125,7 +127,7 @@ async function addApiKey(provider: AIProvider): Promise<void> {
         if (!input || input.trim().length === 0) {
           return 'API key cannot be empty';
         }
-        
+
         // Basic format validation
         if (provider === 'openai' && !input.startsWith('sk-')) {
           return 'OpenAI API keys should start with "sk-"';
@@ -133,7 +135,7 @@ async function addApiKey(provider: AIProvider): Promise<void> {
         if (provider === 'anthropic' && !input.startsWith('sk-ant-')) {
           return 'Anthropic API keys should start with "sk-ant-"';
         }
-        
+
         return true;
       },
     },
@@ -142,11 +144,11 @@ async function addApiKey(provider: AIProvider): Promise<void> {
   // Test the API key
   const spinner = ora('Testing API key...').start();
   const isValid = await KeyManager.testKey(provider, apiKey.trim());
-  
+
   if (!isValid) {
     spinner.fail('API key test failed');
     console.log(chalk.red('❌ The API key appears to be invalid or there was a connection error.'));
-    
+
     const { proceed } = await inquirer.prompt([
       {
         type: 'confirm',
@@ -170,10 +172,9 @@ async function addApiKey(provider: AIProvider): Promise<void> {
     await KeyManager.storeKey(provider, apiKey.trim());
     await KeyManager.ensureGitignore();
     storeSpinner.succeed('API key stored securely');
-    
+
     console.log(chalk.green(`\n✅ ${provider.toUpperCase()} API key configured successfully!`));
     console.log(chalk.blue('🚀 You can now use --ai-prp flag with context-forge init'));
-    
   } catch (error) {
     storeSpinner.fail('Failed to store API key');
     console.error(chalk.red(`Error: ${error}`));
@@ -182,32 +183,34 @@ async function addApiKey(provider: AIProvider): Promise<void> {
 
 async function testApiKey(provider: AIProvider): Promise<void> {
   console.log(chalk.cyan(`\n🧪 Testing ${provider.toUpperCase()} API key\n`));
-  
+
   const spinner = ora(`Testing ${provider} connection...`).start();
   const isValid = await KeyManager.testKey(provider);
-  
+
   if (isValid) {
     spinner.succeed(`${provider.toUpperCase()} API key is working`);
     console.log(chalk.green(`✅ ${provider.toUpperCase()} API connection successful`));
   } else {
     spinner.fail(`${provider.toUpperCase()} API key test failed`);
-    
+
     const hasKey = await KeyManager.hasKey(provider);
     if (!hasKey) {
       console.log(chalk.yellow(`⚠️  No ${provider.toUpperCase()} API key found`));
       console.log(chalk.gray(`Run: context-forge ai-keys to add one`));
     } else {
       console.log(chalk.red(`❌ ${provider.toUpperCase()} API key appears to be invalid`));
-      console.log(chalk.gray('The key might be expired, invalid, or there might be a network issue'));
+      console.log(
+        chalk.gray('The key might be expired, invalid, or there might be a network issue')
+      );
     }
   }
 }
 
 async function testAllKeys(): Promise<void> {
   console.log(chalk.cyan('\n🧪 Testing all stored API keys\n'));
-  
+
   const providers: AIProvider[] = ['openai', 'anthropic'];
-  
+
   for (const provider of providers) {
     if (await KeyManager.hasKey(provider)) {
       await testApiKey(provider);
@@ -215,6 +218,6 @@ async function testAllKeys(): Promise<void> {
       console.log(chalk.gray(`⏭️  No ${provider.toUpperCase()} API key stored`));
     }
   }
-  
+
   console.log('\n');
 }

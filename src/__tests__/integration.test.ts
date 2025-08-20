@@ -153,7 +153,7 @@ describe('Integration Tests', () => {
       // Create config directory manually to simulate init command behavior
       const configDir = path.join(tempDir, '.context-forge');
       await fs.ensureDir(configDir);
-      
+
       // Create a sample config file (simulating what init command should do)
       const sampleConfig = {
         projectName: 'test-project',
@@ -161,7 +161,7 @@ describe('Integration Tests', () => {
         description: 'A test project',
         techStack: {
           frontend: 'react',
-          backend: 'express'
+          backend: 'express',
         },
         features: [],
         targetIDEs: ['claude'],
@@ -170,16 +170,16 @@ describe('Integration Tests', () => {
         deployment: 'vercel',
         extras: {
           prp: true,
-          testing: true
-        }
+          testing: true,
+        },
       };
-      
+
       const configPath = path.join(configDir, 'config.json');
       await fs.writeJson(configPath, sampleConfig, { spaces: 2 });
 
       // Verify the config file exists and is valid
       expect(await fs.pathExists(configPath)).toBe(true);
-      
+
       const loadedConfig = await fs.readJson(configPath);
       expect(loadedConfig.projectName).toBe('test-project');
       expect(loadedConfig.targetIDEs).toContain('claude');
@@ -192,7 +192,7 @@ describe('Integration Tests', () => {
       expect(() => {
         execSync(`node ${cliPath} config --show`, {
           cwd: tempDir,
-          stdio: 'pipe'
+          stdio: 'pipe',
         });
       }).toThrow();
     });
@@ -201,7 +201,7 @@ describe('Integration Tests', () => {
       // Create config directory and file
       const configDir = path.join(tempDir, '.context-forge');
       await fs.ensureDir(configDir);
-      
+
       const sampleConfig = {
         projectName: 'test-project',
         projectType: 'web',
@@ -212,9 +212,9 @@ describe('Integration Tests', () => {
         timeline: 'mvp',
         teamSize: 'solo',
         deployment: 'vercel',
-        extras: { prp: true }
+        extras: { prp: true },
       };
-      
+
       await fs.writeJson(path.join(configDir, 'config.json'), sampleConfig, { spaces: 2 });
 
       const result = execSync(`node ${cliPath} config --show`, {

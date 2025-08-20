@@ -67,11 +67,14 @@ function registerHandlebarsHelpers() {
   );
 }
 
-function createPRPContext(config: ProjectConfig, type: string, targetFeature?: Feature): Partial<PRPContext> {
+function createPRPContext(
+  config: ProjectConfig,
+  type: string,
+  targetFeature?: Feature
+): Partial<PRPContext> {
   // Use the specified target feature, or fall back to primary feature
-  const primaryFeature = targetFeature || 
-    config.features.find((f) => f.priority === 'must-have') || 
-    config.features[0];
+  const primaryFeature =
+    targetFeature || config.features.find((f) => f.priority === 'must-have') || config.features[0];
   const language = getLanguageFromTechStack(config.techStack);
   const testLanguage = getTestLanguageFromTechStack(config.techStack);
 

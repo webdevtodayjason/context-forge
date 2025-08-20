@@ -68,18 +68,18 @@ export class AIIntelligenceService {
 
   private async detectPreferredProvider(): Promise<AIProvider | null> {
     if (this.preferredProvider) return this.preferredProvider;
-    
+
     // Check environment variables first
     if (process.env.ANTHROPIC_API_KEY) return 'anthropic';
     if (process.env.OPENAI_API_KEY) return 'openai';
-    
+
     // Check stored keys
     const availableProviders = await KeyManager.getAvailableProviders();
     if (availableProviders.length > 0) {
       this.preferredProvider = availableProviders[0]; // Use first available
       return this.preferredProvider;
     }
-    
+
     return null;
   }
 
@@ -219,13 +219,13 @@ export class AIIntelligenceService {
 
     try {
       const prompt = this.buildFeaturePRPPrompt(request);
-      
+
       if (provider === 'anthropic') {
         return await this.generateWithAnthropic(prompt);
       } else if (provider === 'openai') {
         return await this.generateWithOpenAI(prompt);
       }
-      
+
       return null;
     } catch (error) {
       console.warn('Feature PRP generation failed:', error);
@@ -249,7 +249,7 @@ export class AIIntelligenceService {
       if (lastMessage.type === 'result' && lastMessage.subtype === 'success') {
         return this.parseFeaturePRPResponse(lastMessage.result);
       }
-      
+
       return null;
     } catch (error) {
       console.error('Anthropic generation failed:', error);
@@ -267,7 +267,7 @@ export class AIIntelligenceService {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -282,13 +282,13 @@ export class AIIntelligenceService {
         throw new Error(`OpenAI API error: ${response.status}`);
       }
 
-      const data = await response.json() as any;
+      const data = (await response.json()) as any;
       const content = data.choices?.[0]?.message?.content;
-      
+
       if (content) {
         return this.parseFeaturePRPResponse(content);
       }
-      
+
       return null;
     } catch (error) {
       console.error('OpenAI generation failed:', error);
@@ -298,7 +298,7 @@ export class AIIntelligenceService {
 
   private buildFeaturePRPPrompt(request: FeaturePRPRequest): string {
     const { feature, projectConfig, techStack } = request;
-    
+
     return `
 You are an expert software architect creating a detailed implementation guide for a specific feature.
 
@@ -358,7 +358,7 @@ Please respond with a JSON object matching this structure:
       if (jsonMatch) {
         const jsonStr = jsonMatch[0];
         const parsed = JSON.parse(jsonStr);
-        
+
         // Validate the response has required fields
         if (parsed.featureName && parsed.implementationStrategy) {
           return {
@@ -371,13 +371,15 @@ Please respond with a JSON object matching this structure:
             pseudocode: parsed.pseudocode || '',
             testingStrategy: parsed.testingStrategy || '',
             dependencies: Array.isArray(parsed.dependencies) ? parsed.dependencies : [],
-            estimatedComplexity: ['simple', 'medium', 'complex'].includes(parsed.estimatedComplexity) 
-              ? parsed.estimatedComplexity 
+            estimatedComplexity: ['simple', 'medium', 'complex'].includes(
+              parsed.estimatedComplexity
+            )
+              ? parsed.estimatedComplexity
               : 'medium',
           };
         }
       }
-      
+
       return null;
     } catch (error) {
       console.warn('Failed to parse AI PRP response:', error);

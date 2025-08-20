@@ -21,7 +21,7 @@ export interface KeyConfig {
 export class KeyManager {
   private static readonly KEYS_FILE = '.context-forge-keys';
   private static readonly ENCRYPTION_ALGORITHM = 'aes-256-cbc';
-  
+
   private static getKeysPath(): string {
     return path.join(os.homedir(), this.KEYS_FILE);
   }
@@ -44,15 +44,15 @@ export class KeyManager {
     const salt = crypto.randomBytes(32);
     const key = this.generateKey(os.userInfo().username, salt);
     const iv = crypto.randomBytes(16);
-    
+
     const cipher = crypto.createCipheriv(this.ENCRYPTION_ALGORITHM, key, iv);
-    
+
     let encrypted = cipher.update(apiKey, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     return {
       encrypted: `${iv.toString('hex')}:${encrypted}`,
-      salt: salt.toString('hex')
+      salt: salt.toString('hex'),
     };
   }
 
@@ -62,15 +62,15 @@ export class KeyManager {
   private static decryptKey(encryptedData: string, saltHex: string): string {
     const salt = Buffer.from(saltHex, 'hex');
     const key = this.generateKey(os.userInfo().username, salt);
-    
+
     const [ivHex, encrypted] = encryptedData.split(':');
     const iv = Buffer.from(ivHex, 'hex');
-    
+
     const decipher = crypto.createDecipheriv(this.ENCRYPTION_ALGORITHM, key, iv);
-    
+
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   }
 
@@ -79,17 +79,17 @@ export class KeyManager {
    */
   public static async storeKey(provider: AIProvider, apiKey: string): Promise<void> {
     const keysPath = this.getKeysPath();
-    
+
     // Encrypt the key
     const { encrypted, salt } = this.encryptKey(apiKey);
-    
+
     // Load existing keys or create new structure
     let keyConfigs: Record<string, KeyConfig> = {};
     if (await fs.pathExists(keysPath)) {
       try {
         const content = await fs.readFile(keysPath, 'utf-8');
         keyConfigs = JSON.parse(content);
-      } catch (error) {
+      } catch {
         console.warn(chalk.yellow('Warning: Could not read existing keys file, creating new one'));
       }
     }
@@ -99,12 +99,12 @@ export class KeyManager {
       provider,
       encrypted,
       salt,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Save to file
     await fs.writeFile(keysPath, JSON.stringify(keyConfigs, null, 2), 'utf-8');
-    
+
     // Set restrictive permissions (owner read/write only)
     await fs.chmod(keysPath, 0o600);
 
@@ -123,7 +123,7 @@ export class KeyManager {
     }
 
     const keysPath = this.getKeysPath();
-    
+
     if (!(await fs.pathExists(keysPath))) {
       return null;
     }
@@ -131,7 +131,7 @@ export class KeyManager {
     try {
       const content = await fs.readFile(keysPath, 'utf-8');
       const keyConfigs: Record<string, KeyConfig> = JSON.parse(content);
-      
+
       const config = keyConfigs[provider];
       if (!config) {
         return null;
@@ -172,16 +172,16 @@ export class KeyManager {
    * Test an API key by making a simple API call
    */
   public static async testKey(provider: AIProvider, apiKey?: string): Promise<boolean> {
-    const key = apiKey || await this.getKey(provider);
+    const key = apiKey || (await this.getKey(provider));
     if (!key) return false;
 
     try {
       if (provider === 'openai') {
         const response = await fetch('https://api.openai.com/v1/models', {
           headers: {
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'application/json'
-          }
+            Authorization: `Bearer ${key}`,
+            'Content-Type': 'application/json',
+          },
         });
         return response.status === 200;
       } else if (provider === 'anthropic') {
@@ -190,18 +190,18 @@ export class KeyManager {
           headers: {
             'x-api-key': key,
             'Content-Type': 'application/json',
-            'anthropic-version': '2023-06-01'
+            'anthropic-version': '2023-06-01',
           },
           body: JSON.stringify({
             model: 'claude-3-haiku-20240307',
             max_tokens: 1,
-            messages: [{ role: 'user', content: 'test' }]
-          })
+            messages: [{ role: 'user', content: 'test' }],
+          }),
         });
         return response.status === 200 || response.status === 400; // 400 is ok for this test
       }
       return false;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -212,27 +212,27 @@ export class KeyManager {
   public static async ensureGitignore(): Promise<void> {
     const gitignorePath = this.getGitignorePath();
     const keyEntry = `.context-forge-keys`;
-    
+
     try {
       let gitignoreContent = '';
-      
+
       if (await fs.pathExists(gitignorePath)) {
         gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
       }
-      
+
       // Check if the entry already exists
       if (gitignoreContent.includes(keyEntry)) {
         return;
       }
-      
+
       // Add entry with a comment
-      const newContent = gitignoreContent + 
+      const newContent =
+        gitignoreContent +
         (gitignoreContent.endsWith('\n') ? '' : '\n') +
         `\n# Context Forge API keys (added automatically)\n${keyEntry}\n`;
-      
+
       await fs.writeFile(gitignorePath, newContent, 'utf-8');
       console.log(chalk.blue(`✓ Added ${keyEntry} to .gitignore`));
-      
     } catch (error) {
       console.warn(chalk.yellow(`Warning: Could not update .gitignore: ${error}`));
     }
@@ -243,7 +243,7 @@ export class KeyManager {
    */
   public static async listKeys(): Promise<void> {
     const keysPath = this.getKeysPath();
-    
+
     if (!(await fs.pathExists(keysPath))) {
       console.log(chalk.yellow('No API keys stored'));
       return;
@@ -252,14 +252,13 @@ export class KeyManager {
     try {
       const content = await fs.readFile(keysPath, 'utf-8');
       const keyConfigs: Record<string, KeyConfig> = JSON.parse(content);
-      
+
       console.log(chalk.blue('\nStored API Keys:'));
       for (const [provider, config] of Object.entries(keyConfigs)) {
         const date = new Date(config.timestamp).toLocaleDateString();
         console.log(chalk.gray(`  ${provider}: stored on ${date}`));
       }
       console.log('');
-      
     } catch (error) {
       console.error(chalk.red('Error reading keys file:', error));
     }
@@ -270,7 +269,7 @@ export class KeyManager {
    */
   public static async removeKey(provider: AIProvider): Promise<void> {
     const keysPath = this.getKeysPath();
-    
+
     if (!(await fs.pathExists(keysPath))) {
       console.log(chalk.yellow(`No keys stored for ${provider}`));
       return;
@@ -279,17 +278,16 @@ export class KeyManager {
     try {
       const content = await fs.readFile(keysPath, 'utf-8');
       const keyConfigs: Record<string, KeyConfig> = JSON.parse(content);
-      
+
       if (!keyConfigs[provider]) {
         console.log(chalk.yellow(`No key stored for ${provider}`));
         return;
       }
-      
+
       delete keyConfigs[provider];
       await fs.writeFile(keysPath, JSON.stringify(keyConfigs, null, 2), 'utf-8');
-      
+
       console.log(chalk.green(`✓ Removed ${provider} API key`));
-      
     } catch (error) {
       console.error(chalk.red(`Error removing ${provider} key:`, error));
     }

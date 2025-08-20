@@ -137,12 +137,18 @@ export const initCommand = new Command('init')
       if (options.aiPrp && config) {
         const availableProviders = await KeyManager.getAvailableProviders();
         if (availableProviders.length === 0) {
-          console.log(chalk.yellow('\n⚠️  AI-powered PRP generation requested but no API keys found.'));
+          console.log(
+            chalk.yellow('\n⚠️  AI-powered PRP generation requested but no API keys found.')
+          );
           console.log(chalk.gray('Run: context-forge ai-keys to set up API keys\n'));
           console.log(chalk.blue('Proceeding with template-based PRP generation...'));
           config.extras.prp = true;
         } else {
-          console.log(chalk.green(`\n🤖 AI-powered PRP generation enabled using ${availableProviders[0].toUpperCase()}`));
+          console.log(
+            chalk.green(
+              `\n🤖 AI-powered PRP generation enabled using ${availableProviders[0].toUpperCase()}`
+            )
+          );
           config.extras.prp = true;
           config.extras.aiPrp = true;
         }
@@ -156,14 +162,16 @@ export const initCommand = new Command('init')
       const configStepId = await progressTracker.addStep(operationId, 'Save configuration');
       const configDir = path.join(outputPath, '.context-forge');
       const configPath = path.join(configDir, 'config.json');
-      
+
       await fs.ensureDir(configDir);
       await fs.writeJson(configPath, config, { spaces: 2 });
-      
+
       // Add .context-forge to .gitignore
       await ensureGitignoreEntry(outputPath, '.context-forge/');
-      
-      console.log(chalk.blue(`📁 Configuration saved to: ${path.relative(process.cwd(), configPath)}`));
+
+      console.log(
+        chalk.blue(`📁 Configuration saved to: ${path.relative(process.cwd(), configPath)}`)
+      );
       await progressTracker.completeStep(operationId, configStepId);
 
       // Generate documentation
@@ -385,26 +393,26 @@ function detectDeployment(techStack: string[]): string {
  */
 async function ensureGitignoreEntry(projectPath: string, entry: string): Promise<void> {
   const gitignorePath = path.join(projectPath, '.gitignore');
-  
+
   try {
     let gitignoreContent = '';
-    
+
     if (await fs.pathExists(gitignorePath)) {
       gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
     }
-    
+
     // Check if the entry already exists
     if (gitignoreContent.includes(entry)) {
       return;
     }
-    
+
     // Add entry with a comment
-    const newContent = gitignoreContent + 
+    const newContent =
+      gitignoreContent +
       (gitignoreContent.endsWith('\n') ? '' : '\n') +
       `\n# Context Forge configuration (added automatically)\n${entry}\n`;
-    
+
     await fs.writeFile(gitignorePath, newContent, 'utf-8');
-    
   } catch (error) {
     // Don't fail the entire process if gitignore update fails
     console.warn(chalk.yellow(`Warning: Could not update .gitignore: ${error}`));

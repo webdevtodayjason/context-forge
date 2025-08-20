@@ -108,21 +108,21 @@ export class ClaudeAdapter extends IDEAdapter {
         if (this.config.features && this.config.features.length > 0) {
           // Ensure PRP directory exists
           await fs.ensureDir(prpPath);
-          
+
           for (const feature of this.config.features) {
             const featureSlug = feature.id || feature.name.toLowerCase().replace(/\s+/g, '-');
             const useAI = this.config.extras.aiPrp || false;
             const filePath = path.join(prpPath, `feature-${featureSlug}-prp.md`);
-            
+
             // Generate content
-            const content = useAI 
+            const content = useAI
               ? await generateAIEnhancedPRP(this.config, 'base', feature, true)
               : await generatePRP(this.config, 'base', feature);
-            
+
             // Write file immediately so user can see progress
             await fs.writeFile(filePath, content, 'utf-8');
             console.log(`📝 Generated: ${path.relative(process.cwd(), filePath)}`);
-            
+
             // Still add to files array for logging
             files.push({
               path: filePath,

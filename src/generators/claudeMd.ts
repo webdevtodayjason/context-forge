@@ -153,8 +153,12 @@ This project uses context engineering principles for efficient AI-assisted devel
 - \`/Docs/project_structure.md\` - Project organization
 - \`/Docs/UI_UX_doc.md\` - Design specifications
 - \`/Docs/Bug_tracking.md\` - Error tracking
-${config.extras.prp ? `- \`/PRPs/\` - Product Requirement Prompts for structured implementation
-  ${config.features && config.features.length > 0 ? config.features.map(f => `- \`/PRPs/feature-${f.id || f.name.toLowerCase().replace(/\s+/g, '-')}-prp.md\` - ${f.name} implementation guide`).join('\n  ') : ''}` : ''}
+${
+  config.extras.prp
+    ? `- \`/PRPs/\` - Product Requirement Prompts for structured implementation
+  ${config.features && config.features.length > 0 ? config.features.map((f) => `- \`/PRPs/feature-${f.id || f.name.toLowerCase().replace(/\s+/g, '-')}-prp.md\` - ${f.name} implementation guide`).join('\n  ') : ''}`
+    : ''
+}
 ${config.extras.aiDocs ? `- \`/ai_docs/\` - Curated documentation for AI context` : ''}
 
 ## Core Development Philosophy
