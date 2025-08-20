@@ -25,35 +25,35 @@
 </p>
 
 <div align="center">
-  <h2>🎉 What's New in v3.2.0</h2>
+  <h2>🎉 What's New in v3.2.8</h2>
   
   <table>
     <tr>
       <td align="center" width="50%">
-        <h3>🤖 Autonomous AI Orchestration</h3>
-        <p><strong>NEW: <code>context-forge orchestrate</code></strong></p>
-        <p>Deploy teams of AI agents working 24/7!</p>
+        <h3>🤖 AI-Powered PRP Generation</h3>
+        <p><strong>NEW: <code>context-forge init --ai-prp</code></strong></p>
+        <p>Generate intelligent, feature-specific PRPs with AI!</p>
         <ul align="left">
-          <li>🚀 Autonomous AI team management</li>
-          <li>💻 Tmux session orchestration</li>
-          <li>💬 Inter-agent communication</li>
-          <li>⏰ Self-scheduling & planning</li>
-          <li>📊 Progress tracking & monitoring</li>
+          <li>🧠 OpenAI & Anthropic Claude integration</li>
+          <li>🔐 Secure API key management with encryption</li>
+          <li>🎯 Feature-specific implementation strategies</li>
+          <li>⚡ Real-time progress feedback</li>
+          <li>🛡️ Timeout handling & fallback systems</li>
         </ul>
-        <code>context-forge orchestrate --team-size medium</code>
+        <code>context-forge ai-keys --provider openai</code>
       </td>
       <td align="center" width="50%">
-        <h3>🎯 Enhancement Planning System</h3>
-        <p><strong>NEW: <code>context-forge enhance</code></strong></p>
-        <p>Plan and implement features systematically!</p>
+        <h3>🔧 Enhanced Core Features</h3>
+        <p><strong>Bug Fixes & Improvements</strong></p>
+        <p>Major improvements to PRP generation and project initialization!</p>
         <ul align="left">
-          <li>🎯 Feature definition & analysis</li>
-          <li>📊 Dependency mapping</li>
-          <li>🛡️ Phased implementation plans</li>
-          <li>✅ Progress tracking commands</li>
-          <li>🔍 Validation checkpoints</li>
+          <li>✅ Fixed identical PRP content bug</li>
+          <li>📝 Added config.json file generation</li>
+          <li>🎯 Feature-specific PRP content</li>
+          <li>🔒 Encrypted key storage</li>
+          <li>📊 Progress tracking during generation</li>
         </ul>
-        <code>context-forge enhance --features auth,api</code>
+        <code>context-forge init --ai-prp</code>
       </td>
     </tr>
   </table>
@@ -195,6 +195,88 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 - **[📝 Enhanced PRP Templates](./docs/claude-features/enhanced-prp-templates.md)** - Four specialized templates for different scenarios
 - **[🎯 Orchestration Workflow](./docs/claude-features/orchestration-workflow.md)** - How all components work together
 
+## 🤖 AI-Powered PRP Generation (NEW in v3.2.8)
+
+Transform your project development with intelligent, feature-specific **Product Requirement Prompts (PRPs)** powered by OpenAI and Anthropic Claude.
+
+### 🧠 What are AI-Powered PRPs?
+
+Unlike template-based PRPs, AI-powered PRPs are dynamically generated for each specific feature in your project, containing:
+
+- **Feature-specific implementation strategies** tailored to your tech stack
+- **Intelligent gotchas and best practices** based on your architecture
+- **Custom validation approaches** optimized for the feature type
+- **Relevant documentation links** curated by AI
+- **Complexity assessments** and dependency analysis
+
+### 🚀 Quick Setup
+
+```bash
+# 1. Set up your AI provider (one-time setup)
+context-forge ai-keys --provider openai
+# OR
+context-forge ai-keys --provider anthropic
+
+# 2. Initialize project with AI-powered PRPs
+context-forge init --ai-prp
+
+# Your API keys are securely encrypted and stored in ~/.context-forge-keys
+```
+
+### 🔐 Secure Key Management
+
+- **AES-256-CBC encryption** for API key storage
+- **User-specific salt generation** for enhanced security
+- **Cross-project key sharing** - set up once, use everywhere
+- **Multi-provider support** - OpenAI, Anthropic Claude, and more coming soon
+
+### ⚡ Real-time Generation Process
+
+Watch as Context Forge generates intelligent PRPs for each feature:
+
+```
+🤖 Generating AI PRP for: User Authentication & Authorization...
+✅ AI content generated for: User Authentication & Authorization
+📝 Generated: PRPs/feature-auth-prp.md
+
+🤖 Generating AI PRP for: Google Drive Cloud Streaming...
+✅ AI content generated for: Google Drive Cloud Streaming
+📝 Generated: PRPs/feature-google-drive-cloud-streaming-prp.md
+```
+
+### 🎯 Example: Feature-Specific Content
+
+**Traditional Template PRP:**
+```markdown
+# TODO: Add implementation details
+# TODO: Add data models based on requirements
+```
+
+**AI-Powered PRP for Google Drive Integration:**
+```markdown
+### AI-Generated Implementation Strategy
+Leverage Google Drive API for file organization, streaming, and redundancy. 
+Use Google's Picker API for intelligent folder structure management. 
+Implement JWT for access control.
+
+### ⚠️ AI-Identified Gotchas
+- Make sure to have proper error handling for API failures
+- Ensure you're not exceeding Google Drive API's rate limits
+- Be careful with user's OAuth tokens
+
+### ✅ AI-Recommended Best Practices
+- Encrypt OAuth tokens
+- Use Google's recommended best practices for Drive API
+- Always validate files before streaming
+```
+
+### 🛡️ Fallback & Reliability
+
+- **30-second timeout** with automatic fallback to template content
+- **Progress feedback** so you always know what's happening
+- **Graceful error handling** ensures project generation never fails
+- **Offline mode** - AI enhancement is always optional
+
 ## ✨ Features
 
 ### Core Features
@@ -213,7 +295,9 @@ Need help understanding how each IDE uses its configuration? Check out our detai
 
 ### Advanced Features
 
+- 🤖 **AI-Powered PRP Generation** - Intelligent, feature-specific PRPs with OpenAI & Anthropic (NEW in v3.2.8!)
 - 🔍 **PRP Integration** - Product Requirement Prompts with validation loops (Claude, Cursor, Windsurf, Cline, Copilot & Gemini)
+- 🔐 **Secure API Key Management** - AES-256-CBC encrypted storage for AI provider keys
 - ✅ **Validation System** - Built-in code quality checks and gates
 - 🛑 **Human-in-the-Loop Checkpoints** - Pause for verification at critical milestones
 - 🪝 **Claude Code Hooks** - PreCompact, ContextRotation, PreSubmit, and PRPTracking hooks
@@ -400,6 +484,12 @@ npm install -g context-forge
 # Initialize a new project
 context-forge init
 
+# Initialize with AI-powered PRPs (optional)
+context-forge init --ai-prp
+
+# Set up AI provider keys (optional)
+context-forge ai-keys
+
 # Or use npx without installation
 npx context-forge init
 ```
@@ -433,6 +523,10 @@ context-forge migrate --target "Next.js"
 
 # NEW: Copy Claude Code hooks from another project
 context-forge copy-hooks --source ../claude-hooks-repo/hooks
+
+# NEW: Set up AI provider keys for enhanced PRP generation
+context-forge ai-keys --provider openai
+context-forge ai-keys --provider anthropic
 ```
 
 ## 💡 Usage Examples
@@ -453,6 +547,7 @@ $ context-forge init
 ? Project timeline: standard
 ? Team size: small
 ? Enable PRP generation? Yes
+? Enable AI-powered PRP generation? Yes
 ? Enable validation system? Yes
 ? Enable Human-in-the-Loop checkpoints? Yes
 ? Enable Claude Code hooks? Yes
@@ -470,9 +565,10 @@ Generated files:
 
 Next steps:
 1. cd analytics-dashboard
-2. Review CLAUDE.md for project rules
-3. Use /prime-context to load project knowledge and activate architect mode
-4. Start with Stage 1 in Docs/Implementation.md
+2. Set up AI keys (optional): context-forge ai-keys
+3. Review CLAUDE.md for project rules
+4. Use /prime-context to load project knowledge and activate architect mode
+5. Start with Stage 1 in Docs/Implementation.md
 ```
 
 ### Example 2: API-Only Microservice

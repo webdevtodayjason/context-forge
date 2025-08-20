@@ -29,7 +29,8 @@ import { getValidationCommands } from '../data/validationCommands';
 
 export async function generatePRP(
   config: ProjectConfig,
-  type: 'base' | 'base-enhanced' | 'planning' | 'spec' | 'task' = 'base'
+  type: 'base' | 'base-enhanced' | 'planning' | 'spec' | 'task' = 'base',
+  targetFeature?: Feature
 ): Promise<string> {
   const templatePath = path.join(__dirname, '../../templates/prp', `${type}.md`);
   const templateContent = await fs.readFile(templatePath, 'utf-8');
@@ -39,7 +40,7 @@ export async function generatePRP(
 
   const template = Handlebars.compile(templateContent);
 
-  const context = createPRPContext(config, type);
+  const context = createPRPContext(config, type, targetFeature);
   return template(context);
 }
 
@@ -66,9 +67,11 @@ function registerHandlebarsHelpers() {
   );
 }
 
-function createPRPContext(config: ProjectConfig, type: string): Partial<PRPContext> {
-  const primaryFeature =
-    config.features.find((f) => f.priority === 'must-have') || config.features[0];
+function createPRPContext(config: ProjectConfig, type: string, targetFeature?: Feature): Partial<PRPContext> {
+  // Use the specified target feature, or fall back to primary feature
+  const primaryFeature = targetFeature || 
+    config.features.find((f) => f.priority === 'must-have') || 
+    config.features[0];
   const language = getLanguageFromTechStack(config.techStack);
   const testLanguage = getTestLanguageFromTechStack(config.techStack);
 

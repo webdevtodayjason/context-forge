@@ -1,5 +1,6 @@
 import { query, type SDKMessage } from '@anthropic-ai/claude-code';
-import { ProjectConfig } from '../types';
+import { ProjectConfig, Feature } from '../types';
+import { KeyManager, AIProvider } from './keyManager';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -36,17 +37,55 @@ export interface AIGenerationOptions {
   analysisDepth?: 'quick' | 'standard' | 'deep';
 }
 
+export interface FeaturePRPRequest {
+  feature: Feature;
+  projectConfig: ProjectConfig;
+  techStack: ProjectConfig['techStack'];
+  existingPatterns?: string[];
+  relatedDocumentation?: string[];
+}
+
+export interface AIFeaturePRP {
+  featureName: string;
+  implementationStrategy: string;
+  technicalApproach: string;
+  validationApproach: string;
+  gotchas: string[];
+  bestPractices: string[];
+  pseudocode: string;
+  testingStrategy: string;
+  dependencies: string[];
+  estimatedComplexity: 'simple' | 'medium' | 'complex';
+}
+
 export class AIIntelligenceService {
-  private apiKeySource: string;
   private aiEnabled: boolean;
+  private preferredProvider: AIProvider | null = null;
 
   constructor() {
-    this.apiKeySource = this.detectAPIKeySource();
     this.aiEnabled = this.shouldEnableAI();
+  }
+
+  private async detectPreferredProvider(): Promise<AIProvider | null> {
+    if (this.preferredProvider) return this.preferredProvider;
+    
+    // Check environment variables first
+    if (process.env.ANTHROPIC_API_KEY) return 'anthropic';
+    if (process.env.OPENAI_API_KEY) return 'openai';
+    
+    // Check stored keys
+    const availableProviders = await KeyManager.getAvailableProviders();
+    if (availableProviders.length > 0) {
+      this.preferredProvider = availableProviders[0]; // Use first available
+      return this.preferredProvider;
+    }
+    
+    return null;
   }
 
   private detectAPIKeySource(): string {
     if (process.env.ANTHROPIC_API_KEY) return 'anthropic';
+    if (process.env.OPENAI_API_KEY) return 'openai';
     if (process.env.CLAUDE_CODE_USE_BEDROCK) return 'bedrock';
     if (process.env.CLAUDE_CODE_USE_VERTEX) return 'vertex';
     return 'none';
@@ -59,7 +98,7 @@ export class AIIntelligenceService {
     }
 
     // Only enable if we have valid API credentials
-    return this.apiKeySource !== 'none';
+    return this.detectAPIKeySource() !== 'none';
   }
 
   async generateSmartDefaults(
@@ -165,6 +204,184 @@ export class AIIntelligenceService {
     } catch (aiError) {
       console.warn('Error recovery AI failed:', aiError);
       return this.getFallbackErrorSuggestions(error);
+    }
+  }
+
+  /**
+   * Generate AI-powered PRP content for a specific feature
+   */
+  async generateFeaturePRP(request: FeaturePRPRequest): Promise<AIFeaturePRP | null> {
+    const provider = await this.detectPreferredProvider();
+    if (!provider) {
+      console.warn('No AI provider available for PRP generation');
+      return null;
+    }
+
+    try {
+      const prompt = this.buildFeaturePRPPrompt(request);
+      
+      if (provider === 'anthropic') {
+        return await this.generateWithAnthropic(prompt);
+      } else if (provider === 'openai') {
+        return await this.generateWithOpenAI(prompt);
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Feature PRP generation failed:', error);
+      return null;
+    }
+  }
+
+  private async generateWithAnthropic(prompt: string): Promise<AIFeaturePRP | null> {
+    try {
+      const messages: SDKMessage[] = [];
+      for await (const message of query({
+        prompt,
+        options: {
+          maxTurns: 2,
+        },
+      })) {
+        messages.push(message);
+      }
+
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.type === 'result' && lastMessage.subtype === 'success') {
+        return this.parseFeaturePRPResponse(lastMessage.result);
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Anthropic generation failed:', error);
+      return null;
+    }
+  }
+
+  private async generateWithOpenAI(prompt: string): Promise<AIFeaturePRP | null> {
+    try {
+      const apiKey = await KeyManager.getKey('openai');
+      if (!apiKey) {
+        throw new Error('OpenAI API key not found');
+      }
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 2000,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json() as any;
+      const content = data.choices?.[0]?.message?.content;
+      
+      if (content) {
+        return this.parseFeaturePRPResponse(content);
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('OpenAI generation failed:', error);
+      return null;
+    }
+  }
+
+  private buildFeaturePRPPrompt(request: FeaturePRPRequest): string {
+    const { feature, projectConfig, techStack } = request;
+    
+    return `
+You are an expert software architect creating a detailed implementation guide for a specific feature.
+
+## Project Context
+- **Project**: ${projectConfig.projectName}
+- **Description**: ${projectConfig.description}
+- **Tech Stack**: 
+  - Frontend: ${techStack.frontend || 'None'}
+  - Backend: ${techStack.backend || 'None'}
+  - Database: ${techStack.database || 'None'}
+  - Auth: ${techStack.auth || 'None'}
+
+## Feature to Implement
+- **Name**: ${feature.name}
+- **Description**: ${feature.description}
+- **Priority**: ${feature.priority}
+- **Complexity**: ${feature.complexity}
+- **Category**: ${feature.category}
+${feature.subtasks ? `- **Subtasks**: ${feature.subtasks.join(', ')}` : ''}
+${feature.dependencies ? `- **Dependencies**: ${feature.dependencies.join(', ')}` : ''}
+
+## Request
+Create a comprehensive implementation strategy for this feature that includes:
+
+1. **Implementation Strategy**: High-level approach and architecture decisions
+2. **Technical Approach**: Specific technical details and patterns to use
+3. **Validation Approach**: How to test and validate the implementation
+4. **Gotchas**: Common pitfalls and issues to avoid
+5. **Best Practices**: Recommended practices specific to this feature
+6. **Pseudocode**: High-level implementation outline
+7. **Testing Strategy**: Unit, integration, and e2e testing approach
+8. **Dependencies**: What needs to be implemented first or integrated with
+9. **Complexity Estimate**: Realistic complexity assessment
+
+Focus on the specific tech stack provided and ensure the approach is practical and follows modern development practices.
+
+Please respond with a JSON object matching this structure:
+{
+  "featureName": "string",
+  "implementationStrategy": "string",
+  "technicalApproach": "string", 
+  "validationApproach": "string",
+  "gotchas": ["string"],
+  "bestPractices": ["string"],
+  "pseudocode": "string",
+  "testingStrategy": "string",
+  "dependencies": ["string"],
+  "estimatedComplexity": "simple|medium|complex"
+}
+`;
+  }
+
+  private parseFeaturePRPResponse(response: string): AIFeaturePRP | null {
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonStr = jsonMatch[0];
+        const parsed = JSON.parse(jsonStr);
+        
+        // Validate the response has required fields
+        if (parsed.featureName && parsed.implementationStrategy) {
+          return {
+            featureName: parsed.featureName || 'Unknown Feature',
+            implementationStrategy: parsed.implementationStrategy || '',
+            technicalApproach: parsed.technicalApproach || '',
+            validationApproach: parsed.validationApproach || '',
+            gotchas: Array.isArray(parsed.gotchas) ? parsed.gotchas : [],
+            bestPractices: Array.isArray(parsed.bestPractices) ? parsed.bestPractices : [],
+            pseudocode: parsed.pseudocode || '',
+            testingStrategy: parsed.testingStrategy || '',
+            dependencies: Array.isArray(parsed.dependencies) ? parsed.dependencies : [],
+            estimatedComplexity: ['simple', 'medium', 'complex'].includes(parsed.estimatedComplexity) 
+              ? parsed.estimatedComplexity 
+              : 'medium',
+          };
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Failed to parse AI PRP response:', error);
+      return null;
     }
   }
 
@@ -446,9 +663,12 @@ Provide actionable, specific solutions.`;
       return 'AI features disabled - no API key found';
     }
 
-    switch (this.apiKeySource) {
+    const apiKeySource = this.detectAPIKeySource();
+    switch (apiKeySource) {
       case 'anthropic':
         return 'AI enhanced - Connected to Anthropic API';
+      case 'openai':
+        return 'AI enhanced - Connected to OpenAI API';
       case 'bedrock':
         return 'AI enhanced - Connected via Amazon Bedrock';
       case 'vertex':

@@ -63,6 +63,7 @@ export interface ProjectConfig extends Record<string, unknown> {
     linting?: boolean;
     examples?: boolean;
     prp?: boolean;
+    aiPrp?: boolean;
     aiDocs?: boolean;
     claudeCommands?: boolean;
     hooks?: boolean;

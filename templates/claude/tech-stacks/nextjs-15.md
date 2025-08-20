@@ -200,9 +200,82 @@ export const env = envSchema.parse(process.env);
 
 {{#if prpConfig}}
 
-### PRP Workflow
+## 🎯 PRP-Driven Development Workflow
 
-- Check `/PRPs/` directory for detailed implementation prompts
-- Follow validation loops defined in PRPs
-- Use ai_docs/ for additional context when needed
-  {{/if}}
+This project uses **Prompt-Driven Programming (PRPs)** for structured implementation. PRPs are comprehensive implementation blueprints that ensure one-pass success.
+
+### Available PRPs
+
+#### Main Project PRP
+- **`/PRPs/{{projectSlug}}-prp.md`** - Base implementation guide for the entire project
+
+{{#if hasFeatures}}
+#### Feature-Specific PRPs
+{{#each features}}
+- **`/PRPs/feature-{{id}}-prp.md`** - Implementation guide for {{name}}
+{{/each}}
+{{/if}}
+
+#### Complex Project Planning  
+- **`/PRPs/{{projectSlug}}-planning.md`** - Architecture and planning document (if applicable)
+
+### PRP Usage Instructions
+
+#### 🚀 **Executing a PRP**
+Use the `/prp-execute` slash command:
+```
+/prp-execute feature-auth-prp
+```
+This will:
+1. Load the specified PRP file
+2. Create a comprehensive implementation plan
+3. Execute following the PRP blueprint
+4. Run all validation gates
+5. Complete all checklist items
+
+#### 📝 **Creating New PRPs**
+Use the `/prp-create` slash command for new features:
+```
+/prp-create "New Feature Name"
+```
+This will:
+1. Research the codebase for similar patterns
+2. Find relevant documentation
+3. Generate a comprehensive PRP with AI assistance (if configured)
+4. Include validation gates and implementation steps
+
+#### 🎯 **PRP Execution Rules**
+
+1. **Always start with the PRP** - Don't implement without reading the PRP first
+2. **Follow the validation gates** - Each step has specific validation requirements  
+3. **Use the TodoWrite tool** - Track progress through the PRP tasks
+4. **Complete all checklist items** - Every PRP has a completion checklist
+5. **Run validation commands** - Each PRP specifies required validation steps
+
+#### 🔄 **PRP Validation Loop**
+
+Each PRP follows this validation pattern:
+```
+1. Implement component/feature
+2. Run syntax validation (linting, type checking)
+3. Run unit tests
+4. Run integration tests  
+5. Manual verification
+6. Mark as complete only when ALL validations pass
+```
+
+### AI-Enhanced PRPs
+
+If AI-powered PRP generation is enabled, each feature PRP contains:
+- **Intelligent implementation strategies** tailored to the specific feature
+- **Feature-specific gotchas and best practices**  
+- **Custom validation approaches** for the feature type
+- **Relevant documentation and examples** curated by AI
+
+### PRP Support Files
+
+- **`/PRPs/ai_docs/`** - Curated documentation for AI context
+- **`.claude/commands/`** - Slash commands for PRP management
+- **`/Docs/Implementation.md`** - High-level implementation roadmap
+
+{{/if}}

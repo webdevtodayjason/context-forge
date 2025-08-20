@@ -9,6 +9,8 @@ import { migrateCommand } from './commands/migrate';
 import { enhanceCommand } from './commands/enhance';
 import { dashboardCommand } from './commands/dashboard';
 import { orchestrateCommand } from './commands/orchestrate';
+import { aiKeysCommand } from './commands/ai-keys';
+import { configCommand } from './commands/config';
 import { version } from '../../package.json';
 
 const program = new Command();
@@ -31,6 +33,8 @@ program.addCommand(migrateCommand);
 program.addCommand(enhanceCommand);
 program.addCommand(dashboardCommand);
 program.addCommand(orchestrateCommand);
+program.addCommand(aiKeysCommand);
+program.addCommand(configCommand);
 
 // Error handling wrapper
 const handleError = (error: Error) => {

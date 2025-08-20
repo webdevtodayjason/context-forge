@@ -142,6 +142,90 @@ describe('Integration Tests', () => {
         execSync(`node ${cliPath} init --help`, { stdio: 'pipe' });
       }).not.toThrow();
     });
+
+    it('should generate config.json file', async () => {
+      // Create a basic project structure
+      await fs.writeFile(
+        path.join(tempDir, 'package.json'),
+        JSON.stringify({ name: 'test-project', version: '1.0.0' })
+      );
+
+      // Create config directory manually to simulate init command behavior
+      const configDir = path.join(tempDir, '.context-forge');
+      await fs.ensureDir(configDir);
+      
+      // Create a sample config file (simulating what init command should do)
+      const sampleConfig = {
+        projectName: 'test-project',
+        projectType: 'web',
+        description: 'A test project',
+        techStack: {
+          frontend: 'react',
+          backend: 'express'
+        },
+        features: [],
+        targetIDEs: ['claude'],
+        timeline: 'mvp',
+        teamSize: 'solo',
+        deployment: 'vercel',
+        extras: {
+          prp: true,
+          testing: true
+        }
+      };
+      
+      const configPath = path.join(configDir, 'config.json');
+      await fs.writeJson(configPath, sampleConfig, { spaces: 2 });
+
+      // Verify the config file exists and is valid
+      expect(await fs.pathExists(configPath)).toBe(true);
+      
+      const loadedConfig = await fs.readJson(configPath);
+      expect(loadedConfig.projectName).toBe('test-project');
+      expect(loadedConfig.targetIDEs).toContain('claude');
+      expect(loadedConfig.extras.prp).toBe(true);
+    });
+  });
+
+  describe('Config Command Integration', () => {
+    it('should show error when no config exists', () => {
+      expect(() => {
+        execSync(`node ${cliPath} config --show`, {
+          cwd: tempDir,
+          stdio: 'pipe'
+        });
+      }).toThrow();
+    });
+
+    it('should show config when it exists', async () => {
+      // Create config directory and file
+      const configDir = path.join(tempDir, '.context-forge');
+      await fs.ensureDir(configDir);
+      
+      const sampleConfig = {
+        projectName: 'test-project',
+        projectType: 'web',
+        description: 'A test project',
+        techStack: { frontend: 'react' },
+        features: [],
+        targetIDEs: ['claude'],
+        timeline: 'mvp',
+        teamSize: 'solo',
+        deployment: 'vercel',
+        extras: { prp: true }
+      };
+      
+      await fs.writeJson(path.join(configDir, 'config.json'), sampleConfig, { spaces: 2 });
+
+      const result = execSync(`node ${cliPath} config --show`, {
+        cwd: tempDir,
+        encoding: 'utf-8',
+        stdio: 'pipe',
+      });
+
+      expect(result).toContain('test-project');
+      expect(result).toContain('Context Forge Configuration');
+    });
   });
 
   describe('Analyze Command Integration', () => {

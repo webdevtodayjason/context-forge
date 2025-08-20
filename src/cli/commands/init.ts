@@ -12,6 +12,7 @@ import { AIIntelligenceService } from '../../services/aiIntelligenceService';
 import { ProjectAnalyzer } from '../../services/projectAnalyzer';
 import { ErrorRecoveryService } from '../../services/errorRecoveryService';
 import { ProgressTracker } from '../../services/progressTracker';
+import { KeyManager } from '../../services/keyManager';
 
 export const initCommand = new Command('init')
   .description('Initialize AI IDE configurations and documentation for your project')
@@ -19,6 +20,7 @@ export const initCommand = new Command('init')
   .option('-p, --preset <preset>', 'use a preset configuration')
   .option('-c, --config <path>', 'path to configuration file')
   .option('--no-ai', 'disable AI-powered smart suggestions')
+  .option('--ai-prp', 'enable AI-powered PRP generation (requires API keys)')
   .option('--quick', 'use quick setup with smart defaults')
   .option(
     '-i, --ide <ide>',
@@ -131,9 +133,38 @@ export const initCommand = new Command('init')
         config.targetIDEs = options.ide;
       }
 
+      // Handle AI PRP flag
+      if (options.aiPrp && config) {
+        const availableProviders = await KeyManager.getAvailableProviders();
+        if (availableProviders.length === 0) {
+          console.log(chalk.yellow('\n⚠️  AI-powered PRP generation requested but no API keys found.'));
+          console.log(chalk.gray('Run: context-forge ai-keys to set up API keys\n'));
+          console.log(chalk.blue('Proceeding with template-based PRP generation...'));
+          config.extras.prp = true;
+        } else {
+          console.log(chalk.green(`\n🤖 AI-powered PRP generation enabled using ${availableProviders[0].toUpperCase()}`));
+          config.extras.prp = true;
+          config.extras.aiPrp = true;
+        }
+      }
+
       if (!config) {
         throw new Error('Configuration not created');
       }
+
+      // Save configuration file
+      const configStepId = await progressTracker.addStep(operationId, 'Save configuration');
+      const configDir = path.join(outputPath, '.context-forge');
+      const configPath = path.join(configDir, 'config.json');
+      
+      await fs.ensureDir(configDir);
+      await fs.writeJson(configPath, config, { spaces: 2 });
+      
+      // Add .context-forge to .gitignore
+      await ensureGitignoreEntry(outputPath, '.context-forge/');
+      
+      console.log(chalk.blue(`📁 Configuration saved to: ${path.relative(process.cwd(), configPath)}`));
+      await progressTracker.completeStep(operationId, configStepId);
 
       // Generate documentation
       const docStepId = await progressTracker.addStep(operationId, 'Generate documentation');
@@ -144,6 +175,7 @@ export const initCommand = new Command('init')
       // Success message
       console.log(chalk.green.bold('\n✨ Context Forge setup complete!\n'));
       console.log(chalk.white('Generated files in:'), chalk.cyan(outputPath));
+      console.log(chalk.white('Configuration saved to:'), chalk.cyan('.context-forge/config.json'));
 
       // Show IDE-specific instructions
       const targetIDEs = config.targetIDEs || ['claude'];
@@ -346,4 +378,35 @@ function detectDeployment(techStack: string[]): string {
   if (techStack.includes('FastAPI') || techStack.includes('Django')) return 'railway';
   if (techStack.includes('Docker')) return 'docker';
   return 'vercel'; // Default
+}
+
+/**
+ * Ensure a specific entry exists in .gitignore
+ */
+async function ensureGitignoreEntry(projectPath: string, entry: string): Promise<void> {
+  const gitignorePath = path.join(projectPath, '.gitignore');
+  
+  try {
+    let gitignoreContent = '';
+    
+    if (await fs.pathExists(gitignorePath)) {
+      gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
+    }
+    
+    // Check if the entry already exists
+    if (gitignoreContent.includes(entry)) {
+      return;
+    }
+    
+    // Add entry with a comment
+    const newContent = gitignoreContent + 
+      (gitignoreContent.endsWith('\n') ? '' : '\n') +
+      `\n# Context Forge configuration (added automatically)\n${entry}\n`;
+    
+    await fs.writeFile(gitignorePath, newContent, 'utf-8');
+    
+  } catch (error) {
+    // Don't fail the entire process if gitignore update fails
+    console.warn(chalk.yellow(`Warning: Could not update .gitignore: ${error}`));
+  }
 }

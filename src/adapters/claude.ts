@@ -1,11 +1,13 @@
 import { IDEAdapter, GeneratedFile } from './base';
 import path from 'path';
+import fs from 'fs-extra';
 import { generateClaudeMd } from '../generators/claudeMd';
 import { generateImplementation } from '../generators/implementation';
 import { generateProjectStructure } from '../generators/projectStructure';
 import { generateUiUx } from '../generators/uiUx';
 import { generateBugTracking } from '../generators/bugTracking';
 import { generatePRP } from '../generators/prp';
+import { generateAIEnhancedPRP } from '../generators/aiPrp';
 import { generateSlashCommands, generateSlashCommandFiles } from '../generators/slashCommands';
 
 export class ClaudeAdapter extends IDEAdapter {
@@ -102,23 +104,30 @@ export class ClaudeAdapter extends IDEAdapter {
           description: 'Base implementation PRP',
         });
 
-        // Generate PRPs for each selected feature
+        // Generate individual PRPs for each feature
         if (this.config.features && this.config.features.length > 0) {
+          // Ensure PRP directory exists
+          await fs.ensureDir(prpPath);
+          
           for (const feature of this.config.features) {
             const featureSlug = feature.id || feature.name.toLowerCase().replace(/\s+/g, '-');
+            const useAI = this.config.extras.aiPrp || false;
+            const filePath = path.join(prpPath, `feature-${featureSlug}-prp.md`);
+            
+            // Generate content
+            const content = useAI 
+              ? await generateAIEnhancedPRP(this.config, 'base', feature, true)
+              : await generatePRP(this.config, 'base', feature);
+            
+            // Write file immediately so user can see progress
+            await fs.writeFile(filePath, content, 'utf-8');
+            console.log(`📝 Generated: ${path.relative(process.cwd(), filePath)}`);
+            
+            // Still add to files array for logging
             files.push({
-              path: path.join(prpPath, `feature-${featureSlug}-prp.md`),
-              content: await generatePRP(
-                {
-                  ...this.config,
-                  prd: {
-                    ...this.config.prd,
-                    content: `Feature: ${feature.name}\nDescription: ${feature.description}\nPriority: ${feature.priority}\nComplexity: ${feature.complexity}`,
-                  },
-                },
-                'base'
-              ),
-              description: `PRP for ${feature.name} feature`,
+              path: filePath,
+              content: content,
+              description: `PRP for ${feature.name} feature${useAI ? ' (AI-enhanced)' : ''}`,
             });
           }
         }

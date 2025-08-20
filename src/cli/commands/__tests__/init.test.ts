@@ -22,7 +22,7 @@ const MockErrorRecoveryService = ErrorRecoveryService as jest.MockedClass<
 // Mock inquirer
 jest.mock('inquirer', () => ({
   prompt: jest.fn(),
-  Separator: jest.fn()
+  Separator: jest.fn(),
 }));
 import inquirer from 'inquirer';
 const mockPrompt = inquirer.prompt as unknown as jest.Mock;
@@ -110,7 +110,6 @@ describe('Init Command', () => {
         reasoning: 'AI analysis complete',
         optimizations: [],
       });
-
 
       const program = new Command();
       program.addCommand(initCommand);
@@ -311,7 +310,6 @@ describe('Init Command', () => {
       const error = new Error('Permission denied');
       mockPrompt.mockRejectedValue(error);
 
-
       const program = new Command();
       program.addCommand(initCommand);
 
@@ -322,7 +320,7 @@ describe('Init Command', () => {
         'test-operation-id',
         'failed',
         expect.objectContaining({
-          errors: expect.arrayContaining([expect.stringContaining('Permission denied')])
+          errors: expect.arrayContaining([expect.stringContaining('Permission denied')]),
         })
       );
     });
@@ -421,7 +419,7 @@ describe('Init Command', () => {
         'completed',
         expect.objectContaining({
           filesGenerated: expect.any(Number),
-          targetIDEs: expect.any(Array)
+          targetIDEs: expect.any(Array),
         })
       );
     });
@@ -479,7 +477,6 @@ describe('Init Command', () => {
 
   describe('AI integration', () => {
     it('should use AI suggestions when available', async () => {
-
       mockPrompt.mockResolvedValue({
         projectName: 'ai-suggestions-test',
         projectType: 'web',
