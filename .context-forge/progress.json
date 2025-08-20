@@ -4,8 +4,8 @@
     "command": "init",
     "operation": "Project initialization",
     "status": "in_progress",
-    "startTime": "2025-07-27T21:15:20.324Z",
     "projectPath": "/Users/sem/code/context-forge",
+    "startTime": "2025-07-27T21:15:20.324Z",
     "metadata": {
       "aiEnabled": false,
       "targetIDEs": [
@@ -13,5 +13,62 @@
       ]
     },
     "steps": []
+  },
+  {
+    "id": "mek1gp9v2iwar373v",
+    "command": "init",
+    "operation": "Project initialization",
+    "status": "in_progress",
+    "projectPath": "/Users/sem/code/context-forge",
+    "startTime": "2025-08-20T13:59:05.203Z",
+    "metadata": {
+      "aiEnabled": false,
+      "targetIDEs": [
+        "claude"
+      ]
+    },
+    "steps": []
+  },
+  {
+    "id": "mek21bfbzfk371y83",
+    "command": "init",
+    "operation": "Project initialization",
+    "status": "failed",
+    "startTime": "2025-08-20T14:15:07.031Z",
+    "projectPath": "/Users/sem/code/context-forge",
+    "metadata": {
+      "aiEnabled": false,
+      "targetIDEs": [
+        "claude"
+      ],
+      "errors": [
+        "Cannot read properties of undefined (reading 'length')"
+      ]
+    },
+    "steps": [
+      {
+        "id": "mek21bfesc0swil5w",
+        "name": "Load configuration file",
+        "status": "completed",
+        "startTime": "2025-08-20T14:15:07.034Z",
+        "endTime": "2025-08-20T14:15:07.034Z"
+      },
+      {
+        "id": "mek21bfeos1d7wbmn",
+        "name": "Save configuration",
+        "status": "completed",
+        "startTime": "2025-08-20T14:15:07.034Z",
+        "endTime": "2025-08-20T14:15:07.035Z"
+      },
+      {
+        "id": "mek21bffttfrlypp9",
+        "name": "Generate documentation",
+        "status": "completed",
+        "startTime": "2025-08-20T14:15:07.035Z",
+        "endTime": "2025-08-20T14:15:07.062Z"
+      }
+    ],
+    "endTime": "2025-08-20T14:15:07.063Z",
+    "duration": 32
   }
 ]

@@ -27,6 +27,7 @@ export async function techStack(projectType: string): Promise<TechStackAnswers> 
         message: 'Select your frontend framework:',
         choices: [
           { name: '🚀 Next.js (React-based, full-stack)', value: 'nextjs' },
+          { name: '🦄 Nuxt 4 (Vue-based, full-stack)', value: 'nuxt4' },
           { name: '⚙️  React (SPA)', value: 'react' },
           { name: '💅 Vue.js', value: 'vuejs' },
           { name: '🌶️  Angular', value: 'angular' },
@@ -58,8 +59,8 @@ export async function techStack(projectType: string): Promise<TechStackAnswers> 
       ]);
       answers.styling = stylingAnswer.styling;
 
-      // State management for React/Vue/Angular
-      if (['react', 'nextjs', 'vuejs', 'angular'].includes(frontendAnswer.frontend)) {
+      // State management for React/Vue/Angular/Nuxt
+      if (['react', 'nextjs', 'vuejs', 'nuxt4', 'angular'].includes(frontendAnswer.frontend)) {
         console.log(chalk.cyan(`📊 ${stepCounter++}. State Management`));
         const stateAnswer = await inquirer.prompt([
           {
@@ -167,6 +168,14 @@ function getStateManagementChoices(framework: string) {
       return [
         { name: 'Vuex', value: 'vuex' },
         { name: 'Pinia', value: 'pinia' },
+        { name: 'None', value: 'none' },
+      ];
+    case 'nuxt4':
+      return [
+        { name: 'Pinia (Recommended)', value: 'pinia' },
+        { name: 'Vuex (Legacy)', value: 'vuex' },
+        { name: 'useState (Nuxt built-in)', value: 'nuxt-usestate' },
+        { name: 'useCookie (Nuxt built-in)', value: 'nuxt-usecookie' },
         { name: 'None', value: 'none' },
       ];
     case 'angular':

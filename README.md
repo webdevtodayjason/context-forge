@@ -25,14 +25,28 @@
 </p>
 
 <div align="center">
-  <h2>🎉 What's New in v3.2.8</h2>
+  <h2>🎉 What's New in v3.2.9</h2>
   
   <table>
     <tr>
       <td align="center" width="50%">
+        <h3>🦄 Nuxt 4 Support</h3>
+        <p><strong>NEW: Full Nuxt 4 Integration</strong></p>
+        <p>Complete support for Nuxt 4 with Vue 3 and modern development!</p>
+        <ul align="left">
+          <li>🏗️ New app/ directory structure support</li>
+          <li>⚡ Enhanced TypeScript integration</li>
+          <li>🎯 Vue 3 Composition API guidelines</li>
+          <li>🔄 Auto-imports and server-side rendering</li>
+          <li>📊 Nuxt-specific validation commands</li>
+        </ul>
+        <code>context-forge init</code><br/>
+        <em>Select "Nuxt 4" as frontend framework</em>
+      </td>
+      <td align="center" width="50%">
         <h3>🤖 AI-Powered PRP Generation</h3>
-        <p><strong>NEW: <code>context-forge init --ai-prp</code></strong></p>
-        <p>Generate intelligent, feature-specific PRPs with AI!</p>
+        <p><strong>Continued: <code>context-forge init --ai-prp</code></strong></p>
+        <p>Intelligent, feature-specific PRPs with AI enhancement!</p>
         <ul align="left">
           <li>🧠 OpenAI & Anthropic Claude integration</li>
           <li>🔐 Secure API key management with encryption</li>
@@ -41,19 +55,6 @@
           <li>🛡️ Timeout handling & fallback systems</li>
         </ul>
         <code>context-forge ai-keys --provider openai</code>
-      </td>
-      <td align="center" width="50%">
-        <h3>🔧 Enhanced Core Features</h3>
-        <p><strong>Bug Fixes & Improvements</strong></p>
-        <p>Major improvements to PRP generation and project initialization!</p>
-        <ul align="left">
-          <li>✅ Fixed identical PRP content bug</li>
-          <li>📝 Added config.json file generation</li>
-          <li>🎯 Feature-specific PRP content</li>
-          <li>🔒 Encrypted key storage</li>
-          <li>📊 Progress tracking during generation</li>
-        </ul>
-        <code>context-forge init --ai-prp</code>
       </td>
     </tr>
   </table>
@@ -596,7 +597,40 @@ user-service/
 └── .github/workflows/
 ```
 
-### Example 3: Using Configuration File
+### Example 3: Nuxt 4 Vue Application
+
+```bash
+$ context-forge init --output nuxt-dashboard
+
+? Project name: Analytics Dashboard  
+? Project type: fullstack
+? Project description: Modern analytics dashboard with real-time data
+? Frontend framework: nuxt4  # NEW: Nuxt 4 option
+? Styling framework: tailwind
+? State management: pinia
+? Backend framework: fastapi
+? Database: postgresql
+? Authentication method: jwt
+? Enable AI-powered PRP generation? Yes
+
+Generated structure:
+nuxt-dashboard/
+├── CLAUDE.md              # Nuxt 4 + Vue 3 specific rules
+├── Docs/
+├── PRPs/
+│   ├── nuxt-dashboard-prp.md
+│   └── feature-auth-prp.md  # AI-enhanced for Nuxt 4
+└── .claude/commands/       # 25+ slash commands
+
+✨ Nuxt 4 Features Included:
+- New app/ directory structure documented
+- Vue 3 Composition API guidelines  
+- TypeScript integration with auto-imports
+- SSR and data fetching best practices
+- Pinia state management setup
+```
+
+### Example 4: Using Configuration File
 
 ```bash
 # context-forge.json
@@ -991,6 +1025,7 @@ When you run `context-forge init`, you'll be guided through:
 #### Frontend Frameworks
 
 - **Next.js 15** - App Router, Server Components, React 19
+- **Nuxt 4** - NEW! Vue-based full-stack with enhanced TypeScript support
 - **React** - SPA with TypeScript and modern patterns
 - **Vue.js 3** - Composition API and TypeScript
 - **Angular** - Standalone components, RxJS

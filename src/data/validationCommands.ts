@@ -48,6 +48,18 @@ export const techStackValidationCommands: Record<string, ValidationCommandSet> =
     coverage: 'vitest --coverage',
   },
 
+  nuxt4: {
+    syntax: ['nuxt typecheck', 'npm run lint'],
+    tests: ['npm run test', 'npm run test:coverage'],
+    build: 'nuxt build',
+    start: 'nuxt dev',
+    typeCheck: 'nuxt typecheck',
+    lint: 'eslint .',
+    format: 'prettier --write "app/**/*.{vue,ts,js}"',
+    coverage: 'vitest --coverage',
+    security: ['npm audit', 'nuxt build --analyze'],
+  },
+
   angular: {
     syntax: ['ng lint', 'ng build --configuration development'],
     tests: ['ng test --no-watch --code-coverage'],

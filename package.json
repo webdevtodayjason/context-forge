@@ -1,6 +1,6 @@
 {
   "name": "context-forge",
-  "version": "3.2.8",
+  "version": "3.2.9",
   "description": "AI orchestration platform with autonomous teams, enhancement planning, migration tools, 25+ slash commands, checkpoints & hooks. Multi-IDE: Claude, Cursor, Windsurf, Cline, Copilot",
   "main": "dist/index.js",
   "bin": {

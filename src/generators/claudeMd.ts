@@ -36,6 +36,8 @@ async function selectTemplate(techStack: ProjectConfig['techStack']): Promise<st
   // Priority order for template selection
   if (techStack.frontend === 'nextjs') {
     return 'tech-stacks/nextjs-15.md';
+  } else if (techStack.frontend === 'nuxt4') {
+    return 'tech-stacks/nuxt4.md';
   } else if (techStack.frontend === 'react') {
     return 'tech-stacks/react.md';
   } else if (techStack.frontend === 'vue') {
@@ -71,6 +73,26 @@ function generateProjectStructure(techStack: ProjectConfig['techStack']): string
 ├── hooks/                 # Custom React hooks
 ├── lib/                   # Utilities
 └── types/                 # TypeScript types`;
+  }
+
+  if (techStack.frontend === 'nuxt4') {
+    return `app/                      # NEW: Nuxt 4 app directory
+├── assets/               # Static assets
+├── components/           # Vue components
+├── composables/          # Vue composables
+├── layouts/              # Layout components
+├── middleware/           # Route middleware
+├── pages/                # File-based routing
+├── plugins/              # Plugins
+├── utils/                # Utility functions
+├── app.vue               # Root component
+├── app.config.ts         # App configuration
+└── error.vue             # Error page
+content/                  # Nuxt Content (optional)
+public/                   # Static files
+server/                   # Server-side code
+shared/                   # Shared utilities
+nuxt.config.ts            # Nuxt configuration`;
   }
 
   if (techStack.backend === 'fastapi') {
