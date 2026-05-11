@@ -8,7 +8,9 @@
     "startTime": "2025-07-27T21:15:20.324Z",
     "metadata": {
       "aiEnabled": false,
-      "targetIDEs": ["claude"]
+      "targetIDEs": [
+        "claude"
+      ]
     },
     "steps": []
   },
@@ -21,7 +23,9 @@
     "startTime": "2025-08-20T13:59:05.203Z",
     "metadata": {
       "aiEnabled": false,
-      "targetIDEs": ["claude"]
+      "targetIDEs": [
+        "claude"
+      ]
     },
     "steps": []
   },
@@ -30,12 +34,18 @@
     "command": "init",
     "operation": "Project initialization",
     "status": "failed",
-    "startTime": "2025-08-20T14:15:07.031Z",
     "projectPath": "/Users/sem/code/context-forge",
+    "startTime": "2025-08-20T14:15:07.031Z",
+    "endTime": "2025-08-20T14:15:07.063Z",
+    "duration": 32,
     "metadata": {
       "aiEnabled": false,
-      "targetIDEs": ["claude"],
-      "errors": ["Cannot read properties of undefined (reading 'length')"]
+      "targetIDEs": [
+        "claude"
+      ],
+      "errors": [
+        "Cannot read properties of undefined (reading 'length')"
+      ]
     },
     "steps": [
       {
@@ -59,8 +69,74 @@
         "startTime": "2025-08-20T14:15:07.035Z",
         "endTime": "2025-08-20T14:15:07.062Z"
       }
+    ]
+  },
+  {
+    "id": "meu54dliho5ckhb97",
+    "command": "init",
+    "operation": "Project initialization",
+    "status": "failed",
+    "projectPath": "/Users/sem/code/context-forge",
+    "startTime": "2025-08-27T15:39:10.422Z",
+    "endTime": "2025-08-27T15:39:10.430Z",
+    "duration": 8,
+    "metadata": {
+      "aiEnabled": false,
+      "targetIDEs": [
+        "claude"
+      ],
+      "errors": [
+        "Parse error on line 209:\n...t.Provider value={{ user, login, logout \n-----------------------^\nExpecting 'ID', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', got 'INVALID'"
+      ]
+    },
+    "steps": [
+      {
+        "id": "meu54dlm99r9rwmjy",
+        "name": "Load configuration file",
+        "status": "completed",
+        "startTime": "2025-08-27T15:39:10.426Z",
+        "endTime": "2025-08-27T15:39:10.426Z"
+      },
+      {
+        "id": "meu54dlnrcyrcn3zv",
+        "name": "Save configuration",
+        "status": "completed",
+        "startTime": "2025-08-27T15:39:10.427Z",
+        "endTime": "2025-08-27T15:39:10.427Z"
+      },
+      {
+        "id": "meu54dlolyztn79h8",
+        "name": "Generate documentation",
+        "status": "in_progress",
+        "startTime": "2025-08-27T15:39:10.428Z"
+      }
+    ]
+  },
+  {
+    "id": "meu54nsswq2cgta2u",
+    "command": "init",
+    "operation": "Project initialization",
+    "status": "failed",
+    "startTime": "2025-08-27T15:39:23.644Z",
+    "projectPath": "/Users/sem/code/context-forge",
+    "metadata": {
+      "aiEnabled": false,
+      "targetIDEs": [
+        "claude"
+      ],
+      "errors": [
+        "Invalid configuration file - please fix the errors above"
+      ]
+    },
+    "steps": [
+      {
+        "id": "meu54nsvf600g7mgw",
+        "name": "Load configuration file",
+        "status": "in_progress",
+        "startTime": "2025-08-27T15:39:23.647Z"
+      }
     ],
-    "endTime": "2025-08-20T14:15:07.063Z",
-    "duration": 32
+    "endTime": "2025-08-27T15:39:23.648Z",
+    "duration": 4
   }
 ]

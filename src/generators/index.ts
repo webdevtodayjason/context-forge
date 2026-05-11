@@ -9,7 +9,8 @@ import { FileLogger } from '../services/fileLogger';
 
 export async function generateDocumentation(
   config: ProjectConfig,
-  outputPath: string
+  outputPath: string,
+  preserveExisting?: boolean
 ): Promise<void> {
   // Ensure output directory exists
   await fs.ensureDir(outputPath);
@@ -53,11 +54,14 @@ export async function generateDocumentation(
                 description: `${file.description} (retrofit mode)`,
               });
             } else {
-              spinner.warn();
+              const message = preserveExisting
+                ? `${file.description} (preserved existing file)`
+                : `${file.description} (file already exists)`;
+              spinner.info(`Preserving existing ${relativePath}...`);
               logger.logOperation({
                 type: 'skipped',
                 filePath: file.path,
-                description: `${file.description} (file already exists)`,
+                description: message,
               });
             }
             continue;

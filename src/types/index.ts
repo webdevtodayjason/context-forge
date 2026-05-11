@@ -42,6 +42,7 @@ export interface ProjectConfig extends Record<string, unknown> {
     auth?: string;
     styling?: string;
     stateManagement?: string;
+    orm?: string;
   };
 
   // Features
@@ -87,6 +88,14 @@ export interface ProjectConfig extends Record<string, unknown> {
 
   // Enhancement configuration (for feature additions)
   enhancementConfig?: EnhancementConfig;
+
+  // Task file configuration (for task file analysis)
+  taskFileConfig?: {
+    originalFile: any; // ParsedTaskFile
+    totalTasks: number;
+    phaseCount: number;
+    riskProfile: 'low' | 'medium' | 'high';
+  };
 }
 
 export interface Feature {
@@ -94,10 +103,24 @@ export interface Feature {
   name: string;
   description: string;
   priority: 'must-have' | 'should-have' | 'nice-to-have';
-  complexity: 'simple' | 'medium' | 'complex';
-  category: 'auth' | 'ui' | 'data' | 'integration' | 'infrastructure';
+  complexity: 'simple' | 'medium' | 'complex' | 'very-complex';
+  category:
+    | 'auth'
+    | 'ui'
+    | 'data'
+    | 'integration'
+    | 'infrastructure'
+    | 'api'
+    | 'database'
+    | 'security'
+    | 'testing'
+    | 'feature';
   subtasks?: string[];
   dependencies?: string[];
+  acceptanceCriteria?: string[];
+  technicalRequirements?: string[];
+  risks?: Array<{ type: string; description: string; mitigation: string }>;
+  estimatedEffort?: string;
 }
 
 // Define specific types for PRPContext array fields

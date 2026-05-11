@@ -5,7 +5,11 @@ import path from 'path';
 import fs from 'fs-extra';
 import { runPrompts } from '../prompts';
 import { generateDocumentation } from '../../generators';
-import { validateOutputPath } from '../../utils/validator';
+import {
+  validateOutputPath,
+  validateTemplateFile,
+  printValidationResults,
+} from '../../utils/validator';
 import { ProjectConfig, SupportedIDE } from '../../types';
 import { getSupportedIDEs } from '../../adapters';
 import { AIIntelligenceService } from '../../services/aiIntelligenceService';
@@ -13,14 +17,20 @@ import { ProjectAnalyzer } from '../../services/projectAnalyzer';
 import { ErrorRecoveryService } from '../../services/errorRecoveryService';
 import { ProgressTracker } from '../../services/progressTracker';
 import { KeyManager } from '../../services/keyManager';
+import { TemplateGenerator } from '../../services/templateGenerator';
 
 export const initCommand = new Command('init')
   .description('Initialize AI IDE configurations and documentation for your project')
   .option('-o, --output <path>', 'output directory for generated files', '.')
   .option('-p, --preset <preset>', 'use a preset configuration')
   .option('-c, --config <path>', 'path to configuration file')
+  .option(
+    '-t, --template [filename]',
+    'generate configuration template file (default: context-forge-template.json)'
+  )
   .option('--no-ai', 'disable AI-powered smart suggestions')
   .option('--ai-prp', 'enable AI-powered PRP generation (requires API keys)')
+  .option('--preserve-existing', 'preserve existing documentation files instead of overwriting')
   .option('--quick', 'use quick setup with smart defaults')
   .option(
     '-i, --ide <ide>',
@@ -37,6 +47,76 @@ export const initCommand = new Command('init')
     }
   )
   .action(async (options) => {
+    // Handle template generation mode
+    if (options.template !== undefined) {
+      console.log(chalk.blue.bold('\n📝 Context Forge Template Generator\n'));
+      console.log(chalk.gray('Generating configuration template file...\n'));
+
+      const spinner = ora('Generating template...').start();
+      const templateGenerator = new TemplateGenerator();
+      const outputPath = path.resolve(options.output);
+
+      try {
+        // Optionally analyze project for AI suggestions
+        let aiSuggestions = null;
+        if (!options.ai === false) {
+          const aiService = new AIIntelligenceService();
+          if (aiService.isAIEnabled()) {
+            const analyzer = new ProjectAnalyzer(outputPath);
+            const basicAnalysis = await analyzer.analyzeBasic();
+            aiSuggestions = await aiService.generateSmartDefaults(outputPath, basicAnalysis);
+          }
+        }
+
+        // Determine filename
+        const filename =
+          typeof options.template === 'string' ? options.template : 'context-forge-template.json';
+
+        const templatePath = await templateGenerator.generateTemplate({
+          outputPath,
+          format: 'json',
+          variant: 'comprehensive',
+          includeComments: true,
+          aiSuggestions,
+        });
+
+        // If custom filename provided, rename the file
+        if (
+          typeof options.template === 'string' &&
+          options.template !== 'context-forge-template.json'
+        ) {
+          const customPath = path.join(outputPath, filename);
+          await fs.move(templatePath, customPath);
+          spinner.succeed(
+            `Template generated: ${chalk.cyan(path.relative(process.cwd(), customPath))}`
+          );
+        } else {
+          spinner.succeed(
+            `Template generated: ${chalk.cyan(path.relative(process.cwd(), templatePath))}`
+          );
+        }
+
+        console.log(chalk.blue.bold('\n📋 Template Usage Instructions:\n'));
+        console.log(chalk.white('1. Edit the generated template file with your project details'));
+        console.log(chalk.white('2. Fill in all required fields (marked with comments)'));
+        console.log(
+          chalk.white('3. Run: ') + chalk.cyan(`context-forge init --config ${filename}`)
+        );
+        console.log(chalk.white('4. Your AI IDE configurations will be generated automatically\n'));
+
+        console.log(chalk.yellow('💡 Pro Tips:'));
+        console.log(chalk.gray("  • Remove sections you don't need (like PRD or checkpoints)"));
+        console.log(chalk.gray('  • Start with minimal features and add more later'));
+        console.log(chalk.gray('  • Use the --quick flag for faster setup with defaults\n'));
+
+        return;
+      } catch (error) {
+        spinner.fail('Template generation failed');
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+
     console.log(chalk.blue.bold('\n🚀 Welcome to Context Forge!\n'));
     console.log(chalk.gray("Let's set up AI-optimized documentation for your project.\n"));
 
@@ -61,7 +141,7 @@ export const initCommand = new Command('init')
       });
 
       // Validate output path
-      await validateOutputPath(outputPath);
+      await validateOutputPath(outputPath, options.preserveExisting);
 
       let aiSuggestions = null;
 
@@ -70,8 +150,27 @@ export const initCommand = new Command('init')
         const stepId = await progressTracker.addStep(operationId, 'Load configuration file');
         spinner.start('Loading configuration file...');
         const configPath = path.resolve(options.config);
+
+        // Validate template file first
+        spinner.text = 'Validating configuration file...';
+        const validationResult = await validateTemplateFile(configPath);
+
+        if (!validationResult.isValid) {
+          spinner.fail('Configuration validation failed');
+          printValidationResults(validationResult, configPath);
+          throw new Error('Invalid configuration file - please fix the errors above');
+        }
+
+        // If validation passed, show results and load config
+        if (validationResult.warnings.length > 0) {
+          spinner.succeed('Configuration loaded with warnings');
+          printValidationResults(validationResult, configPath);
+          console.log(''); // Add spacing
+        } else {
+          spinner.succeed('Configuration loaded and validated');
+        }
+
         config = await fs.readJson(configPath);
-        spinner.succeed('Configuration loaded');
         await progressTracker.completeStep(operationId, stepId);
       } else if (options.preset) {
         // Load preset configuration
@@ -177,7 +276,7 @@ export const initCommand = new Command('init')
       // Generate documentation
       const docStepId = await progressTracker.addStep(operationId, 'Generate documentation');
       console.log(chalk.blue.bold('\n📝 Generating documentation...\n'));
-      await generateDocumentation(config, outputPath);
+      await generateDocumentation(config, outputPath, options.preserveExisting);
       await progressTracker.completeStep(operationId, docStepId);
 
       // Success message
