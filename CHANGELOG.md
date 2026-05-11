@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.1] — 2026-05-11 — Security audit cleanup (0 vulnerabilities)
+
+Same-day patch. `npm install context-forge@4.0.0 && npm audit` reported 15 vulnerabilities (1 critical, 6 high, 4 moderate, 4 low). All 15 are now resolved.
+
+### Changed
+
+- **`@anthropic-ai/claude-code` moved from `dependencies` to `peerDependencies` (optional).** This single change resolves 11 high-severity CLI-surface CVEs (sed/find command injection, symlink path-restriction bypass, settings.json sandbox escape, ZSH clobber file writes, Windows privilege escalation, and others — GHSA-7mv8-j34q-vp7q et al). The CVEs are CLI-surface issues that don't actually exercise via context-forge's library use, but `npm audit` flags any installed copy. Users who want AI features install the package themselves (most already have it — it's Claude Code).
+- **`src/services/aiIntelligenceService.ts`** now lazy-loads `@anthropic-ai/claude-code` via `require()` with a runtime guard. If the dep is missing OR its `query()` programmatic export was removed (claude-code 2.x is CLI-only), AI features degrade gracefully to existing `getFallback*` deterministic templates — the operator sees a warning, but `context-forge init` continues without crashing.
+- **`npm audit fix`** non-breaking pass cleaned the remaining 4 vulnerabilities (handlebars critical → patched, glob/minimatch/picomatch/brace-expansion/flatted/ajv/uuid/@isaacs/brace-expansion/@eslint/plugin-kit all bumped to safe versions).
+
+### Result
+
+- `npm audit` → **0 vulnerabilities** (both full and `--omit=dev`).
+- AI features work as before for users who have `@anthropic-ai/claude-code` 1.x installed.
+- AI features degrade gracefully to deterministic templates for users without it (the typical context-forge non-AI workflow is unchanged).
+
+### Upgrade
+
+```bash
+npm install -g context-forge@4.0.1
+```
+
+If you use `--ai-prp`, install the optional peer dep:
+
+```bash
+npm install -g @anthropic-ai/claude-code@^1.0.128
+```
+
 ## [4.0.0] — 2026-05-11 — Claude-current refresh
 
 The first major refresh in nine months. Context-forge now generates **everything a modern (May 2026) Claude Code project expects** — settings.json with the full hook lifecycle, sub-agents, skills, and slash commands as real `.md` files with frontmatter. The wizard that drives `init` is now a full-screen Ink TUI.

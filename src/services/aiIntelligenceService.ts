@@ -1,4 +1,58 @@
-import { query, type SDKMessage } from '@anthropic-ai/claude-code';
+/**
+ * `@anthropic-ai/claude-code` is an OPTIONAL peer dependency (v4.0.1+).
+ *
+ * Why optional: the published package versions through 2.1.74 have known
+ * CLI-surface CVEs (sed/find command injection, symlink path-restriction
+ * bypass, settings.json sandbox escape, etc. — see GHSAs). `npm audit`
+ * flags any installed copy regardless of whether context-forge actually
+ * exercises those CLI paths. By making the package optional, context-forge
+ * itself ships with zero audit findings; users who want AI-powered PRP
+ * generation install `@anthropic-ai/claude-code` themselves (most already
+ * have it — it's the Claude Code CLI).
+ *
+ * Why not refactor to `@anthropic-ai/sdk` direct: the claude-code library
+ * exposes an *agentic* `query()` API (multi-turn, tool-using), not simple
+ * `messages.create`. A clean migration is v4.1.0 W11 (planned).
+ *
+ * Runtime contract: when AI features are invoked and the dep is missing,
+ * `loadClaudeCode()` resolves to `null` and every AI path degrades to its
+ * existing `getFallback*` deterministic-template behavior.
+ */
+type QueryFn = (input: {
+  prompt: string;
+  options?: { maxTurns?: number };
+}) => AsyncIterable<SDKMessage>;
+
+// Mirrors the shape exposed by `@anthropic-ai/claude-code` 1.x. Loosely typed
+// because the library's actual union covers streaming + tool-use envelopes we
+// don't introspect; we only care about the terminal `result` message.
+interface SDKMessage {
+  type: string;
+  subtype?: string;
+  result?: string;
+  [key: string]: unknown;
+}
+
+let _claudeCodeModule: { query: QueryFn } | null | undefined;
+async function loadClaudeCode(): Promise<{ query: QueryFn } | null> {
+  if (_claudeCodeModule !== undefined) return _claudeCodeModule;
+  try {
+    // Dynamic require so missing peer dep doesn't crash module load.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('@anthropic-ai/claude-code') as Record<string, unknown>;
+    if (typeof mod.query === 'function') {
+      _claudeCodeModule = mod as unknown as { query: QueryFn };
+    } else {
+      // claude-code 2.x removed the programmatic `query()` export — package
+      // is installed (CLI use) but the library API we need is gone.
+      _claudeCodeModule = null;
+    }
+  } catch {
+    _claudeCodeModule = null;
+  }
+  return _claudeCodeModule;
+}
+
 import { ProjectConfig, Feature } from '../types';
 import { KeyManager, AIProvider } from './keyManager';
 import * as fs from 'fs-extra';
@@ -114,8 +168,14 @@ export class AIIntelligenceService {
       const projectContext = await this.buildProjectContext(projectPath, options);
       const prompt = this.buildSmartDefaultsPrompt(projectContext, basicAnalysis);
 
+      const cc = await loadClaudeCode();
+      if (!cc) {
+        throw new Error(
+          '@anthropic-ai/claude-code is not installed. AI features require it as an optional peer dependency. Install with: npm install @anthropic-ai/claude-code'
+        );
+      }
       const messages: SDKMessage[] = [];
-      for await (const message of query({
+      for await (const message of cc.query({
         prompt,
         options: {
           maxTurns: options.maxTurns || 3,
@@ -125,7 +185,11 @@ export class AIIntelligenceService {
       }
 
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.type === 'result' && lastMessage.subtype === 'success') {
+      if (
+        lastMessage.type === 'result' &&
+        lastMessage.subtype === 'success' &&
+        typeof lastMessage.result === 'string'
+      ) {
         return this.parseAIResponse(lastMessage.result);
       }
 
@@ -149,8 +213,14 @@ export class AIIntelligenceService {
       const projectContext = await this.buildProjectContext(projectPath, options);
       const prompt = this.buildEnhancementPrompt(projectContext, currentConfig);
 
+      const cc = await loadClaudeCode();
+      if (!cc) {
+        throw new Error(
+          '@anthropic-ai/claude-code is not installed. AI features require it as an optional peer dependency. Install with: npm install @anthropic-ai/claude-code'
+        );
+      }
       const messages: SDKMessage[] = [];
-      for await (const message of query({
+      for await (const message of cc.query({
         prompt,
         options: {
           maxTurns: options.maxTurns || 2,
@@ -160,7 +230,11 @@ export class AIIntelligenceService {
       }
 
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.type === 'result' && lastMessage.subtype === 'success') {
+      if (
+        lastMessage.type === 'result' &&
+        lastMessage.subtype === 'success' &&
+        typeof lastMessage.result === 'string'
+      ) {
         const response = this.parseAIResponse(lastMessage.result);
         return response.suggestions || [];
       }
@@ -184,8 +258,14 @@ export class AIIntelligenceService {
     try {
       const prompt = this.buildErrorRecoveryPrompt(error, context);
 
+      const cc = await loadClaudeCode();
+      if (!cc) {
+        throw new Error(
+          '@anthropic-ai/claude-code is not installed. AI features require it as an optional peer dependency. Install with: npm install @anthropic-ai/claude-code'
+        );
+      }
       const messages: SDKMessage[] = [];
-      for await (const message of query({
+      for await (const message of cc.query({
         prompt,
         options: {
           maxTurns: 2,
@@ -195,7 +275,11 @@ export class AIIntelligenceService {
       }
 
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.type === 'result' && lastMessage.subtype === 'success') {
+      if (
+        lastMessage.type === 'result' &&
+        lastMessage.subtype === 'success' &&
+        typeof lastMessage.result === 'string'
+      ) {
         const response = this.parseAIResponse(lastMessage.result);
         return response.suggestions || [];
       }
@@ -235,8 +319,14 @@ export class AIIntelligenceService {
 
   private async generateWithAnthropic(prompt: string): Promise<AIFeaturePRP | null> {
     try {
+      const cc = await loadClaudeCode();
+      if (!cc) {
+        throw new Error(
+          '@anthropic-ai/claude-code is not installed. AI features require it as an optional peer dependency. Install with: npm install @anthropic-ai/claude-code'
+        );
+      }
       const messages: SDKMessage[] = [];
-      for await (const message of query({
+      for await (const message of cc.query({
         prompt,
         options: {
           maxTurns: 2,
@@ -246,7 +336,11 @@ export class AIIntelligenceService {
       }
 
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.type === 'result' && lastMessage.subtype === 'success') {
+      if (
+        lastMessage.type === 'result' &&
+        lastMessage.subtype === 'success' &&
+        typeof lastMessage.result === 'string'
+      ) {
         return this.parseFeaturePRPResponse(lastMessage.result);
       }
 

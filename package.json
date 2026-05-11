@@ -1,6 +1,6 @@
 {
   "name": "context-forge",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Claude-current AI development context engine. Generates .claude/settings.json (hooks + MCP + statusLine + permissions), .claude/agents/, .claude/skills/, .claude/commands/ with frontmatter, plus PRPs. Ink TUI wizard, 21 slash commands across 6 subdirs, full 8-event hook lifecycle, multi-IDE (Claude, Cursor, Cline, Copilot, Windsurf, Gemini, Roo Code). Tracks Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5.",
   "main": "dist/index.js",
   "bin": {
@@ -89,7 +89,6 @@
     ".claude/docs/"
   ],
   "dependencies": {
-    "@anthropic-ai/claude-code": "^1.0.128",
     "@anthropic-ai/sdk": "^0.94.0",
     "@types/uuid": "^10.0.0",
     "chalk": "^5.4.1",
@@ -107,6 +106,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@anthropic-ai/claude-code": "^2.1.138",
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.8",
     "@types/jest": "^30.0.0",
@@ -121,5 +121,13 @@
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/claude-code": "^1.0.128 || ^2.1.138"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/claude-code": {
+      "optional": true
+    }
   }
 }
