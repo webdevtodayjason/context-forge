@@ -4,6 +4,12 @@ export interface GeneratedFile {
   path: string;
   content: string;
   description: string;
+  /**
+   * POSIX file mode (e.g. 0o755 for executable). When set, the writer in
+   * `src/generators/index.ts` runs `fs.chmod(path, mode)` after writing.
+   * Used by hook generators so emitted shell/python scripts are runnable.
+   */
+  mode?: number;
 }
 
 export abstract class IDEAdapter {

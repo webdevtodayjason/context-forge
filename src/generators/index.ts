@@ -64,6 +64,9 @@ export async function generateDocumentation(
           }
 
           await fs.writeFile(file.path, file.content, 'utf-8');
+          if (file.mode) {
+            await fs.chmod(file.path, file.mode);
+          }
           spinner.succeed();
           logger.logOperation({
             type: 'created',
@@ -105,8 +108,12 @@ export async function generateDocumentation(
         await fs.ensureDir(path.dirname(fullPath));
         await fs.writeFile(fullPath, file.content, 'utf-8');
 
-        // Make Python hooks executable
-        if (file.path.endsWith('.py')) {
+        // Honor mode if the generator set one (W5 hooks set 0o755 on every
+        // emitted script — shell and python alike). Fall back to chmod 0o755
+        // for `.sh` / `.py` files without an explicit mode for safety.
+        if (file.mode) {
+          await fs.chmod(fullPath, file.mode);
+        } else if (file.path.endsWith('.py') || file.path.endsWith('.sh')) {
           await fs.chmod(fullPath, 0o755);
         }
 

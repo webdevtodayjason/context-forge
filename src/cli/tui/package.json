@@ -1,0 +1,5 @@
+{
+  "type": "module",
+  "private": true,
+  "description": "Build-time marker: the compiled TUI under dist/cli/tui/ is ESM so Ink (which uses top-level await via yoga-layout) can be loaded via dynamic import()."
+}

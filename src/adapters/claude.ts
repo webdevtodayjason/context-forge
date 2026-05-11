@@ -8,7 +8,10 @@ import { generateUiUx } from '../generators/uiUx';
 import { generateBugTracking } from '../generators/bugTracking';
 import { generatePRP } from '../generators/prp';
 import { generateAIEnhancedPRP } from '../generators/aiPrp';
-import { generateSlashCommands, generateSlashCommandFiles } from '../generators/slashCommands';
+import { generateSlashCommands } from '../generators/slashCommands';
+import { generateClaudeSettings } from '../generators/claudeSettings';
+import { generateAgents } from '../generators/agents';
+import { generateSkills } from '../generators/skills';
 
 export class ClaudeAdapter extends IDEAdapter {
   get name(): string {
@@ -143,10 +146,43 @@ export class ClaudeAdapter extends IDEAdapter {
       }
     }
 
-    // Generate slash commands
-    const slashCommands = await generateSlashCommands(this.config);
-    const commandFiles = generateSlashCommandFiles(slashCommands);
-    files.push(...commandFiles);
+    // Generate slash commands (W6: now returns GeneratedFile[] directly with frontmatter)
+    const slashCommandFiles = generateSlashCommands(this.config).map((f) => ({
+      ...f,
+      path: path.join(outputPath, f.path),
+    }));
+    files.push(...slashCommandFiles);
+
+    // ── v4.0.0 modern Claude Code surface ──────────────────────────────────
+    // Default-on unless the operator explicitly opts out via extras flags.
+    // These three generators were added in v4.0.0 and are the load-bearing
+    // pieces of "Claude-current" output.
+
+    const extras = this.config.extras ?? {};
+
+    if (extras.claudeSettings !== false) {
+      const settingsFiles = generateClaudeSettings(this.config).map((f) => ({
+        ...f,
+        path: path.join(outputPath, f.path),
+      }));
+      files.push(...settingsFiles);
+    }
+
+    if (extras.agents !== false) {
+      const agentFiles = generateAgents(this.config).map((f) => ({
+        ...f,
+        path: path.join(outputPath, f.path),
+      }));
+      files.push(...agentFiles);
+    }
+
+    if (extras.skills !== false) {
+      const skillFiles = generateSkills(this.config).map((f) => ({
+        ...f,
+        path: path.join(outputPath, f.path),
+      }));
+      files.push(...skillFiles);
+    }
 
     return files;
   }

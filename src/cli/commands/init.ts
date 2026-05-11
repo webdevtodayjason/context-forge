@@ -13,6 +13,30 @@ import { ProjectAnalyzer } from '../../services/projectAnalyzer';
 import { ErrorRecoveryService } from '../../services/errorRecoveryService';
 import { ProgressTracker } from '../../services/progressTracker';
 import { KeyManager } from '../../services/keyManager';
+// The TUI is compiled separately as ESM (so Ink + yoga-layout's top-level
+// await can be loaded). We dynamic-import it from this CJS module and only
+// reference it via the inline types below — never touching src/cli/tui from
+// the main tsc graph (so the main project doesn't need to type-check Ink).
+
+interface GenerationStep {
+  id: string;
+  label: string;
+  status: 'pending' | 'running' | 'done' | 'failed';
+  detail?: string;
+}
+
+interface GenerationResult {
+  outputPath: string;
+  filesCreated: number;
+  filesSkipped?: number;
+  filesUpdated?: number;
+  summary?: string;
+}
+
+type RunGenerators = (
+  config: ProjectConfig,
+  onProgress: (steps: GenerationStep[]) => void
+) => Promise<GenerationResult>;
 
 export const initCommand = new Command('init')
   .description('Initialize AI IDE configurations and documentation for your project')
@@ -22,6 +46,7 @@ export const initCommand = new Command('init')
   .option('--no-ai', 'disable AI-powered smart suggestions')
   .option('--ai-prp', 'enable AI-powered PRP generation (requires API keys)')
   .option('--quick', 'use quick setup with smart defaults')
+  .option('--no-tui', 'use the legacy inquirer prompt flow instead of the Ink TUI')
   .option(
     '-i, --ide <ide>',
     'target IDE (claude, cursor, windsurf, cline, roo, gemini, copilot)',
@@ -37,6 +62,35 @@ export const initCommand = new Command('init')
     }
   )
   .action(async (options) => {
+    const outputPath = path.resolve(options.output);
+
+    // TUI path: full-screen Ink wizard. Used for interactive runs unless the user
+    // disables it (`--no-tui`) or has provided enough non-interactive flags
+    // (`--preset`, `--config`, `--quick`) that the legacy path is preferable.
+    const wantsTui =
+      process.stdout.isTTY &&
+      options.tui !== false &&
+      !options.preset &&
+      !options.config &&
+      !options.quick;
+
+    if (wantsTui) {
+      try {
+        await runInitWithTui(options, outputPath);
+        return;
+      } catch (error) {
+        // Fall back to inquirer path on TUI failure so the user is never stranded.
+        const message = error instanceof Error ? error.message : String(error);
+        if (message.includes('cancelled by user')) {
+          console.log(chalk.gray('\nCancelled. No files were written.'));
+          process.exitCode = 130;
+          return;
+        }
+        console.error(chalk.yellow(`\n⚠️  TUI failed: ${message}`));
+        console.error(chalk.gray('Falling back to inquirer prompt flow…\n'));
+      }
+    }
+
     console.log(chalk.blue.bold('\n🚀 Welcome to Context Forge!\n'));
     console.log(chalk.gray("Let's set up AI-optimized documentation for your project.\n"));
 
@@ -45,7 +99,6 @@ export const initCommand = new Command('init')
     const errorRecovery = new ErrorRecoveryService();
     const progressTracker = new ProgressTracker();
 
-    const outputPath = path.resolve(options.output);
     let config: ProjectConfig | undefined;
     let operationId: string = '';
 
@@ -417,4 +470,135 @@ async function ensureGitignoreEntry(projectPath: string, entry: string): Promise
     // Don't fail the entire process if gitignore update fails
     console.warn(chalk.yellow(`Warning: Could not update .gitignore: ${error}`));
   }
+}
+
+/**
+ * Build a progress-emitting runGenerators callback for the Ink TUI.
+ *
+ * Suppresses console.log/error/warn and stderr writes while generateDocumentation
+ * runs so its ora spinners don't fight with Ink's render loop.
+ */
+function buildTuiRunGenerators(
+  options: { aiPrp?: boolean; ide?: SupportedIDE[] },
+  outputPath: string
+): RunGenerators {
+  return async (config, onProgress) => {
+    const steps: GenerationStep[] = [
+      { id: 'validate', label: 'Validate output path', status: 'pending' },
+      { id: 'aiprp', label: 'Check AI providers', status: 'pending' },
+      { id: 'save', label: 'Save .context-forge/config.json', status: 'pending' },
+      { id: 'docs', label: 'Generate documentation', status: 'pending' },
+    ];
+
+    const tick = (id: string, status: GenerationStep['status'], detail?: string): void => {
+      const idx = steps.findIndex((s) => s.id === id);
+      if (idx >= 0) steps[idx] = { ...steps[idx], status, detail };
+      onProgress(steps.map((s) => ({ ...s })));
+    };
+
+    // Step 1 — validate output path
+    tick('validate', 'running');
+    await validateOutputPath(outputPath);
+    tick('validate', 'done');
+
+    // Apply --ide override (TUI's choice can be replaced by CLI flag)
+    if (options.ide && options.ide.length > 0) {
+      config.targetIDEs = options.ide;
+    }
+
+    // Step 2 — AI PRP check
+    tick('aiprp', 'running');
+    if (options.aiPrp) {
+      const availableProviders = await KeyManager.getAvailableProviders();
+      if (availableProviders.length === 0) {
+        config.extras.prp = true;
+        tick('aiprp', 'done', 'no API keys — using template PRP');
+      } else {
+        config.extras.prp = true;
+        config.extras.aiPrp = true;
+        tick('aiprp', 'done', `using ${availableProviders[0].toUpperCase()}`);
+      }
+    } else {
+      tick('aiprp', 'done', 'skipped');
+    }
+
+    // Step 3 — save config
+    tick('save', 'running');
+    const configDir = path.join(outputPath, '.context-forge');
+    const configPath = path.join(configDir, 'config.json');
+    await fs.ensureDir(configDir);
+    await fs.writeJson(configPath, config, { spaces: 2 });
+    await ensureGitignoreEntry(outputPath, '.context-forge/');
+    tick('save', 'done', path.relative(process.cwd(), configPath));
+
+    // Step 4 — generate documentation (silenced — Ink owns the screen)
+    tick('docs', 'running');
+    const restoreLog = console.log;
+    const restoreError = console.error;
+    const restoreWarn = console.warn;
+    const restoreInfo = console.info;
+    const restoreStderr = process.stderr.write.bind(process.stderr);
+
+    const noop: typeof console.log = () => undefined;
+    console.log = noop;
+    console.error = noop;
+    console.warn = noop;
+    console.info = noop;
+    process.stderr.write = ((): true => true) as typeof process.stderr.write;
+
+    try {
+      await generateDocumentation(config, outputPath);
+    } finally {
+      console.log = restoreLog;
+      console.error = restoreError;
+      console.warn = restoreWarn;
+      console.info = restoreInfo;
+      process.stderr.write = restoreStderr;
+    }
+
+    const ideCount = config.targetIDEs.length;
+    tick('docs', 'done', `${ideCount} IDE config${ideCount === 1 ? '' : 's'}`);
+
+    const result: GenerationResult = {
+      outputPath,
+      filesCreated: ideCount + (config.features?.length || 0),
+      summary: `Documentation written under ${path.relative(process.cwd(), outputPath) || '.'}`,
+    };
+    return result;
+  };
+}
+
+/**
+ * Run the Ink-based init wizard. Throws on user cancellation; otherwise returns
+ * after the user dismisses the Done screen.
+ */
+interface TuiModule {
+  runInitTui: (opts: {
+    outputPath: string;
+    runGenerators: RunGenerators;
+    initial?: Record<string, unknown>;
+  }) => Promise<unknown>;
+}
+
+async function runInitWithTui(
+  options: { aiPrp?: boolean; ide?: SupportedIDE[] },
+  outputPath: string
+): Promise<void> {
+  const runGenerators = buildTuiRunGenerators(options, outputPath);
+  // Dynamic import: the TUI module is compiled as ESM (see tsconfig.tui.json
+  // and src/cli/tui/package.json) so it can load Ink, which requires a
+  // top-level-await-capable graph via yoga-layout.
+  //
+  // The path is constructed at runtime so the main `tsc` invocation does not
+  // walk into src/cli/tui (which has its own separate build).
+  const tuiPath = path.join(__dirname, '..', 'tui', 'index.js');
+  const dynamicImport = new Function('p', 'return import(p)') as (p: string) => Promise<TuiModule>;
+  const tuiModule = await dynamicImport(tuiPath);
+  await tuiModule.runInitTui({
+    outputPath,
+    runGenerators,
+    initial: {
+      targetIDEs: options.ide && options.ide.length > 0 ? options.ide : undefined,
+    },
+  });
 }

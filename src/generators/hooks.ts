@@ -1,7 +1,55 @@
+/**
+ * Hooks generator — emits .claude/hooks/*.sh (and a few legacy .py kept where
+ * portable bash isn't a fit) plus a `getHooksFragment(config)` that W2
+ * (`claudeSettings.ts`) merges into `.claude/settings.json` under `hooks`.
+ *
+ * 2026 Claude Code lifecycle events handled here:
+ *   - PreCompact          — pre-compact.sh
+ *   - UserPromptSubmit    — pre-submit.sh
+ *   - PostToolUse         — lint-on-edit.sh (matcher: Edit|Write)
+ *   - SessionStart        — session-start.sh
+ *   - Stop                — stop.sh
+ *
+ * Hook scripts are emitted as `GeneratedFile` objects with an extra optional
+ * `mode` field (0o755). The base `GeneratedFile` interface in
+ * `src/adapters/base.ts` does NOT yet declare a `mode` field — see
+ * `HookFile` below and the orchestrator note in the worker report.
+ */
 import path from 'path';
 import fs from 'fs-extra';
 import { ProjectConfig } from '../types';
 import { GeneratedFile } from '../adapters/base';
+import { getEnhancementHooksFragment, generateEnhancementHooks } from './enhancementHooks';
+import { getMigrationHooksFragment, generateMigrationHooks } from './migrationHooks';
+
+// ---------------------------------------------------------------------------
+// Public hook-fragment contract — mirrors the shapes in
+// `src/generators/claudeSettings.ts` (W2). They are structurally identical;
+// re-exporting here so any consumer can import either canonical source.
+// ---------------------------------------------------------------------------
+
+export interface HookRule {
+  matcher?: string;
+  hooks: { type: 'command'; command: string }[];
+}
+
+export interface SettingsHooksFragment {
+  PreToolUse?: HookRule[];
+  PostToolUse?: HookRule[];
+  PreCompact?: HookRule[];
+  SessionStart?: HookRule[];
+  UserPromptSubmit?: HookRule[];
+  Stop?: HookRule[];
+  SubagentStop?: HookRule[];
+  Notification?: HookRule[];
+}
+
+// Local extension of `GeneratedFile` so we can carry the unix mode bit through
+// to the writer. Once the orchestrator extends GeneratedFile, this can be
+// inlined.
+export interface HookFile extends GeneratedFile {
+  mode?: number;
+}
 
 export interface HooksConfig {
   sourceRepo?: string;
@@ -9,40 +57,225 @@ export interface HooksConfig {
   enabledHooks?: string[];
 }
 
+// ---------------------------------------------------------------------------
+// Fragment merge helper
+// ---------------------------------------------------------------------------
+
+const LIFECYCLE_KEYS: (keyof SettingsHooksFragment)[] = [
+  'PreToolUse',
+  'PostToolUse',
+  'PreCompact',
+  'SessionStart',
+  'UserPromptSubmit',
+  'Stop',
+  'SubagentStop',
+  'Notification',
+];
+
+function mergeFragments(...frags: SettingsHooksFragment[]): SettingsHooksFragment {
+  const out: SettingsHooksFragment = {};
+  for (const frag of frags) {
+    if (!frag) continue;
+    for (const key of LIFECYCLE_KEYS) {
+      const rules = frag[key];
+      if (!rules || rules.length === 0) continue;
+      out[key] = [...(out[key] ?? []), ...rules];
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Fragment builder — the public W2 contract entry point.
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the hooks fragment that W2 will splice into `.claude/settings.json`.
+ * Aggregates the base lifecycle hooks plus enhancement/migration fragments
+ * when those configs are present. Returns `{}` when hooks are disabled in
+ * `config.extras`.
+ */
+export function getHooksFragment(config: ProjectConfig): SettingsHooksFragment {
+  if (!config?.extras?.hooks) {
+    return {};
+  }
+
+  const base = buildBaseFragment(config);
+  const enh = config.enhancementConfig ? getEnhancementHooksFragment(config) : {};
+  const mig = config.migrationConfig ? getMigrationHooksFragment(config) : {};
+
+  return mergeFragments(base, enh, mig);
+}
+
+function buildBaseFragment(config: ProjectConfig): SettingsHooksFragment {
+  const fragment: SettingsHooksFragment = {
+    PreCompact: [{ hooks: [{ type: 'command', command: './.claude/hooks/pre-compact.sh' }] }],
+    UserPromptSubmit: [{ hooks: [{ type: 'command', command: './.claude/hooks/pre-submit.sh' }] }],
+    SessionStart: [{ hooks: [{ type: 'command', command: './.claude/hooks/session-start.sh' }] }],
+    Stop: [{ hooks: [{ type: 'command', command: './.claude/hooks/stop.sh' }] }],
+  };
+
+  // lint-on-edit only when linting/testing was requested
+  if (config.extras?.linting || config.extras?.testing) {
+    fragment.PostToolUse = [
+      {
+        matcher: 'Edit|Write',
+        hooks: [{ type: 'command', command: './.claude/hooks/lint-on-edit.sh' }],
+      },
+    ];
+  }
+
+  // PRP tracking — runs after Edit/Write so we can see PRP file mutations
+  if (config.extras?.prp) {
+    fragment.PostToolUse = [
+      ...(fragment.PostToolUse ?? []),
+      {
+        matcher: 'Edit|Write',
+        hooks: [{ type: 'command', command: './.claude/hooks/prp-tracking.py' }],
+      },
+    ];
+  }
+
+  // Dart integration hooks — Python kept because the JSON wire-format parsing
+  // and complex categorisation are awkward in pure bash.
+  if (config.extras?.dartIntegration) {
+    fragment.PostToolUse = [
+      ...(fragment.PostToolUse ?? []),
+      {
+        matcher: 'Edit|Write|Bash',
+        hooks: [
+          { type: 'command', command: './.claude/hooks/dart-progress-updater.py' },
+          { type: 'command', command: './.claude/hooks/auto-task-commenter.py' },
+          { type: 'command', command: './.claude/hooks/task-code-mapper.py' },
+        ],
+      },
+    ];
+  }
+
+  return fragment;
+}
+
+// ---------------------------------------------------------------------------
+// File generation — emits the actual hook scripts.
+// ---------------------------------------------------------------------------
+
 export async function generateHooks(config: ProjectConfig): Promise<GeneratedFile[]> {
-  if (!config.extras.hooks) {
+  if (!config.extras?.hooks) {
     return [];
   }
 
-  const files: GeneratedFile[] = [];
+  const files: HookFile[] = [];
 
-  // Add hooks configuration directory structure
   files.push({
     path: path.join('.claude', 'hooks', 'README.md'),
     content: generateHooksReadme(config),
     description: 'Claude Code hooks documentation',
   });
 
-  // Add common hooks based on project type
-  const commonHooks = getCommonHooks(config);
+  // Always-on lifecycle scripts
+  files.push(
+    executable(
+      '.claude/hooks/pre-compact.sh',
+      preCompactScript(config),
+      'Snapshots branch + critical files before compaction (PreCompact)'
+    )
+  );
+  files.push(
+    executable(
+      '.claude/hooks/pre-submit.sh',
+      preSubmitScript(config),
+      "Lints the user's most recent file change (UserPromptSubmit)"
+    )
+  );
+  files.push(
+    executable(
+      '.claude/hooks/session-start.sh',
+      sessionStartScript(config),
+      'Prints orientation on session boot (SessionStart)'
+    )
+  );
+  files.push(
+    executable(
+      '.claude/hooks/stop.sh',
+      stopScript(config),
+      'Appends a session-summary line to .claude/logs/sessions.jsonl (Stop)'
+    )
+  );
 
-  for (const hook of commonHooks) {
-    files.push({
-      path: path.join('.claude', 'hooks', hook.filename),
-      content: hook.content,
-      description: hook.description,
-    });
+  if (config.extras?.linting || config.extras?.testing) {
+    files.push(
+      executable(
+        '.claude/hooks/lint-on-edit.sh',
+        lintOnEditScript(config),
+        'Runs the project linter on a just-edited file (PostToolUse: Edit|Write)'
+      )
+    );
   }
 
-  return files;
+  // PRP tracking — Python retained: scans many .md files and analyses checkbox
+  // counts in a way much terser in Python.
+  if (config.extras?.prp) {
+    files.push(
+      executable(
+        '.claude/hooks/prp-tracking.py',
+        prpTrackingPyScript(config),
+        'Analyses PRP completion checkboxes (Python — complex md scanning)'
+      )
+    );
+  }
+
+  // Dart integration — Python retained for stdin-JSON parsing and pattern matching.
+  if (config.extras?.dartIntegration) {
+    files.push(
+      executable(
+        '.claude/hooks/dart-progress-updater.py',
+        dartProgressUpdaterPy(config),
+        'Updates Dart task progress (Python — needs stdin JSON)'
+      )
+    );
+    files.push(
+      executable(
+        '.claude/hooks/auto-task-commenter.py',
+        autoTaskCommenterPy(config),
+        'Generates task comments from code analysis (Python)'
+      )
+    );
+    files.push(
+      executable(
+        '.claude/hooks/task-code-mapper.py',
+        taskCodeMapperPy(config),
+        'Maps Dart tasks to changed files (Python)'
+      )
+    );
+  }
+
+  return files as GeneratedFile[];
 }
+
+function executable(filePath: string, content: string, description: string): HookFile {
+  return { path: filePath, content, description, mode: 0o755 };
+}
+
+// ---------------------------------------------------------------------------
+// Re-export helpers from sibling generators so a single import surface works.
+// ---------------------------------------------------------------------------
+
+export {
+  generateEnhancementHooks,
+  getEnhancementHooksFragment,
+  generateMigrationHooks,
+  getMigrationHooksFragment,
+};
+
+// ---------------------------------------------------------------------------
+// Existing copy-from-repo helper (untouched behaviour).
+// ---------------------------------------------------------------------------
 
 export async function copyHooksFromRepo(
   hooksRepoPath: string,
   targetPath: string,
   selectedHooks?: string[]
 ): Promise<void> {
-  // Check if hooks repo exists
   if (!(await fs.pathExists(hooksRepoPath))) {
     throw new Error(`Hooks repository not found at: ${hooksRepoPath}`);
   }
@@ -52,15 +285,12 @@ export async function copyHooksFromRepo(
     throw new Error(`Hooks directory not found in repository: ${hooksDir}`);
   }
 
-  // Ensure target hooks directory exists
   const targetHooksDir = path.join(targetPath, '.claude', 'hooks');
   await fs.ensureDir(targetHooksDir);
 
-  // Get list of available hooks
   const availableHooks = await fs.readdir(hooksDir);
   const hooksToProcess = selectedHooks || availableHooks;
 
-  // Copy selected hooks
   for (const hookFile of hooksToProcess) {
     const sourcePath = path.join(hooksDir, hookFile);
     const targetFilePath = path.join(targetHooksDir, hookFile);
@@ -71,1050 +301,511 @@ export async function copyHooksFromRepo(
   }
 }
 
+// ---------------------------------------------------------------------------
+// README
+// ---------------------------------------------------------------------------
+
 function generateHooksReadme(config: ProjectConfig): string {
   return `# Claude Code Hooks
 
-This directory contains Claude Code hooks that enhance your development workflow with automated context management and project-specific behaviors.
+This directory contains shell-script hooks that Claude Code invokes at lifecycle
+events. They are registered through \`.claude/settings.json\` (see the
+\`hooks\` block) — file names alone do not auto-register hooks in 2026.
 
-## About Hooks
+## Lifecycle map
 
-Claude Code hooks are scripts that run at specific points during development:
-- **PreCompact**: Runs before context is compacted to preserve important information
-- **PostMessage**: Runs after each message to maintain project state
-- **PreSubmit**: Runs before submitting code to validate quality
+| Event              | Script                            |
+|--------------------|-----------------------------------|
+| PreCompact         | \`pre-compact.sh\`                |
+| UserPromptSubmit   | \`pre-submit.sh\`                 |
+| PostToolUse (Edit|Write) | \`lint-on-edit.sh\`         |
+| SessionStart       | \`session-start.sh\`              |
+| Stop               | \`stop.sh\`                       |
 
-## Project Configuration
+## Project context
 
-Project: ${config.projectName}
-Type: ${config.projectType}
-Tech Stack: ${Object.values(config.techStack).filter(Boolean).join(', ')}
+- **Project**: ${config.projectName}
+- **Type**: ${config.projectType}
+- **Stack**: ${Object.values(config.techStack).filter(Boolean).join(', ')}
 
-## Available Hooks
+## Customisation
 
-### Context Management
-- **PreCompact**: Preserves project context, CLAUDE.md, and recent changes
-- **ContextRotation**: Manages context window by preserving critical information
-
-### Quality Gates
-- **PreSubmit**: Validates code quality before submission
-- **LintAndTest**: Runs linting and testing before commits
-
-### Project Specific
-- **ProjectStatePreservation**: Maintains project-specific state information
-- **FeatureTracking**: Tracks feature implementation progress
-
-## Hook Configuration
-
-Hooks are automatically detected by Claude Code. To customize hook behavior:
-
-1. Edit hook files directly in this directory
-2. Add project-specific logic based on your needs
-3. Configure hook triggers in Claude settings
-
-## Usage Tips
-
-- Hooks run automatically based on their triggers
-- Check Claude Code logs if hooks aren't working as expected
-- Hooks can access project files and context
-- Use hooks to maintain context across long development sessions
+Edit any script in this directory. Each one is a regular bash script with
+\`set -euo pipefail\` and a clear single responsibility. Add new hooks by
+dropping a new script here and adding an entry under
+\`.claude/settings.json\` → \`hooks\`.
 
 ## Troubleshooting
 
-If hooks aren't working:
-1. Check file permissions (hooks need to be executable)
-2. Verify Claude Code settings have hooks enabled
-3. Review hook logs for error messages
-4. Ensure required dependencies are installed
+1. Scripts must be executable (\`chmod +x .claude/hooks/*.sh\`).
+2. Check Claude Code logs if a hook isn't firing.
+3. Use \`bash -n <script>\` to syntax-check.
 
-For more information, see: https://docs.anthropic.com/claude-code/hooks
+Docs: https://docs.anthropic.com/claude-code/hooks
 `;
 }
 
-interface HookTemplate {
-  filename: string;
-  content: string;
-  description: string;
+// ---------------------------------------------------------------------------
+// Bash hook scripts
+// ---------------------------------------------------------------------------
+
+function preCompactScript(config: ProjectConfig): string {
+  return `#!/usr/bin/env bash
+# pre-compact.sh — snapshot critical context before compaction.
+# Project: ${config.projectName}
+set -euo pipefail
+
+SNAP=".claude/.precompact-snapshot"
+mkdir -p "$(dirname "$SNAP")"
+
+{
+  echo "# precompact snapshot — $(date -u +%FT%TZ)"
+  echo "## branch"
+  git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "no-git"
+  echo "## last commit"
+  git log -1 --oneline 2>/dev/null || echo "no-git"
+  echo "## modified files"
+  git status --porcelain 2>/dev/null || true
+  echo "## critical files"
+  for f in CLAUDE.md README.md package.json requirements.txt PRPs Docs docs ai_docs; do
+    [[ -e "$f" ]] && echo "  - $f"
+  done
+} > "$SNAP"
+
+echo "✅ pre-compact: snapshot written to $SNAP"
+`;
 }
 
-function getCommonHooks(config: ProjectConfig): HookTemplate[] {
-  const hooks: HookTemplate[] = [];
+function preSubmitScript(config: ProjectConfig): string {
+  const lintHint = config.extras?.linting ? 'npm run lint' : '(no linter configured)';
+  return `#!/usr/bin/env bash
+# pre-submit.sh — UserPromptSubmit hook.
+# Quick sanity-lint of the most-recently-modified source file.
+# Project: ${config.projectName}
+set -euo pipefail
 
-  // PreCompact hook - essential for context preservation
-  hooks.push({
-    filename: 'PreCompact.py',
-    content: generatePreCompactHook(config),
-    description: 'Preserves project context before compaction',
-  });
+LATEST="$(git ls-files -m 2>/dev/null | head -n 1 || true)"
+if [[ -z "\${LATEST:-}" ]]; then
+  exit 0
+fi
 
-  // Context rotation hook for long sessions
-  hooks.push({
-    filename: 'ContextRotation.py',
-    content: generateContextRotationHook(config),
-    description: 'Manages context window for long development sessions',
-  });
+case "$LATEST" in
+  *.ts|*.tsx|*.js|*.jsx)
+    if [[ -f package.json ]] && command -v npx >/dev/null 2>&1; then
+      npx --no-install eslint "$LATEST" 2>&1 | tail -n 20 || true
+    else
+      echo "pre-submit: skipping lint (${lintHint})"
+    fi
+    ;;
+  *.py)
+    if command -v ruff >/dev/null 2>&1; then
+      ruff check "$LATEST" 2>&1 | tail -n 20 || true
+    fi
+    ;;
+  *) : ;;
+esac
 
-  // Quality gate hook
-  if (config.extras.testing || config.extras.linting) {
-    hooks.push({
-      filename: 'PreSubmit.py',
-      content: generatePreSubmitHook(config),
-      description: 'Validates code quality before submission',
-    });
-  }
-
-  // PRP tracking hook
-  if (config.extras.prp) {
-    hooks.push({
-      filename: 'PRPTracking.py',
-      content: generatePRPTrackingHook(config),
-      description: 'Tracks PRP implementation progress',
-    });
-  }
-
-  // Dart integration hooks
-  if (config.extras.dartIntegration) {
-    hooks.push({
-      filename: 'DartProgressUpdater.py',
-      content: generateDartProgressUpdaterHook(config),
-      description: 'Updates Dart task progress based on code changes',
-    });
-
-    hooks.push({
-      filename: 'AutoTaskCommenter.py',
-      content: generateAutoTaskCommenterHook(config),
-      description: 'Adds detailed comments to Dart tasks',
-    });
-
-    hooks.push({
-      filename: 'TaskCodeMapper.py',
-      content: generateTaskCodeMapperHook(config),
-      description: 'Maps Dart tasks to code files intelligently',
-    });
-  }
-
-  return hooks;
+exit 0
+`;
 }
 
-function generatePreCompactHook(config: ProjectConfig): string {
-  const criticalFiles = [
-    'CLAUDE.md',
-    'README.md',
-    'package.json',
-    'requirements.txt',
-    '.env.example',
-    'PRPs/**/*.md',
-    'Docs/**/*.md',
-    'docs/**/*.md',
-  ];
+function lintOnEditScript(config: ProjectConfig): string {
+  const cmd = config.techStack?.frontend === 'nextjs' ? 'npm run lint' : 'npm run lint';
+  return `#!/usr/bin/env bash
+# lint-on-edit.sh — PostToolUse(Edit|Write) hook.
+# Lint the file Claude just touched, when we can identify it.
+# Project: ${config.projectName}
+set -euo pipefail
 
-  if (config.extras.prp) {
-    criticalFiles.push('PRPs/**/*.md');
-    criticalFiles.push('.claude/commands/**/*.md');
-    criticalFiles.push('CONTEXT-FORGE-FILE-MAPPING.md');
-    criticalFiles.push('PRIME-CONTEXT-ENHANCEMENT.md');
-  }
+# Claude Code passes a JSON envelope on stdin for tool hooks. We try the env
+# var first (newer surface) and fall back to parsing JSON.
+FILE="\${CLAUDE_TOOL_FILE_PATH:-}"
+if [[ -z "$FILE" && ! -t 0 ]]; then
+  if command -v jq >/dev/null 2>&1; then
+    FILE="$(jq -r '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null || true)"
+  fi
+fi
 
-  if (config.extras.aiDocs) {
-    criticalFiles.push('ai_docs/**/*.md');
-  }
+if [[ -z "$FILE" || ! -f "$FILE" ]]; then
+  exit 0
+fi
 
-  // Add Dart integration status files
-  if (config.extras.dartIntegration) {
-    criticalFiles.push('.claude/rotation_context.json');
-    criticalFiles.push('.claude/checkpoint_status.json');
-    criticalFiles.push('.claude/dart_progress.json');
-    criticalFiles.push('.claude/task_mapping.json');
-    criticalFiles.push('.claude/phase_progress.json');
-  }
+case "$FILE" in
+  *.ts|*.tsx|*.js|*.jsx)
+    if [[ -f package.json ]] && grep -q '"lint"' package.json; then
+      ${cmd} -- "$FILE" 2>&1 | tail -n 30 || true
+    fi
+    ;;
+  *.py)
+    command -v ruff >/dev/null 2>&1 && ruff check "$FILE" 2>&1 | tail -n 30 || true
+    ;;
+  *) : ;;
+esac
 
+exit 0
+`;
+}
+
+function sessionStartScript(config: ProjectConfig): string {
+  const tech =
+    Object.values(config.techStack ?? {})
+      .filter(Boolean)
+      .join(', ') || 'n/a';
+  return `#!/usr/bin/env bash
+# session-start.sh — SessionStart hook.
+# Print orientation so Claude lands with current state.
+# Project: ${config.projectName}
+set -euo pipefail
+
+echo "👋 Welcome back to ${config.projectName}"
+echo "   Type: ${config.projectType ?? 'unknown'}"
+echo "   Stack: ${tech}"
+
+if [[ -d .git ]]; then
+  echo "   Branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown')"
+  echo "   Last commit: $(git log -1 --oneline 2>/dev/null || echo 'none')"
+fi
+
+if [[ -f .claude/state.json ]]; then
+  echo "--- .claude/state.json ---"
+  cat .claude/state.json
+fi
+
+if [[ -f .claude/.precompact-snapshot ]]; then
+  echo "--- pre-compact snapshot (head) ---"
+  head -n 30 .claude/.precompact-snapshot
+fi
+
+exit 0
+`;
+}
+
+function stopScript(config: ProjectConfig): string {
+  return `#!/usr/bin/env bash
+# stop.sh — Stop hook. Append one JSON line summarising the session.
+# Project: ${config.projectName}
+set -euo pipefail
+
+LOG=".claude/logs/sessions.jsonl"
+mkdir -p "$(dirname "$LOG")"
+
+TS="$(date -u +%FT%TZ)"
+SUMMARY="\${CLAUDE_STOP_SUMMARY:-stopped}"
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+LAST="$(git log -1 --oneline 2>/dev/null || echo none)"
+
+# Escape any embedded double quotes in the summary.
+ESC_SUMMARY="\${SUMMARY//\\"/\\\\\\"}"
+printf '{"date":"%s","project":"%s","branch":"%s","last_commit":"%s","summary":"%s"}\\n' \\
+  "$TS" "${config.projectName}" "$BRANCH" "$LAST" "$ESC_SUMMARY" >> "$LOG"
+
+exit 0
+`;
+}
+
+// ---------------------------------------------------------------------------
+// Python hook scripts retained where Python is genuinely a better fit.
+// ---------------------------------------------------------------------------
+
+function prpTrackingPyScript(config: ProjectConfig): string {
   return `#!/usr/bin/env python3
-"""
-PreCompact Hook for ${config.projectName}
+"""prp-tracking.py — PostToolUse hook. Scan PRPs/ for checkbox completion."""
 
-Preserves critical project information before context is compacted.
-This ensures important context is maintained across development sessions.
-"""
-
-import os
-import json
 import glob
-from datetime import datetime
-from pathlib import Path
-
-def main():
-    """
-    Preserve critical project context before compaction.
-    """
-    try:
-        project_info = {
-            "project_name": "${config.projectName}",
-            "project_type": "${config.projectType}",
-            "tech_stack": ${JSON.stringify(config.techStack)},
-            "last_preserved": datetime.now().isoformat(),
-            "critical_files": []
-        }
-        
-        # Critical files to preserve
-        critical_patterns = ${JSON.stringify(criticalFiles)}
-        
-        for pattern in critical_patterns:
-            files = glob.glob(pattern, recursive=True)
-            for file_path in files:
-                if os.path.exists(file_path):
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                        
-                        project_info["critical_files"].append({
-                            "path": file_path,
-                            "size": len(content),
-                            "last_modified": os.path.getmtime(file_path),
-                            "preview": content[:500] + "..." if len(content) > 500 else content
-                        })
-                    except Exception as e:
-                        print(f"Warning: Could not read {file_path}: {e}")
-        
-        # Save context summary
-        context_file = ".claude/context_summary.json"
-        os.makedirs(os.path.dirname(context_file), exist_ok=True)
-        
-        with open(context_file, 'w', encoding='utf-8') as f:
-            json.dump(project_info, f, indent=2)
-        
-        print(f"✅ PreCompact: Preserved context for {len(project_info['critical_files'])} files")
-        
-        # Generate context prompt for next session
-        generate_context_prompt(project_info)
-        
-    except Exception as e:
-        print(f"❌ PreCompact hook failed: {e}")
-
-def generate_context_prompt(project_info):
-    """Generate a comprehensive context restoration prompt for PRD/PRP workflow."""
-    
-    # Categorize files by type
-    prp_files = []
-    doc_files = []
-    command_files = []
-    status_files = []
-    
-    for file_info in project_info["critical_files"]:
-        path = file_info["path"]
-        if "/PRPs/" in path or path.startswith("PRPs/"):
-            prp_files.append(file_info)
-        elif "/commands/" in path or path.startswith(".claude/commands/"):
-            command_files.append(file_info)
-        elif path.endswith(".json") and any(status in path for status in ["dart_progress", "task_mapping", "phase_progress", "checkpoint_status"]):
-            status_files.append(file_info)
-        elif path.endswith(".md"):
-            doc_files.append(file_info)
-    
-    prompt = f"""# Context Restoration for ${config.projectName}
-
-## Project Overview
-- **Name**: ${config.projectName}
-- **Type**: ${config.projectType}
-- **Tech Stack**: {', '.join([f"{k}: {v}" for k, v in project_info["tech_stack"].items() if v])}
-
-## Recent Context
-- **Last Preserved**: {project_info["last_preserved"]}
-- **Files Tracked**: {len(project_info["critical_files"])} critical files
-- **PRPs Tracked**: {len(prp_files)} PRP files
-- **Commands Available**: {len(command_files)} slash commands
-- **Status Files**: {len(status_files)} status tracking files
-
-## PRD/PRP Workflow Files
-"""
-    
-    if prp_files:
-        prompt += "### Product Requirement Profiles (PRPs)\\n"
-        for file_info in prp_files:
-            prompt += f"- **{file_info['path']}** ({file_info['size']} chars)\\n"
-        prompt += "\\n"
-    
-    if command_files:
-        prompt += "### Available Slash Commands\\n"
-        for file_info in command_files:
-            command_name = file_info['path'].split('/')[-1].replace('.md', '')
-            prompt += f"- **/{command_name}** - {file_info['path']}\\n"
-        prompt += "\\n"
-    
-    if status_files:
-        prompt += "### Task & Progress Tracking\\n"
-        for file_info in status_files:
-            status_type = file_info['path'].split('/')[-1].replace('.json', '')
-            prompt += f"- **{status_type}** - {file_info['size']} chars of status data\\n"
-        prompt += "\\n"
-    
-    prompt += f"""## Quick Start Commands
-- \`/prime-context\` - Load full project understanding
-- \`/prp-create [feature]\` - Create new feature PRP
-- \`/prp-execute [prp-file]\` - Execute specific PRP
-- \`/checkpoint [milestone]\` - Request human verification
-- \`/orchestrate-status\` - Check project orchestration status
-- \`/validate-prp [prp-file]\` - Validate PRP completeness
-
-## Critical Documentation Files
-"""
-    
-    for file_info in doc_files[:10]:  # Top 10 documentation files
-        prompt += f"- **{file_info['path']}** ({file_info['size']} chars)\\n"
-    
-    prompt += f"""
-## Context Restoration Instructions
-1. Review the current task from Implementation.md
-2. Check active PRPs and their execution status
-3. Use \`/prime-context\` to load comprehensive project context
-4. Continue with PRP workflow or create new PRPs as needed
-5. Verify Dart integration status if available
-6. Use \`/checkpoint\` before major milestone transitions
-
-## PRD/PRP Workflow Best Practices
-- Always validate PRPs before execution with \`/validate-prp\`
-- Use \`/orchestrate-status\` to check overall project health
-- Maintain checkpoint verification for major milestones
-- Keep PRPs focused and executable
-- Document all changes in appropriate PRP files
-
----
-*This context was automatically preserved by Claude Code PreCompact Hook*
-"""
-    
-    # Save restoration prompt
-    with open(".claude/context_restoration.md", 'w', encoding='utf-8') as f:
-        f.write(prompt)
-
-if __name__ == "__main__":
-    main()
-`;
-}
-
-function generateContextRotationHook(config: ProjectConfig): string {
-  return `#!/usr/bin/env python3
-"""
-Context Rotation Hook for ${config.projectName}
-
-Manages context window during long development sessions by preserving
-essential PRD/PRP information when context approaches limits.
-"""
-
-import os
 import json
+import os
 from datetime import datetime
 
-def main():
-    """
-    Manage context rotation for long development sessions.
-    """
-    try:
-        # Check if we're approaching context limits
-        # This is a placeholder - actual implementation would check with Claude API
-        
-        rotation_info = {
-            "project": "${config.projectName}",
-            "rotation_time": datetime.now().isoformat(),
-            "preserved_context": {
-                "current_task": "Check CLAUDE.md for current focus",
-                "recent_changes": "Check git log --oneline -10",
-                "active_prps": "List of currently active PRPs",
-                "checkpoint_status": "Last checkpoint verification status"
+
+def main() -> None:
+    status = {
+        "project": "${config.projectName}",
+        "updated": datetime.utcnow().isoformat() + "Z",
+        "prps": [],
+    }
+
+    for prp_file in glob.glob("PRPs/**/*.md", recursive=True):
+        try:
+            with open(prp_file, "r", encoding="utf-8") as f:
+                content = f.read()
+        except OSError:
+            continue
+
+        done = content.count("- [x]") + content.count("- [X]")
+        todo = content.count("- [ ]")
+        status["prps"].append(
+            {
+                "file": prp_file,
+                "name": os.path.basename(prp_file).replace(".md", ""),
+                "completed": done,
+                "pending": todo,
+                "percent": round(done / max(1, done + todo) * 100, 1),
             }
-        }
-        
-        # Save rotation context
-        os.makedirs(".claude", exist_ok=True)
-        with open(".claude/rotation_context.json", 'w') as f:
-            json.dump(rotation_info, f, indent=2)
-            
-        print("🔄 Context rotation: Essential information preserved")
-        
-    except Exception as e:
-        print(f"❌ Context rotation hook failed: {e}")
+        )
+
+    os.makedirs(".claude", exist_ok=True)
+    with open(".claude/prp_status.json", "w", encoding="utf-8") as f:
+        json.dump(status, f, indent=2)
+
+    print(f"📋 prp-tracking: {len(status['prps'])} PRPs scanned")
+
 
 if __name__ == "__main__":
-    main()
-`;
-}
-
-function generatePreSubmitHook(config: ProjectConfig): string {
-  const lintCommand = config.techStack.frontend === 'nextjs' ? 'npm run lint' : 'eslint .';
-  const testCommand = config.techStack.frontend === 'nextjs' ? 'npm test' : 'npm run test';
-
-  return `#!/usr/bin/env python3
-"""
-PreSubmit Hook for ${config.projectName}
-
-Validates code quality before submission by running linting and tests.
-"""
-
-import subprocess
-import sys
-import os
-
-def main():
-    """
-    Run quality checks before code submission.
-    """
     try:
-        print("🔍 Running pre-submit quality checks...")
-        
-        checks_passed = True
-        
-        ${
-          config.extras.linting
-            ? `
-        # Run linting
-        print("📋 Running linting...")
-        result = subprocess.run("${lintCommand}", shell=True, capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"❌ Linting failed:\\n{result.stdout}\\n{result.stderr}")
-            checks_passed = False
-        else:
-            print("✅ Linting passed")
-        `
-            : '# Linting disabled'
-        }
-        
-        ${
-          config.extras.testing
-            ? `
-        # Run tests
-        print("🧪 Running tests...")
-        result = subprocess.run("${testCommand}", shell=True, capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"❌ Tests failed:\\n{result.stdout}\\n{result.stderr}")
-            checks_passed = False
-        else:
-            print("✅ Tests passed")
-        `
-            : '# Testing disabled'
-        }
-        
-        # Check for critical patterns
-        print("🔍 Checking for critical patterns...")
-        critical_patterns = [
-            "TODO:",
-            "FIXME:",
-            "console.log(",
-            "debugger;",
-            "import pdb"
-        ]
-        
-        for pattern in critical_patterns:
-            result = subprocess.run(f"grep -r '{pattern}' src/ || true", shell=True, capture_output=True, text=True)
-            if result.stdout.strip():
-                print(f"⚠️  Found {pattern} in code:")
-                print(result.stdout)
-        
-        if checks_passed:
-            print("✅ All pre-submit checks passed!")
-            return 0
-        else:
-            print("❌ Pre-submit checks failed!")
-            return 1
-            
-    except Exception as e:
-        print(f"❌ Pre-submit hook failed: {e}")
-        return 1
-
-if __name__ == "__main__":
-    sys.exit(main())
+        main()
+    except Exception as exc:  # noqa: BLE001
+        print(f"prp-tracking: non-fatal error: {exc}")
 `;
 }
 
-function generatePRPTrackingHook(config: ProjectConfig): string {
+function dartProgressUpdaterPy(config: ProjectConfig): string {
   return `#!/usr/bin/env python3
-"""
-PRP Tracking Hook for ${config.projectName}
-
-Tracks PRP implementation progress and provides status updates.
-"""
-
-import os
-import json
-import glob
-from datetime import datetime
-
-def main():
-    """
-    Track PRP implementation progress.
-    """
-    try:
-        prp_status = {
-            "project": "${config.projectName}",
-            "updated": datetime.now().isoformat(),
-            "prps": []
-        }
-        
-        # Find all PRP files
-        prp_files = glob.glob("PRPs/*.md")
-        
-        for prp_file in prp_files:
-            if os.path.exists(prp_file):
-                with open(prp_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                # Basic PRP analysis
-                prp_info = {
-                    "file": prp_file,
-                    "name": os.path.basename(prp_file).replace('.md', ''),
-                    "size": len(content),
-                    "has_validation": "## Validation Gates" in content,
-                    "has_tasks": "## Task Breakdown" in content,
-                    "completion_indicators": content.count("- [x]"),
-                    "pending_tasks": content.count("- [ ]"),
-                    "last_modified": os.path.getmtime(prp_file)
-                }
-                
-                prp_status["prps"].append(prp_info)
-        
-        # Save PRP status
-        os.makedirs(".claude", exist_ok=True)
-        with open(".claude/prp_status.json", 'w') as f:
-            json.dump(prp_status, f, indent=2)
-        
-        print(f"📋 PRP Tracking: {len(prp_status['prps'])} PRPs tracked")
-        
-        # Print summary
-        for prp in prp_status["prps"]:
-            completion = prp["completion_indicators"] / max(1, prp["completion_indicators"] + prp["pending_tasks"]) * 100
-            print(f"  - {prp['name']}: {completion:.0f}% complete")
-        
-    except Exception as e:
-        print(f"❌ PRP tracking hook failed: {e}")
-
-if __name__ == "__main__":
-    main()
-`;
-}
-
-function generateDartProgressUpdaterHook(config: ProjectConfig): string {
-  return `#!/usr/bin/env python3
-"""
-Dart Progress Updater Hook for ${config.projectName}
-
-Automatically updates Dart task progress based on code changes and git commits.
-"""
+"""dart-progress-updater.py — PostToolUse hook. Reads Claude's tool_response
+JSON envelope from stdin and records progress entries for Dart tasks."""
 
 import json
 import os
-import sys
 import re
-import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-def main():
-    """Main entry point for the Dart progress updater hook."""
-    try:
-        # Read input from stdin
-        input_data = json.load(sys.stdin)
-        
-        # Extract relevant information
-        tool_name = input_data.get('tool_name', '')
-        tool_input = input_data.get('tool_input', {})
-        tool_response = input_data.get('tool_response', {})
-        session_id = input_data.get('session_id', 'unknown')
-        
-        # Process based on tool type
-        if tool_name == 'Write':
-            file_path = tool_input.get('file_path', '')
-            if file_path and tool_response.get('success'):
-                update_progress_for_file_change(file_path, 'created', session_id)
-        
-        elif tool_name in ['Edit', 'MultiEdit']:
-            file_path = tool_input.get('file_path', '')
-            if file_path and tool_response.get('success'):
-                update_progress_for_file_change(file_path, 'modified', session_id)
-        
-        elif tool_name == 'Bash':
-            command = tool_input.get('command', '')
-            if 'git commit' in command and tool_response.get('success'):
-                update_progress_for_git_commit(command, session_id)
-        
-        print("✅ Dart progress updated successfully")
-        
-    except json.JSONDecodeError:
-        print("❌ Invalid JSON input", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"❌ Dart progress updater failed: {e}", file=sys.stderr)
-        sys.exit(1)
 
-def update_progress_for_file_change(file_path, change_type, session_id):
-    """Update task progress based on file changes."""
-    try:
-        # Extract task ID from file path or commit messages
-        task_id = detect_task_from_file_changes(file_path)
-        
-        if task_id:
-            progress_entry = {
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'session_id': session_id,
-                'file_path': file_path,
-                'change_type': change_type,
-                'task_id': task_id,
-                'status': 'in_progress'
-            }
-            
-            # Save progress update
-            save_progress_update(progress_entry)
-            
-            # Suggest task status update
-            suggest_task_status_update(task_id, file_path, change_type)
-    
-    except Exception as e:
-        print(f"Warning: Could not update progress for file {file_path}: {e}")
+PROJECT = "${config.projectName}"
+PATTERNS = [
+    r"task[-_](\\w+)",
+    r"feature[-_](\\w+)",
+    r"bug[-_](\\w+)",
+    r"issue[-_](\\w+)",
+    r"prp[-_](\\w+)",
+]
 
-def detect_task_from_file_changes(file_path):
-    """Detect task ID from file path patterns."""
-    # Common patterns for task detection
-    patterns = [
-        r'task[-_](\w+)',
-        r'feature[-_](\w+)',
-        r'bug[-_](\w+)',
-        r'issue[-_](\w+)',
-        r'prp[-_](\w+)',
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, file_path, re.IGNORECASE)
-        if match:
-            return match.group(1)
-    
+
+def detect_task(file_path: str) -> str | None:
+    for p in PATTERNS:
+        m = re.search(p, file_path, re.IGNORECASE)
+        if m:
+            return m.group(1)
     return None
 
-def save_progress_update(progress_entry):
-    """Save progress update to file."""
-    progress_file = Path('.claude/dart_progress.json')
-    progress_file.parent.mkdir(exist_ok=True)
-    
-    # Load existing progress
-    progress_data = {'updates': []}
-    if progress_file.exists():
-        try:
-            with open(progress_file, 'r') as f:
-                progress_data = json.load(f)
-        except:
-            pass
-    
-    # Add new entry
-    progress_data['updates'].append(progress_entry)
-    
-    # Keep only recent entries (last 100)
-    progress_data['updates'] = progress_data['updates'][-100:]
-    
-    # Save updated progress
-    with open(progress_file, 'w') as f:
-        json.dump(progress_data, f, indent=2)
 
-def suggest_task_status_update(task_id, file_path, change_type):
-    """Suggest task status update based on changes."""
-    suggestion = {
-        'task_id': task_id,
-        'suggested_status': 'in_progress',
-        'reason': f"File {file_path} was {change_type}",
-        'timestamp': datetime.now(timezone.utc).isoformat()
-    }
-    
-    # Save suggestion
-    suggestions_file = Path('.claude/task_suggestions.json')
-    suggestions_file.parent.mkdir(exist_ok=True)
-    
-    suggestions_data = {'suggestions': []}
-    if suggestions_file.exists():
+def append(entry: dict, target: Path, key: str, cap: int) -> None:
+    target.parent.mkdir(exist_ok=True)
+    data: dict = {key: []}
+    if target.exists():
         try:
-            with open(suggestions_file, 'r') as f:
-                suggestions_data = json.load(f)
-        except:
+            with open(target, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
             pass
-    
-    suggestions_data['suggestions'].append(suggestion)
-    suggestions_data['suggestions'] = suggestions_data['suggestions'][-50:]
-    
-    with open(suggestions_file, 'w') as f:
-        json.dump(suggestions_data, f, indent=2)
+    data.setdefault(key, []).append(entry)
+    data[key] = data[key][-cap:]
+    with open(target, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
+def main() -> None:
+    raw = sys.stdin.read() if not sys.stdin.isatty() else "{}"
+    try:
+        payload = json.loads(raw or "{}")
+    except ValueError:
+        payload = {}
+
+    tool_input = payload.get("tool_input", {}) or {}
+    file_path = tool_input.get("file_path") or tool_input.get("path") or ""
+    task_id = detect_task(file_path)
+    if not task_id:
+        return
+
+    entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "project": PROJECT,
+        "session_id": payload.get("session_id", "unknown"),
+        "file_path": file_path,
+        "tool": payload.get("tool_name", "unknown"),
+        "task_id": task_id,
+    }
+    append(entry, Path(".claude/dart_progress.json"), "updates", 100)
+    print(f"dart-progress-updater: recorded {task_id}")
+
 
 if __name__ == "__main__":
-    main()
-`;
-}
-function generateAutoTaskCommenterHook(config: ProjectConfig): string {
-  return `#!/usr/bin/env python3
-"""
-Auto Task Commenter Hook for ${config.projectName}
-
-Adds detailed comments to Dart tasks with code change summaries.
-"""
-
-import json
-import os
-import sys
-import re
-import subprocess
-from datetime import datetime, timezone
-from pathlib import Path
-
-def main():
-    """Main entry point for the auto task commenter hook."""
     try:
-        # Read input from stdin
-        input_data = json.load(sys.stdin)
-        
-        # Extract relevant information
-        tool_name = input_data.get('tool_name', '')
-        tool_input = input_data.get('tool_input', {})
-        tool_response = input_data.get('tool_response', {})
-        session_id = input_data.get('session_id', 'unknown')
-        
-        # Process based on tool type
-        if tool_name in ['Write', 'Edit', 'MultiEdit']:
-            file_path = tool_input.get('file_path', '')
-            if file_path and tool_response.get('success'):
-                create_task_comment(file_path, tool_name, tool_input, session_id)
-        
-        elif tool_name == 'Bash':
-            command = tool_input.get('command', '')
-            if any(cmd in command for cmd in ['npm run build', 'npm run test', 'git commit']):
-                create_milestone_comment(command, tool_response, session_id)
-        
-        print("✅ Task comments updated successfully")
-        
-    except json.JSONDecodeError:
-        print("❌ Invalid JSON input", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"❌ Auto task commenter failed: {e}", file=sys.stderr)
-        sys.exit(1)
-
-def create_task_comment(file_path, tool_name, tool_input, session_id):
-    """Create detailed task comment based on file changes."""
-    try:
-        # Detect task from file path
-        task_id = detect_task_from_file_path(file_path)
-        
-        if task_id:
-            # Analyze the code change
-            change_analysis = analyze_code_structure(file_path, tool_name, tool_input)
-            
-            # Generate comment text
-            comment_text = generate_comment_text(file_path, tool_name, change_analysis)
-            
-            if should_create_comment(change_analysis):
-                comment_entry = {
-                    'task_id': task_id,
-                    'timestamp': datetime.now(timezone.utc).isoformat(),
-                    'session_id': session_id,
-                    'file_path': file_path,
-                    'action': tool_name,
-                    'comment': comment_text,
-                    'analysis': change_analysis
-                }
-                
-                save_task_comment(comment_entry)
-    
-    except Exception as e:
-        print(f"Warning: Could not create task comment for {file_path}: {e}")
-
-def detect_task_from_file_path(file_path):
-    """Detect task ID from file path patterns."""
-    # First try explicit task patterns
-    patterns = [
-        r'task[-_](\w+)',
-        r'feature[-_](\w+)',
-        r'bug[-_](\w+)',
-        r'issue[-_](\w+)',
-        r'prp[-_](\w+)',
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, file_path, re.IGNORECASE)
-        if match:
-            return match.group(1)
-    
-    # Infer from file category
-    return infer_task_from_file_category(file_path)
-
-def analyze_code_structure(file_path, tool_name, tool_input):
-    """Analyze code structure to understand the change."""
-    analysis = {
-        'file_type': get_file_type(file_path),
-        'change_type': tool_name,
-        'estimated_complexity': 'medium',
-        'functions_added': 0,
-        'functions_modified': 0,
-        'imports_added': 0,
-        'lines_added': 0,
-        'category': categorize_file_change(file_path)
-    }
-    
-    try:
-        # Analyze the content if available
-        if tool_name == 'Write' and 'content' in tool_input:
-            content = tool_input['content']
-            analysis.update(analyze_content_structure(content, analysis['file_type']))
-        
-        elif tool_name in ['Edit', 'MultiEdit']:
-            # For edits, we can analyze the change patterns
-            if 'old_string' in tool_input and 'new_string' in tool_input:
-                analysis.update(analyze_edit_changes(
-                    tool_input['old_string'], 
-                    tool_input['new_string'],
-                    analysis['file_type']
-                ))
-    
-    except Exception as e:
-        print(f"Warning: Could not analyze code structure: {e}")
-    
-    return analysis
-
-def generate_comment_text(file_path, tool_name, analysis):
-    """Generate detailed comment text for the task."""
-    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
-    
-    comment_parts = [
-        f"## 🔧 Code Change - {timestamp}",
-        f"**File**: {file_path}",
-        f"**Action**: {tool_name}",
-        f"**Category**: {analysis['category'].replace('_', ' ').title()}",
-        f"**Complexity**: {analysis['estimated_complexity'].title()}",
-        ""
-    ]
-    
-    # Add specific details based on analysis
-    if analysis.get('functions_added', 0) > 0:
-        comment_parts.append(f"✅ **Functions Added**: {analysis['functions_added']}")
-    
-    if analysis.get('functions_modified', 0) > 0:
-        comment_parts.append(f"🔄 **Functions Modified**: {analysis['functions_modified']}")
-    
-    if analysis.get('lines_added', 0) > 0:
-        comment_parts.append(f"📊 **Lines Added**: {analysis['lines_added']}")
-    
-    if analysis.get('net_change', 0) != 0:
-        change_type = "increased" if analysis['net_change'] > 0 else "decreased"
-        comment_parts.append(f"📈 **Net Change**: {abs(analysis['net_change'])} lines {change_type}")
-    
-    comment_parts.extend([
-        "",
-        "**Development Progress**:",
-        "- Code structure implemented",
-        "- Ready for testing and validation",
-        "",
-        "---",
-        "*This update was automatically generated by Claude Code task tracker*"
-    ])
-    
-    return '\\n'.join(comment_parts)
-
-def should_create_comment(analysis):
-    """Determine if a comment should be created based on analysis."""
-    # Create comments for significant changes
-    if analysis.get('functions_added', 0) > 0:
-        return True
-    
-    if analysis.get('lines_added', 0) > 20:
-        return True
-    
-    if analysis.get('estimated_complexity') in ['medium', 'high']:
-        return True
-    
-    if analysis.get('category') in ['authentication', 'api_development', 'database']:
-        return True
-    
-    return False
-
-def save_task_comment(comment_entry):
-    """Save task comment to file."""
-    comments_file = Path('.claude/task_comments.json')
-    comments_file.parent.mkdir(exist_ok=True)
-    
-    comments_data = {'comments': []}
-    if comments_file.exists():
-        try:
-            with open(comments_file, 'r') as f:
-                comments_data = json.load(f)
-        except:
-            pass
-    
-    comments_data['comments'].append(comment_entry)
-    comments_data['comments'] = comments_data['comments'][-100:]  # Keep last 100
-    
-    with open(comments_file, 'w') as f:
-        json.dump(comments_data, f, indent=2)
-
-if __name__ == "__main__":
-    main()
+        main()
+    except Exception as exc:  # noqa: BLE001
+        print(f"dart-progress-updater: non-fatal error: {exc}", file=sys.stderr)
 `;
 }
 
-function generateTaskCodeMapperHook(config: ProjectConfig): string {
+function autoTaskCommenterPy(config: ProjectConfig): string {
   return `#!/usr/bin/env python3
-"""
-Task Code Mapper Hook for ${config.projectName}
-
-Maintains intelligent mapping between Dart tasks and code files.
-"""
+"""auto-task-commenter.py — PostToolUse hook. Generates a structured task
+comment summarising the most recent code change for downstream Dart sync."""
 
 import json
-import os
-import sys
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-def main():
-    """Main entry point for the task code mapper hook."""
-    try:
-        # Read input from stdin
-        input_data = json.load(sys.stdin)
-        
-        # Extract relevant information
-        tool_name = input_data.get('tool_name', '')
-        tool_input = input_data.get('tool_input', {})
-        tool_response = input_data.get('tool_response', {})
-        session_id = input_data.get('session_id', 'unknown')
-        
-        # Process file changes
-        if tool_name in ['Write', 'Edit', 'MultiEdit']:
-            file_path = tool_input.get('file_path', '')
-            if file_path and tool_response.get('success'):
-                update_task_mapping(file_path, tool_name, session_id)
-        
-        print("✅ Task mapping updated successfully")
-        
-    except json.JSONDecodeError:
-        print("❌ Invalid JSON input", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"❌ Task code mapper failed: {e}", file=sys.stderr)
-        sys.exit(1)
 
-def update_task_mapping(file_path, action, session_id):
-    """Update the mapping between tasks and code files."""
-    try:
-        # Infer task from file path
-        inferred_task = infer_task_from_file_path(file_path)
-        
-        if inferred_task:
-            # Create mapping entry
-            mapping_entry = {
-                'file_path': file_path,
-                'task_id': inferred_task['task_id'],
-                'task_category': inferred_task['category'],
-                'confidence': inferred_task['confidence'],
-                'action': action,
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'session_id': session_id
-            }
-            
-            # Save mapping
-            save_task_mapping(mapping_entry)
-            
-            # Suggest task assignment if confidence is high
-            if inferred_task['confidence'] > 0.7:
-                suggest_task_assignment(inferred_task, file_path)
-    
-    except Exception as e:
-        print(f"Warning: Could not update task mapping for {file_path}: {e}")
+PROJECT = "${config.projectName}"
 
-def infer_task_from_file_path(file_path):
-    """Infer task information from file path."""
-    # Project-specific patterns for ${config.projectName}
-    project_patterns = {
-        'auth': {
-            'keywords': ['auth', 'login', 'register', 'user', 'session', 'jwt', 'token'],
-            'task_prefix': 'auth'
-        },
-        'user_management': {
-            'keywords': ['user', 'profile', 'account', 'member', 'team'],
-            'task_prefix': 'user'
-        },
-        'api': {
-            'keywords': ['api', 'route', 'endpoint', 'handler', 'service', 'controller'],
-            'task_prefix': 'api'
-        },
-        'ui': {
-            'keywords': ['component', 'ui', 'interface', 'layout', 'style', 'theme'],
-            'task_prefix': 'ui'
-        },
-        'database': {
-            'keywords': ['model', 'schema', 'migration', 'seed', 'db', 'entity'],
-            'task_prefix': 'db'
-        },
-        'integration': {
-            'keywords': ['integration', 'webhook', 'external', 'third-party', 'slack'],
-            'task_prefix': 'integration'
-        },
-        'testing': {
-            'keywords': ['test', 'spec', '__tests__', 'e2e', 'integration'],
-            'task_prefix': 'test'
+
+def categorise(path: str) -> str:
+    p = path.lower()
+    if any(k in p for k in ("auth", "login", "session")):
+        return "auth"
+    if any(k in p for k in ("/api/", "route", "controller")):
+        return "api"
+    if any(k in p for k in ("component", "page", ".tsx", ".jsx")):
+        return "ui"
+    if any(k in p for k in ("model", "schema", "migration")):
+        return "database"
+    if any(k in p for k in ("test", "spec", "__tests__")):
+        return "testing"
+    return "other"
+
+
+def main() -> None:
+    raw = sys.stdin.read() if not sys.stdin.isatty() else "{}"
+    try:
+        payload = json.loads(raw or "{}")
+    except ValueError:
+        payload = {}
+
+    tool_input = payload.get("tool_input", {}) or {}
+    file_path = tool_input.get("file_path") or tool_input.get("path") or ""
+    if not file_path:
+        return
+
+    content = tool_input.get("content") or tool_input.get("new_string") or ""
+    lines = content.count("\\n") if content else 0
+
+    comment = {
+        "project": PROJECT,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "file_path": file_path,
+        "category": categorise(file_path),
+        "tool": payload.get("tool_name", "unknown"),
+        "added_lines": lines,
+        "session_id": payload.get("session_id", "unknown"),
+    }
+
+    out = Path(".claude/task_comments.json")
+    out.parent.mkdir(exist_ok=True)
+    data = {"comments": []}
+    if out.exists():
+        try:
+            with open(out, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            pass
+    data.setdefault("comments", []).append(comment)
+    data["comments"] = data["comments"][-100:]
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+    print(f"auto-task-commenter: logged {Path(file_path).name}")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as exc:  # noqa: BLE001
+        print(f"auto-task-commenter: non-fatal error: {exc}", file=sys.stderr)
+`;
+}
+
+function taskCodeMapperPy(config: ProjectConfig): string {
+  return `#!/usr/bin/env python3
+"""task-code-mapper.py — PostToolUse hook. Maintains a rolling map of file
+paths to inferred task IDs based on lightweight pattern matching."""
+
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+PROJECT = "${config.projectName}"
+
+CATEGORY_KEYWORDS = {
+    "auth": ["auth", "login", "session", "jwt", "token"],
+    "user": ["user", "profile", "account", "member"],
+    "api": ["api", "route", "endpoint", "handler", "controller"],
+    "ui": ["component", "page", "layout", "style"],
+    "database": ["model", "schema", "migration", "seed"],
+    "integration": ["webhook", "integration", "third-party"],
+    "testing": ["test", "spec", "__tests__"],
+}
+
+
+def infer(path: str) -> dict | None:
+    lower = path.lower()
+    best: dict | None = None
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        score = sum(0.2 for kw in keywords if kw in lower)
+        if f"/{category}/" in lower:
+            score += 0.2
+        if score == 0:
+            continue
+        candidate = {
+            "category": category,
+            "task_id": f"{category}_{abs(hash(path)) % 10000:04d}",
+            "confidence": round(min(score, 1.0), 2),
         }
-    }
-    
-    file_lower = file_path.lower()
-    best_match = None
-    highest_confidence = 0
-    
-    for category, config in project_patterns.items():
-        confidence = 0
-        matched_keywords = []
-        
-        # Check keywords in file path
-        for keyword in config['keywords']:
-            if keyword in file_lower:
-                confidence += 0.2
-                matched_keywords.append(keyword)
-        
-        # Boost confidence for specific file patterns
-        if category == 'auth' and any(pattern in file_lower for pattern in ['login', 'register', 'auth']):
-            confidence += 0.3
-        
-        elif category == 'api' and any(pattern in file_lower for pattern in ['route', 'handler', 'controller']):
-            confidence += 0.3
-        
-        elif category == 'ui' and any(pattern in file_lower for pattern in ['component', 'layout', 'page']):
-            confidence += 0.3
-        
-        elif category == 'database' and any(pattern in file_lower for pattern in ['model', 'schema', 'migration']):
-            confidence += 0.3
-        
-        # Check file location patterns
-        if f'/{category}/' in file_lower or f'\\\\{category}\\\\' in file_lower:
-            confidence += 0.2
-        
-        # Update best match
-        if confidence > highest_confidence:
-            highest_confidence = confidence
-            best_match = {
-                'category': category,
-                'task_id': f"{config['task_prefix']}_{generate_task_id(file_path)}",
-                'confidence': confidence,
-                'matched_keywords': matched_keywords
-            }
-    
-    return best_match
+        if best is None or candidate["confidence"] > best["confidence"]:
+            best = candidate
+    return best
 
-def save_task_mapping(mapping_entry):
-    """Save task mapping to file."""
-    mapping_file = Path('.claude/task_mapping.json')
-    mapping_file.parent.mkdir(exist_ok=True)
-    
-    mapping_data = {'mappings': []}
-    if mapping_file.exists():
+
+def main() -> None:
+    raw = sys.stdin.read() if not sys.stdin.isatty() else "{}"
+    try:
+        payload = json.loads(raw or "{}")
+    except ValueError:
+        payload = {}
+
+    tool_input = payload.get("tool_input", {}) or {}
+    file_path = tool_input.get("file_path") or tool_input.get("path") or ""
+    if not file_path:
+        return
+
+    inferred = infer(file_path)
+    if inferred is None:
+        return
+
+    entry = {
+        "project": PROJECT,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "file_path": file_path,
+        "tool": payload.get("tool_name", "unknown"),
+        "session_id": payload.get("session_id", "unknown"),
+        **inferred,
+    }
+
+    out = Path(".claude/task_mapping.json")
+    out.parent.mkdir(exist_ok=True)
+    data = {"mappings": []}
+    if out.exists():
         try:
-            with open(mapping_file, 'r') as f:
-                mapping_data = json.load(f)
-        except:
+            with open(out, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
             pass
-    
-    mapping_data['mappings'].append(mapping_entry)
-    mapping_data['mappings'] = mapping_data['mappings'][-200:]  # Keep last 200
-    
-    with open(mapping_file, 'w') as f:
-        json.dump(mapping_data, f, indent=2)
+    data.setdefault("mappings", []).append(entry)
+    data["mappings"] = data["mappings"][-200:]
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+    print(f"task-code-mapper: mapped {entry['task_id']}")
+
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:  # noqa: BLE001
+        print(f"task-code-mapper: non-fatal error: {exc}", file=sys.stderr)
 `;
 }

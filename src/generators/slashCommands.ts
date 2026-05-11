@@ -1,922 +1,1223 @@
+/**
+ * Slash command generator (W6 — refreshed 2026-05-11)
+ *
+ * Emits real `.claude/commands/[<subdir>/]<name>.md` files with proper YAML
+ * frontmatter, replacing the previous "command-as-string-blob" approach.
+ *
+ * Frontmatter schema (per ORCHESTRATION.md):
+ *   - allowed-tools: optional YAML array of tool names with optional Bash matchers
+ *   - argument-hint:  optional single-line string shown in the picker
+ *   - description:    required, single-line
+ *   - model:          optional, one of the canonical lineup IDs
+ *
+ * Bodies use `$1`, `$2`, ... for positional arguments (legacy `$ARGUMENTS`
+ * is still respected by Claude Code but new commands prefer the positional
+ * form).
+ */
 import { ProjectConfig } from '../types';
+import { GeneratedFile } from '../adapters/base';
 import { generateCheckpointCommands } from './checkpointCommands';
 
-interface SlashCommand {
+// ---------------------------------------------------------------------------
+// Public types
+// ---------------------------------------------------------------------------
+
+export interface SlashCommandDef {
+  /** kebab-case command name (no leading slash) */
+  name: string;
+  /** Required single-line description rendered to frontmatter and indexes. */
+  description: string;
+  /** Optional argument-hint shown in the slash-command picker. */
+  argumentHint?: string;
+  /** Optional restricted tool list. Accepts plain names or Bash matchers. */
+  allowedTools?: string[];
+  /**
+   * Optional model ID. Must be one of the canonical 2026-05 lineup:
+   *   - claude-opus-4-7
+   *   - claude-sonnet-4-6
+   *   - claude-haiku-4-5-20251001
+   * If omitted the command inherits from the session.
+   */
+  model?: string;
+  /** Markdown body. May reference $1, $2, … or $ARGUMENTS. */
+  body: string;
+  /** Optional grouping subdirectory (e.g. "PRPs", "orchestration"). */
+  subdir?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the canonical default command set, parameterised by ProjectConfig.
+ */
+export function getDefaultCommands(config: ProjectConfig): SlashCommandDef[] {
+  const commands: SlashCommandDef[] = [
+    // ---- PRPs --------------------------------------------------------------
+    prpCreate(),
+    prpExecute(),
+    prpValidate(),
+    prpList(),
+    prpUpdate(),
+
+    // ---- Orchestration ----------------------------------------------------
+    orchestrateStatus(config),
+    orchestrateList(),
+    orchestrateSpawn(config),
+    spawnSubagents(),
+
+    // ---- Checkpoints ------------------------------------------------------
+    checkpointCreate(),
+    checkpointRestore(),
+    checkpointList(),
+
+    // ---- Quality ----------------------------------------------------------
+    validate(config),
+    review(),
+    securityScan(),
+
+    // ---- Session ----------------------------------------------------------
+    sessionSave(),
+    sessionRestore(),
+    primeContext(config),
+
+    // ---- Migration --------------------------------------------------------
+    migrateAnalyze(),
+    migratePlan(),
+    migrateExecute(),
+  ];
+
+  // Append legacy-compatibility checkpoint commands when the project opts in.
+  if (config.extras?.checkpoints) {
+    const legacy = generateCheckpointCommands(config);
+    legacy.forEach((cmd) => {
+      // Only push checkpoint extras if not already present by name.
+      if (commands.some((c) => c.name === cmd.name)) return;
+      commands.push({
+        name: cmd.name,
+        description: cmd.description,
+        body: cmd.template,
+        subdir: 'checkpoints',
+      });
+    });
+  }
+
+  return commands;
+}
+
+/**
+ * Emits one GeneratedFile per command, plus a short README index.
+ * The output layout is:
+ *
+ *     .claude/commands/<subdir>/<name>.md      (when subdir is set)
+ *     .claude/commands/<name>.md               (otherwise)
+ *     .claude/commands/README.md               (index)
+ */
+export function generateSlashCommands(config: ProjectConfig): GeneratedFile[] {
+  const commands = getDefaultCommands(config);
+
+  const files: GeneratedFile[] = commands.map((cmd) => ({
+    path: cmd.subdir
+      ? `.claude/commands/${cmd.subdir}/${cmd.name}.md`
+      : `.claude/commands/${cmd.name}.md`,
+    content: renderCommandMarkdown(cmd),
+    description: cmd.description,
+  }));
+
+  files.push({
+    path: '.claude/commands/README.md',
+    content: renderCommandsReadme(commands),
+    description: 'Slash commands index',
+  });
+
+  return files;
+}
+
+/**
+ * Compatibility export consumed by `claudeMd.ts` (which embeds a slash-command
+ * summary section inside the generated CLAUDE.md). Returns a markdown table
+ * grouped by subdir.
+ */
+export function renderCommandsForClaudeMd(config: ProjectConfig): string {
+  const commands = getDefaultCommands(config);
+  const grouped = groupBySubdir(commands);
+
+  let out = '## Available Slash Commands\n\n';
+  out +=
+    `Context Forge generates ${commands.length}+ slash commands under \`.claude/commands/\`. ` +
+    'Each is a standalone Markdown file with YAML frontmatter (allowed-tools, model, ' +
+    'argument-hint, description). Invoke with `/<name>` in Claude Code.\n\n';
+
+  for (const subdir of Object.keys(grouped).sort()) {
+    const heading = subdir === '' ? 'Top-level' : capitalize(subdir);
+    out += `### ${heading}\n\n`;
+    out += '| Command | Argument | Description |\n';
+    out += '|---------|----------|-------------|\n';
+    for (const cmd of grouped[subdir]) {
+      const hint = cmd.argumentHint ?? '—';
+      out += `| \`/${cmd.name}\` | ${hint} | ${escapePipe(cmd.description)} |\n`;
+    }
+    out += '\n';
+  }
+
+  return out.trimEnd() + '\n';
+}
+
+// ---------------------------------------------------------------------------
+// Legacy compatibility shim
+// ---------------------------------------------------------------------------
+//
+// The previous API exported `generateSlashCommandFiles(commands)` and the
+// `generateSlashCommands` function returned an array of `{ name, category,
+// content, description }` objects. claudeMd / older adapters may still call
+// these signatures, so we preserve them as deprecated wrappers around the new
+// implementation.
+
+/** @deprecated Use SlashCommandDef from the new API. */
+export interface SlashCommand {
   name: string;
   category: string;
   content: string;
   description: string;
 }
 
-export async function generateSlashCommands(config: ProjectConfig): Promise<SlashCommand[]> {
-  const commands: SlashCommand[] = [];
-
-  // PRP Commands
-  commands.push({
-    name: 'prp-create',
-    category: 'PRPs',
-    description: 'Generate a comprehensive PRP with deep research',
-    content: `# Create PRP for Feature: $ARGUMENTS
-
-Generate a complete PRP for feature implementation with deep and thorough research. Ensure rich context is passed to the AI through the PRP to enable one-pass implementation success.
-
-## Research Process
-
-1. **Codebase Analysis**
-   - Search for similar features/patterns in the codebase
-   - Identify all necessary files to reference
-   - Note existing conventions to follow
-   - Check test patterns for validation approach
-
-2. **External Research**
-   - Find relevant documentation (include URLs)
-   - Search for implementation examples
-   - Document best practices and common pitfalls
-   - Add critical docs to PRPs/ai_docs/ if needed
-
-3. **User Clarification**
-   - Ask for any missing requirements
-
-## PRP Generation
-
-Using the PRP template, include:
-- All necessary context (docs, examples, gotchas)
-- Implementation blueprint with pseudocode
-- Executable validation gates
-- Clear task breakdown
-
-## Output
-
-Save as: \`PRPs/{feature-name}-prp.md\`
-
-Remember: The goal is one-pass implementation success through comprehensive context.`,
-  });
-
-  commands.push({
-    name: 'prp-execute',
-    category: 'PRPs',
-    description: 'Execute a PRP against the codebase',
-    content: `# Execute PRP: $ARGUMENTS
-
-Load and execute the specified PRP file.
-
-## Workflow
-
-1. **Load PRP**: Read PRPs/$ARGUMENTS.md
-2. **Plan**: Create comprehensive implementation plan
-3. **Execute**: Implement following the blueprint
-4. **Validate**: Run all validation gates
-5. **Complete**: Ensure all checklist items done
-
-## Execution Guidelines
-
-- Follow existing code patterns
-- Implement incrementally with validation
-- Use TodoWrite tool to track progress
-- Run validation gates after each component
-- Fix any failures before proceeding
-
-When complete, all validation gates should pass.`,
-  });
-
-  commands.push({
-    name: 'prime-context',
-    category: 'development',
-    description: 'Prime Claude with intelligent project context and mode switching',
-    content: generateSmartPrimeContextCommand(config),
-  });
-
-  commands.push({
-    name: 'validate-prp',
-    category: 'PRPs',
-    description: 'Validate a PRP for completeness',
-    content: `# Validate PRP: $ARGUMENTS
-
-Check if the PRP contains all necessary elements for one-pass success.
-
-## Validation Checklist
-
-### Required Sections
-- [ ] Clear Goal statement
-- [ ] Why (business value)
-- [ ] What (requirements)
-- [ ] All Needed Context section
-- [ ] Implementation Blueprint
-- [ ] Validation Gates (4 levels)
-- [ ] Task Breakdown
-
-### Context Quality
-- [ ] Documentation URLs included
-- [ ] Code examples referenced
-- [ ] Known gotchas documented
-- [ ] Patterns identified
-
-### Validation Gates
-- [ ] Level 1: Syntax/Style commands
-- [ ] Level 2: Unit test patterns
-- [ ] Level 3: Integration tests
-- [ ] Level 4: Creative validation
-
-## Score
-
-Rate the PRP 1-10 for likelihood of one-pass success.`,
-  });
-
-  // Development Commands
-  commands.push({
-    name: 'debug-issue',
-    category: 'development',
-    description: 'Debug and find root cause of an issue',
-    content: `# Debug Issue: $ARGUMENTS
-
-Systematically debug and resolve the specified issue.
-
-## Debug Process
-
-1. **Reproduce**: Understand how to trigger the issue
-2. **Investigate**: 
-   - Check error logs and stack traces
-   - Examine relevant code paths
-   - Review recent changes
-3. **Root Cause**: Identify the underlying problem
-4. **Fix**: Implement and test the solution
-5. **Verify**: Ensure the issue is resolved
-
-Report findings and implemented fix.`,
-  });
-
-  // Code Quality Commands
-  commands.push({
-    name: 'review-code',
-    category: 'quality',
-    description: 'Review code for quality and best practices',
-    content: `# Code Review: $ARGUMENTS
-
-Review the specified code for quality, security, and best practices.
-
-## Review Areas
-
-1. **Code Quality**
-   - Readability and maintainability
-   - Proper error handling
-   - Performance considerations
-   - Security vulnerabilities
-
-2. **Best Practices**
-   - Follows project conventions
-   - Appropriate abstractions
-   - Test coverage
-   - Documentation
-
-3. **Suggestions**
-   - Specific improvements
-   - Refactoring opportunities
-   - Additional test cases
-
-Provide actionable feedback with examples.`,
-  });
-
-  commands.push({
-    name: 'refactor-code',
-    category: 'quality',
-    description: 'Refactor code for better structure',
-    content: `# Refactor: $ARGUMENTS
-
-Refactor the specified code while maintaining functionality.
-
-## Refactoring Process
-
-1. **Understand**: Analyze current implementation
-2. **Plan**: Identify refactoring opportunities
-3. **Test**: Ensure existing tests pass
-4. **Refactor**: Apply improvements incrementally
-5. **Validate**: Verify no regressions
-
-## Focus Areas
-- Extract reusable functions
-- Improve naming and clarity
-- Reduce complexity
-- Enhance type safety
-- Follow SOLID principles
-
-Maintain all existing functionality.`,
-  });
-
-  // Add rapid development commands
-  commands.push({
-    name: 'parallel-prp-create',
-    category: 'rapid',
-    description: 'Create multiple PRPs in parallel using subagents',
-    content: `# Parallel PRP Creation: $ARGUMENTS
-
-Create multiple PRPs simultaneously using batch tools and subagents.
-
-## Process
-
-1. **Parse Requirements**: Break down into independent features
-2. **Spawn Subagents**: Create parallel research tasks
-3. **Deep Research**: Each agent researches their feature
-4. **Generate PRPs**: Create comprehensive PRPs
-5. **Validate**: Ensure all PRPs meet quality standards
-
-## Subagent Instructions
-
-Each subagent should:
-- Research existing patterns thoroughly
-- Find external documentation
-- Document gotchas and pitfalls
-- Create executable validation gates
-- Score PRP confidence (1-10)
-
-Use batch tools to maximize efficiency.`,
-  });
-
-  commands.push({
-    name: 'smart-commit',
-    category: 'git',
-    description: 'Create intelligent git commits',
-    content: `# Smart Commit
-
-Analyze changes and create a well-structured commit.
-
-## Process
-
-1. **Analyze Changes**: Review all modified files
-2. **Group Changes**: Organize by feature/fix
-3. **Generate Message**: Create conventional commit message
-4. **Validate**: Ensure message follows standards
-
-## Commit Format
-
-\`\`\`
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-\`\`\`
-
-Types: feat, fix, docs, style, refactor, test, chore`,
-  });
-
-  commands.push({
-    name: 'create-pr',
-    category: 'git',
-    description: 'Create comprehensive pull request',
-    content: `# Create Pull Request
-
-Generate a detailed PR with all necessary context.
-
-## PR Structure
-
-1. **Title**: Clear, concise description
-2. **Summary**: What and why
-3. **Changes**: Detailed list of modifications
-4. **Testing**: How to verify changes
-5. **Screenshots**: If UI changes
-6. **Checklist**: Required validations
-
-## Template
-
-### Summary
-Brief description of changes and motivation
-
-### Changes
-- Change 1: Description
-- Change 2: Description
-
-### Testing
-Steps to test the changes
-
-### Checklist
-- [ ] Tests pass
-- [ ] Documentation updated
-- [ ] No regressions`,
-  });
-
-  // Checkpoint Commands (if enabled)
-  if (config.extras.checkpoints) {
-    const checkpointCommands = generateCheckpointCommands(config);
-    checkpointCommands.forEach((cmd) => {
-      commands.push({
-        name: cmd.name,
-        category: cmd.category,
-        description: cmd.description,
-        content: cmd.template,
-      });
-    });
+/** @deprecated Use `generateSlashCommands(config)` which now returns
+ * GeneratedFile[] directly. Accepts the legacy SlashCommand[] shape, the
+ * new SlashCommandDef[] shape, or a pre-rendered GeneratedFile[] (in which
+ * case it acts as a passthrough — this is how the unmodified Claude
+ * adapter continues to work until the orchestrator rewires wave 2). */
+export function generateSlashCommandFiles(
+  commands: SlashCommand[] | SlashCommandDef[] | GeneratedFile[]
+): GeneratedFile[] {
+  if (commands.length === 0) return [];
+
+  const first = commands[0] as unknown as Record<string, unknown>;
+
+  // Already rendered (GeneratedFile shape) → passthrough.
+  if ('path' in first && typeof first.path === 'string') {
+    return commands as GeneratedFile[];
   }
 
-  // Orchestration Commands
-  commands.push({
-    name: 'orchestrate-project',
-    category: 'orchestration',
-    description: 'Deploy autonomous AI team for 24/7 development',
-    content: generateOrchestratorCommand(config),
-  });
-
-  commands.push({
-    name: 'orchestrate-feature',
-    category: 'orchestration',
-    description: 'Deploy focused team for specific feature',
-    content: generateFeatureOrchestratorCommand(config),
-  });
-
-  commands.push({
-    name: 'orchestrate-status',
-    category: 'orchestration',
-    description: 'Check orchestration team status',
-    content: generateOrchestratorStatusCommand(),
-  });
-
-  commands.push({
-    name: 'feature-status',
-    category: 'development',
-    description: 'Check feature implementation progress',
-    content: `# Check Feature Status: $ARGUMENTS
-
-View progress on a specific feature implementation.
-
-## Usage
-
-\`/feature-status "authentication"\` - Status of auth feature
-\`/feature-status all\` - Status of all features
-
-## Information Displayed
-
-### Feature Overview
-- Feature name and description
-- Assigned team members
-- Current phase
-- Overall progress percentage
-
-### Task Breakdown
-- Completed tasks ✅
-- In-progress tasks 🔄
-- Blocked tasks 🚫
-- Pending tasks ⏳
-
-### Quality Metrics
-- Test coverage
-- Code review status
-- Documentation status
-- Performance benchmarks
-
-### Timeline
-- Start date
-- Expected completion
-- Actual vs planned progress
-- Blocker impact on timeline
-
-### Recent Activity
-- Last 5 commits related to feature
-- Recent PR activity
-- Test results
-- Key decisions made
-
-## Quick Actions
-
-Based on status:
-1. Unblock team members
-2. Adjust timeline
-3. Add resources
-4. Review completed work
-
-Use this to keep features on track!`,
-  });
-
-  return commands;
-}
-
-export function generateSlashCommandFiles(commands: SlashCommand[]): GeneratedFile[] {
-  const files: GeneratedFile[] = [];
-
-  for (const command of commands) {
-    files.push({
-      path: path.join('.claude', 'commands', command.category, `${command.name}.md`),
-      content: command.content,
-      description: command.description,
-    });
+  // New SlashCommandDef shape.
+  if ('body' in first) {
+    return (commands as SlashCommandDef[]).map((cmd) => ({
+      path: cmd.subdir
+        ? `.claude/commands/${cmd.subdir}/${cmd.name}.md`
+        : `.claude/commands/${cmd.name}.md`,
+      content: renderCommandMarkdown(cmd),
+      description: cmd.description,
+    }));
   }
 
-  // Add README for commands
-  files.push({
-    path: path.join('.claude', 'commands', 'README.md'),
-    content: generateCommandsReadme(commands),
-    description: 'Slash commands documentation',
-  });
-
-  // Add PRPs/ai_docs directory with README
-  files.push({
-    path: path.join('PRPs', 'ai_docs', 'README.md'),
-    content: generateAiDocsReadme(),
-    description: 'AI documentation curation guide',
-  });
-
-  return files;
+  // Legacy shape: name + category + content
+  return (commands as SlashCommand[]).map((cmd) => ({
+    path: `.claude/commands/${cmd.category}/${cmd.name}.md`,
+    content: cmd.content,
+    description: cmd.description,
+  }));
 }
 
-function generateCommandsReadme(commands: SlashCommand[]): string {
-  const commandsByCategory = commands.reduce(
-    (acc, cmd) => {
-      if (!acc[cmd.category]) acc[cmd.category] = [];
-      acc[cmd.category].push(cmd);
-      return acc;
-    },
-    {} as Record<string, SlashCommand[]>
-  );
+// ---------------------------------------------------------------------------
+// Frontmatter / Markdown rendering
+// ---------------------------------------------------------------------------
 
-  let content = `# Context Forge Slash Commands
+export function renderCommandMarkdown(cmd: SlashCommandDef): string {
+  const fm = renderFrontmatter(cmd);
+  const body = cmd.body.endsWith('\n') ? cmd.body : cmd.body + '\n';
+  return `${fm}\n${body}`;
+}
 
-Custom slash commands for Claude Code to enhance your development workflow.
+function renderFrontmatter(cmd: SlashCommandDef): string {
+  const lines: string[] = ['---'];
 
-## Usage
+  if (cmd.allowedTools && cmd.allowedTools.length > 0) {
+    lines.push(`allowed-tools: ${formatYamlArray(cmd.allowedTools)}`);
+  }
+  if (cmd.argumentHint) {
+    lines.push(`argument-hint: ${formatYamlString(cmd.argumentHint)}`);
+  }
+  // description is required
+  lines.push(`description: ${formatYamlString(cmd.description)}`);
+  if (cmd.model) {
+    lines.push(`model: ${formatYamlString(cmd.model)}`);
+  }
 
-In Claude Code, type \`/\` followed by the command name:
-- \`/prp-create feature-name\` - Create a new PRP
-- \`/prp-execute feature-name\` - Execute an existing PRP
-- \`/prime-context\` - Load project context
+  lines.push('---');
+  return lines.join('\n');
+}
 
-## Available Commands
+/**
+ * Render a YAML scalar string. Always quotes to avoid ambiguity around
+ * colons, hash marks, leading/trailing whitespace, etc. Uses double-quoted
+ * style with proper escapes.
+ */
+function formatYamlString(value: string): string {
+  // Escape backslashes and double quotes; convert newlines to literal \n
+  const escaped = value
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
+  return `"${escaped}"`;
+}
+
+/** Render a YAML flow-style array of scalar strings. */
+function formatYamlArray(values: string[]): string {
+  return `[${values.map(formatYamlString).join(', ')}]`;
+}
+
+function renderCommandsReadme(commands: SlashCommandDef[]): string {
+  const grouped = groupBySubdir(commands);
+  let out = `# Slash Commands
+
+Generated by [context-forge](https://github.com/webdevtodayjason/context-forge).
+
+Each file in this directory is a Claude Code slash command with YAML
+frontmatter. Invoke with \`/<name>\` in Claude Code; positional arguments
+fill in \`$1\`, \`$2\`, … in the body.
+
+## Frontmatter fields
+
+- \`allowed-tools\` — restricts the command to a specific tool surface
+  (e.g. \`[Read, Grep, Bash(git status:*)]\`).
+- \`argument-hint\` — placeholder shown in the picker.
+- \`description\` — single-line summary (required).
+- \`model\` — one of \`claude-opus-4-7\`, \`claude-sonnet-4-6\`,
+  \`claude-haiku-4-5-20251001\`. Inherits the session model when omitted.
+
+## Index
 
 `;
 
-  for (const [category, cmds] of Object.entries(commandsByCategory)) {
-    content += `\n### ${category.charAt(0).toUpperCase() + category.slice(1)}\n\n`;
-    for (const cmd of cmds) {
-      content += `- **/${cmd.name}** - ${cmd.description}\n`;
+  for (const subdir of Object.keys(grouped).sort()) {
+    const heading = subdir === '' ? 'Top-level' : capitalize(subdir);
+    out += `### ${heading}\n\n`;
+    for (const cmd of grouped[subdir]) {
+      const hint = cmd.argumentHint ? ` ${cmd.argumentHint}` : '';
+      out += `- **/${cmd.name}**${hint} — ${cmd.description}\n`;
     }
+    out += '\n';
   }
 
-  content += `\n## Creating Custom Commands
-
-Add your own commands by creating markdown files in the appropriate category folder:
-- \`.claude/commands/PRPs/\` - PRP-related commands
-- \`.claude/commands/development/\` - Development utilities
-- \`.claude/commands/quality/\` - Code quality tools
-- \`.claude/commands/rapid/\` - Rapid development tools
-- \`.claude/commands/git/\` - Git operations
-
-Use \`$ARGUMENTS\` placeholder for dynamic input.
-
-## Tips
-
-- Commands are automatically discovered by Claude Code
-- Use descriptive names for easy discovery
-- Include clear instructions in command content
-- Reference existing patterns in the codebase
-- Commands can call other commands`;
-
-  return content;
+  return out.trimEnd() + '\n';
 }
 
-function generateAiDocsReadme(): string {
-  return `# AI Documentation Curation
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
 
-This directory contains curated documentation for AI-assisted development. These docs are referenced in PRPs to provide comprehensive context.
+function groupBySubdir(commands: SlashCommandDef[]): Record<string, SlashCommandDef[]> {
+  return commands.reduce<Record<string, SlashCommandDef[]>>((acc, cmd) => {
+    const key = cmd.subdir ?? '';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(cmd);
+    return acc;
+  }, {});
+}
 
-## Purpose
+function capitalize(s: string): string {
+  return s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
+}
 
-When creating PRPs, you may need to include specific documentation that isn't easily accessible via URLs or is critical for implementation success. This directory serves as a repository for such documentation.
+function escapePipe(s: string): string {
+  return s.replace(/\|/g, '\\|');
+}
 
-## Usage in PRPs
+function describeTechStack(config: ProjectConfig): string {
+  if (!config.techStack) return 'unknown';
+  const parts = Object.entries(config.techStack)
+    .filter(([, v]) => Boolean(v))
+    .map(([k, v]) => `${k}: ${v}`);
+  return parts.length > 0 ? parts.join(', ') : 'unknown';
+}
 
-Reference documents in your PRPs using:
+// ---------------------------------------------------------------------------
+// Command definitions — PRPs
+// ---------------------------------------------------------------------------
 
-\`\`\`yaml
-- docfile: PRPs/ai_docs/library-guide.md
-  why: Specific implementation patterns and gotchas
+function prpCreate(): SlashCommandDef {
+  return {
+    name: 'prp-create',
+    subdir: 'PRPs',
+    description: 'Generate a comprehensive Product Requirement Prompt for a new feature.',
+    argumentHint: '<feature-name>',
+    allowedTools: ['Read', 'Grep', 'Glob', 'WebFetch', 'Write'],
+    model: 'claude-opus-4-7',
+    body: `# PRP create — $1
+
+Compose a Product Requirement Prompt for the feature **$1** with deep,
+single-pass research. The goal is one-pass implementation success: the PRP
+must carry enough context for the executor to ship without follow-up
+clarification.
+
+## Steps
+
+1. **Inventory existing PRPs.** Read \`PRPs/*.md\` to absorb tone, structure,
+   and validation conventions in this codebase.
+2. **Codebase reconnaissance.** Use \`Grep\` and \`Glob\` to find similar
+   features, conventions, and test patterns to mirror. List every file the
+   executor will need to touch or reference.
+3. **External research.** Pull authoritative docs (with full URLs), version
+   notes, and known gotchas. Stash anything dense in \`PRPs/ai_docs/\` and
+   reference by relative path.
+4. **Compose the PRP** using the project's PRP template. Required sections:
+   - Goal, Why, What, Success criteria
+   - All Needed Context (URLs, files, gotchas)
+   - Implementation Blueprint (pseudo-code for each task)
+   - Validation Gates (4 levels: syntax, unit, integration, creative)
+   - Task Breakdown (ordered, atomic, executable)
+5. **Self-score** the PRP confidence 1–10 in a final block. Anything <8 means
+   you need more context — loop back to step 2/3.
+
+## Output
+
+Save as: \`PRPs/$1-prp.md\`. Confirm path and word count when done.
+
+Remember: depth and specificity here saves a 5x cost during execution.
+`,
+  };
+}
+
+function prpExecute(): SlashCommandDef {
+  return {
+    name: 'prp-execute',
+    subdir: 'PRPs',
+    description: 'Execute an existing PRP end-to-end against the codebase.',
+    argumentHint: '<prp-name>',
+    allowedTools: ['Read', 'Grep', 'Glob', 'Edit', 'Write', 'Bash'],
+    body: `# PRP execute — $1
+
+Load and execute the PRP at \`PRPs/$1.md\`.
+
+## Workflow
+
+1. **Read the PRP.** Internalise Goal, Success Criteria, and every Needed
+   Context entry. Stop and ask if anything reads ambiguous.
+2. **Plan.** Break the Implementation Blueprint into a TodoWrite list. Each
+   item must be atomic and individually verifiable.
+3. **Execute.** Implement task-by-task following the blueprint. Mirror the
+   repository's existing patterns; do not invent new conventions.
+4. **Validate after each task.** Run the validation gate appropriate to the
+   change (lint, unit test, integration test). Do not advance past a failing
+   gate — fix in place.
+5. **Final pass.** Run *all* validation gates from the PRP's "Validation
+   Gates" section. Every one must pass before declaring done.
+
+## Reporting
+
+When complete, post a short report covering:
+
+- Files touched (with line counts)
+- Validation gate results (each gate, pass/fail/skipped + why)
+- Anything from the PRP that turned out to be wrong, missing, or stale
+- Confidence the change is shippable (1-10)
+`,
+  };
+}
+
+function prpValidate(): SlashCommandDef {
+  return {
+    name: 'prp-validate',
+    subdir: 'PRPs',
+    description: 'Validate that a PRP is complete enough for one-pass execution.',
+    argumentHint: '<prp-name>',
+    allowedTools: ['Read', 'Grep', 'Bash(npm test:*)', 'Bash(npm run lint:*)'],
+    body: `# PRP validate — $1
+
+Audit \`PRPs/$1.md\` against the one-pass-success rubric and emit a score.
+
+## Required sections (each must be non-empty and specific)
+
+- [ ] Goal — single sentence, outcome-oriented
+- [ ] Why — business or technical motivation
+- [ ] What — observable requirements
+- [ ] All Needed Context — URLs, files, gotchas, version notes
+- [ ] Implementation Blueprint — pseudo-code per task
+- [ ] Validation Gates — Levels 1–4 with concrete commands
+- [ ] Task Breakdown — atomic, ordered, individually verifiable
+
+## Context quality checks
+
+- [ ] At least one external doc URL with anchor or version
+- [ ] At least one in-repo file path under \`Needed Context\`
+- [ ] Known gotchas and anti-patterns are spelled out
+- [ ] Existing patterns (file paths) named for the executor to mirror
+
+## Validation gates must include
+
+- Level 1 (syntax/style): lint + format command
+- Level 2 (unit): test runner invocation
+- Level 3 (integration): cross-module/E2E command
+- Level 4 (creative): qualitative check (e.g. screenshot, perf budget)
+
+## Output
+
+Print a final scorecard:
+
+\`\`\`
+PRP: $1
+Required sections: <n/7>
+Context quality:    <n/4>
+Validation gates:   <n/4>
+Confidence (1-10):  <score>
+Verdict: SHIP / REVISE
 \`\`\`
 
-## What to Include
+If any required section scores zero, verdict is REVISE regardless.
+`,
+  };
+}
 
-1. **Library Documentation** - Key sections from official docs
-2. **Implementation Patterns** - Common patterns and best practices
-3. **API References** - Detailed API documentation for complex integrations
-4. **Migration Guides** - When upgrading versions or switching libraries
-5. **Internal Standards** - Team-specific coding standards and practices
+function prpList(): SlashCommandDef {
+  return {
+    name: 'prp-list',
+    subdir: 'PRPs',
+    description: 'List every PRP in the repo with its status and confidence.',
+    allowedTools: ['Read', 'Glob', 'Grep'],
+    model: 'claude-haiku-4-5-20251001',
+    body: `# PRP list
 
-## File Naming Convention
+Enumerate \`PRPs/*.md\` and emit a one-line summary per PRP.
 
-- Use descriptive names: \`react-hooks-guide.md\`, \`fastapi-async-patterns.md\`
-- Include version if relevant: \`nextjs-15-app-router.md\`
-- Use lowercase with hyphens
+## Steps
 
-## Example Structure
+1. \`Glob\` for \`PRPs/*.md\` (skip \`PRPs/ai_docs/\` and \`PRPs/templates/\`).
+2. For each, read the first ~30 lines to extract:
+   - Title (first H1)
+   - Goal (one-liner under "## Goal" if present)
+   - Confidence score (search for "Confidence" in the file)
+   - Status (search for "Status:" in the file; default "draft")
+
+## Output
+
+A single Markdown table:
+
+| PRP | Goal | Status | Confidence |
+|-----|------|--------|------------|
+| feature-x-prp | … | draft | 7/10 |
+
+Sort by confidence descending. Append a count summary line at the bottom.
+`,
+  };
+}
+
+function prpUpdate(): SlashCommandDef {
+  return {
+    name: 'prp-update',
+    subdir: 'PRPs',
+    description: 'Refresh an existing PRP with new findings or revised context.',
+    argumentHint: '<prp-name>',
+    allowedTools: ['Read', 'Grep', 'Glob', 'WebFetch', 'Edit'],
+    model: 'claude-opus-4-7',
+    body: `# PRP update — $1
+
+Reopen \`PRPs/$1.md\` and refresh it against current reality.
+
+## Steps
+
+1. Read the existing PRP top-to-bottom.
+2. Re-run the codebase reconnaissance (\`Grep\`, \`Glob\`) — note anything
+   that has changed since the PRP was written (file paths, conventions, deps).
+3. Re-fetch external docs referenced in "Needed Context" — flag stale URLs,
+   version drift, deprecated APIs.
+4. Edit the PRP in place. Use a "Changelog" section at the bottom to record
+   what changed and why. Bump the confidence score if reality now matches
+   the PRP better, or down if new gaps surfaced.
+
+## Constraints
+
+- Do not delete sections silently — strike through with notes if removing.
+- Preserve the original task ordering unless a dependency reordering is
+  necessary; if so, explain in the Changelog.
+- If the underlying feature has shipped, mark Status: shipped and stop.
+`,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Command definitions — Orchestration
+// ---------------------------------------------------------------------------
+
+function orchestrateStatus(config: ProjectConfig): SlashCommandDef {
+  return {
+    name: 'orchestrate-status',
+    subdir: 'orchestration',
+    description: 'Show the current orchestration team status (panes, tasks, blockers).',
+    allowedTools: ['Bash(tmux ls:*)', 'Bash(tmux list-windows:*)', 'Bash(git log:*)', 'Read'],
+    body: `# Orchestrate status
+
+Report the current state of the orchestration team for **${config.projectName ?? 'this project'}**.
+
+## Steps
+
+1. \`tmux ls\` to list active orchestration sessions. Match anything matching
+   \`cf-*\` or \`orch-*\`.
+2. For each match, \`tmux list-windows -t <session>\` to enumerate workers.
+3. Read \`ORCHESTRATION.md\` if present — extract the Task Ledger and
+   Decision Log.
+4. \`git log --since="6 hours ago" --oneline\` to see recent worker commits.
+
+## Report
+
+Print a single status block:
 
 \`\`\`
-PRPs/ai_docs/
-├── README.md (this file)
-├── react-hooks-guide.md
-├── fastapi-async-patterns.md
-├── postgres-optimization.md
-└── aws-lambda-best-practices.md
+Session:    <name>
+Workers:    <n active> / <n total>
+Tasks:      <pending> / <in_progress> / <completed>
+Last commit: <sha> <message> (<relative time>)
+Blockers:   <list, or "none">
 \`\`\`
 
-Remember: The goal is to provide AI with all necessary context for one-pass implementation success.`;
+Flag any worker idle > 30min as 🟡 IDLE; any blocked worker as 🔴 BLOCKED.
+`,
+  };
 }
 
-// Re-export for use in adapters
-import { GeneratedFile } from '../adapters/base';
-import path from 'path';
+function orchestrateList(): SlashCommandDef {
+  return {
+    name: 'orchestrate-list',
+    subdir: 'orchestration',
+    description: 'List all orchestration sessions known to this machine.',
+    allowedTools: ['Bash(tmux ls:*)'],
+    model: 'claude-haiku-4-5-20251001',
+    body: `# Orchestrate list
 
-function generateOrchestratorCommand(config: ProjectConfig): string {
-  return `# Deploy Autonomous Orchestration: $ARGUMENTS
+Enumerate every tmux session that looks like a context-forge orchestration
+(prefixes \`cf-\`, \`orch-\`, or any session whose name matches a directory
+containing \`ORCHESTRATION.md\`).
 
-Deploy a full AI orchestration team to work on your project autonomously.
+## Steps
 
-## What This Does
+1. \`tmux ls\` and parse session names + window counts.
+2. Filter to candidate orchestration sessions.
+3. Print a one-line summary per session:
 
-1. **Creates AI Team**: Deploys orchestrator, project managers, and developers
-2. **Self-Managing**: Agents schedule their own check-ins and manage workload
-3. **Git Discipline**: Auto-commits every 30 minutes to prevent work loss
-4. **24/7 Operation**: Can run continuously without human intervention
+\`\`\`
+<session>  windows=<n>  attached=<yes|no>  uptime=<duration>
+\`\`\`
 
-## Usage
-
-\`/orchestrate-project\` - Deploy with default team structure
-\`/orchestrate-project small\` - Small team (1 PM, 2 devs)
-\`/orchestrate-project large\` - Large team (2 PMs, 4 devs, QA, DevOps)
-
-## Team Structure
-
-### Default Team
-- 1 Orchestrator (oversees everything)
-- 1 Project Manager (coordinates work)
-- 2 Developers (implement features)
-- 1 QA Engineer (ensures quality)
-
-### Small Team
-- 1 Orchestrator
-- 1 Project Manager
-- 2 Developers
-
-### Large Team
-- 1 Orchestrator
-- 2 Project Managers
-- 4 Developers
-- 2 QA Engineers
-- 1 DevOps Engineer
-- 1 Code Reviewer
-
-## Prerequisites
-
-1. **tmux installed**: Required for agent management
-2. **Git initialized**: Project must be a git repository
-3. **Claude access**: Each agent needs Claude access
-4. **PRPs created**: Agents work best with clear PRPs
-
-## Deployment Process
-
-1. Check tmux availability
-2. Create orchestration session
-3. Deploy agents with specific roles
-4. Initialize git auto-commit
-5. Set up self-scheduling
-6. Brief each agent on their responsibilities
-
-## Monitoring
-
-Use \`/orchestrate-status\` to check on your team
-Use \`tmux attach -t cf-${config.projectName}\` to view agents
-
-## Important Notes
-
-- Agents commit automatically - review commits regularly
-- Each agent has specific responsibilities and constraints
-- Communication follows hub-and-spoke model through PM
-- Orchestrator handles high-level decisions only
-
-Ready to deploy your AI team!`;
+If \`tmux\` is not installed or no sessions exist, say so explicitly and
+exit cleanly.
+`,
+  };
 }
 
-function generateFeatureOrchestratorCommand(_config: ProjectConfig): string {
-  return `# Deploy Feature-Focused Orchestration: $ARGUMENTS
+function orchestrateSpawn(config: ProjectConfig): SlashCommandDef {
+  return {
+    name: 'orchestrate-spawn',
+    subdir: 'orchestration',
+    description: 'Spawn a new orchestration team for a focused feature or audit.',
+    argumentHint: '<feature-or-task>',
+    allowedTools: ['Bash(tmux new-session:*)', 'Bash(tmux send-keys:*)', 'Read', 'Write'],
+    model: 'claude-opus-4-7',
+    body: `# Orchestrate spawn — $1
 
-Deploy a focused AI team to implement a specific feature.
+Stand up a new orchestrator + worker team focused on **$1**.
 
-## Usage
+Project: ${config.projectName ?? '(unset)'}
+Stack:   ${describeTechStack(config)}
 
-\`/orchestrate-feature "user authentication"\` - Deploy team for auth feature
-\`/orchestrate-feature "payment integration" large\` - Large team for complex feature
+## Plan first
 
-## What This Does
+Before spawning anything, emit a one-screen plan covering:
 
-1. **Focused Team**: Smaller team dedicated to one feature
-2. **Feature PRP**: Generates feature-specific PRP if needed
-3. **Auto PR**: Creates pull request when feature is complete
-4. **Progress Tracking**: Regular updates on feature progress
+- GOAL — what "done" looks like for this team
+- UNKNOWNS — what still needs investigation
+- WORK BREAKDOWN — 3–7 worker subjects with explicit file scopes
+- SERIALIZATION — which workers can run in parallel vs which are blocked
+- DONE WHEN — the verifiable exit criteria
 
-## Team Composition
+**Wait for explicit operator approval** before continuing.
 
-### Default Feature Team
-- 1 Lead Developer (owns the feature)
-- 1 Supporting Developer (assists and reviews)
-- 1 QA Engineer (tests the feature)
+## Then spawn
 
-### Large Feature Team
-- 1 Feature Lead
-- 2 Developers
-- 1 QA Engineer
-- 1 Code Reviewer
+1. \`tmux new-session -d -s cf-$1\` — create the session.
+2. Launch the orchestrator pane on the left, worker panes stacked on the right.
+3. Brief each worker with a self-contained prompt (file scopes, deliverable,
+   verification commands).
+4. Append the team to \`ORCHESTRATION.md\` task ledger.
 
-## Process
+## Verify
 
-1. Analyze feature requirements
-2. Generate or load feature PRP
-3. Deploy specialized team
-4. Implement with test-driven development
-5. Create PR when complete
-
-## Feature Workflow
-
-1. **Planning**: Team reviews requirements
-2. **Implementation**: TDD approach
-3. **Testing**: Comprehensive test coverage
-4. **Review**: Internal code review
-5. **PR Creation**: Automated PR with details
-
-## Success Criteria
-
-- All acceptance criteria met
-- Tests passing with >80% coverage
-- Code review approved
-- No regressions in existing features
-- Documentation updated
-
-## Monitoring
-
-Check progress with:
-- \`/feature-status [feature-name]\`
-- \`/orchestrate-status\`
-
-Feature-focused orchestration ensures dedicated attention to critical features!`;
+Run \`/orchestrate-status\` immediately after spawn to confirm every worker
+came up.
+`,
+  };
 }
 
-function generateOrchestratorStatusCommand(): string {
-  return `# Check Orchestration Status
+function spawnSubagents(): SlashCommandDef {
+  return {
+    name: 'spawn-subagents',
+    subdir: 'orchestration',
+    description: 'Fan out parallel research subagents for an open question.',
+    argumentHint: '<question>',
+    allowedTools: ['Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch'],
+    body: `# Spawn subagents — $1
 
-View the current status of your AI orchestration team.
+Run independent research subagents in parallel against question: **$1**.
 
-## Usage
+## Decomposition
 
-\`/orchestrate-status\` - Show current team status
-\`/orchestrate-status detailed\` - Include agent performance metrics
-\`/orchestrate-status logs\` - Show recent agent activity
+1. Split $1 into 3–5 *independent* sub-questions whose answers can be
+   gathered without depending on each other.
+2. For each sub-question, dispatch a subagent with:
+   - Crisp scope (one question, one report)
+   - The exact tool surface it needs (Read+Grep for codebase, WebFetch+
+     WebSearch for external)
+   - A 200-word reporting cap
+3. Wait for all subagents to return.
 
-## Status Information
+## Synthesis
 
-### Team Overview
-- Active agents and their roles
-- Current tasks being worked on
-- Blocked agents needing attention
-- Overall progress metrics
+Once every subagent reports:
 
-### Git Activity
-- Recent commits by agents
-- Current branch structure
-- Pending changes
+- Compile findings into a single brief (max 1 page).
+- Note conflicts between subagent reports — these are signal, not noise.
+- Surface the *next* concrete action this enables.
 
-### Performance Metrics
-- Tasks completed per agent
-- Average task completion time
-- Code quality scores
-- Communication efficiency
-
-### Health Indicators
-- Agent uptime
-- Error rates
-- Blocker frequency
-- Recovery success rate
-
-## Status Codes
-
-- 🟢 **Active**: Agent working normally
-- 🟡 **Idle**: No activity for 30+ minutes
-- 🔴 **Blocked**: Agent needs help
-- ⚫ **Offline**: Agent not responding
-
-## Quick Actions
-
-Based on status, you might:
-1. Unblock agents with additional context
-2. Adjust team size for workload
-3. Review and merge completed work
-4. Address quality issues
-
-## Dashboard View
-
-For real-time monitoring:
-\`tmux attach -t cf-[project-name]\`
-
-This lets you watch agents work in real-time!`;
+Do not delegate the synthesis itself — you must read every subagent's report
+yourself before composing the brief.
+`,
+  };
 }
 
-function generateSmartPrimeContextCommand(config: ProjectConfig): string {
-  return `# Smart Prime Context for ${config.projectName}
+// ---------------------------------------------------------------------------
+// Command definitions — Checkpoints
+// ---------------------------------------------------------------------------
 
-Intelligently prime Claude with project context and switch to appropriate mode based on project state.
+function checkpointCreate(): SlashCommandDef {
+  return {
+    name: 'checkpoint-create',
+    subdir: 'checkpoints',
+    description: 'Create a named checkpoint of the current working state.',
+    argumentHint: '<checkpoint-name>',
+    allowedTools: ['Bash(git status:*)', 'Bash(git stash:*)', 'Bash(git tag:*)', 'Read', 'Write'],
+    body: `# Checkpoint create — $1
 
-## Phase 1: Project State Detection
+Snapshot the current working state under name **$1**.
 
-First, analyze the project to determine if this is a new project or an existing codebase:
+## Steps
+
+1. \`git status\` — record clean/dirty.
+2. If dirty: \`git stash push -u -m "checkpoint:$1"\` to preserve uncommitted
+   work without losing it.
+3. Tag the current HEAD: \`git tag -a checkpoint/$1 -m "checkpoint $1"\`.
+4. Append a row to \`.claude/checkpoints/log.md\` with: timestamp, sha,
+   branch, dirty status, summary.
+
+## Output
+
+\`\`\`
+Checkpoint: $1
+Branch:     <branch>
+SHA:        <sha>
+Stash:      <ref or "none">
+\`\`\`
+
+If a checkpoint with this name already exists, abort and tell the operator
+to choose a different name (do not overwrite).
+`,
+  };
+}
+
+function checkpointRestore(): SlashCommandDef {
+  return {
+    name: 'checkpoint-restore',
+    subdir: 'checkpoints',
+    description: 'Restore the working state from a named checkpoint.',
+    argumentHint: '<checkpoint-name>',
+    allowedTools: ['Bash(git status:*)', 'Bash(git checkout:*)', 'Bash(git stash:*)', 'Read'],
+    body: `# Checkpoint restore — $1
+
+Restore working state from checkpoint **$1**.
+
+## Safety check first
+
+1. \`git status\` — refuse to restore over a dirty tree without confirmation.
+2. Confirm the checkpoint exists: \`git tag -l checkpoint/$1\`. If missing,
+   list available checkpoints and stop.
+
+## Restore
+
+1. \`git checkout checkpoint/$1\` (detached HEAD).
+2. If the checkpoint had an associated stash entry, surface its ref and ask
+   the operator whether to \`git stash pop\` it.
+3. Append a "RESTORED FROM" row to \`.claude/checkpoints/log.md\`.
+
+Do not auto-pop the stash — leave that to the operator.
+`,
+  };
+}
+
+function checkpointList(): SlashCommandDef {
+  return {
+    name: 'checkpoint-list',
+    subdir: 'checkpoints',
+    description: 'List every checkpoint with its sha, branch, and timestamp.',
+    allowedTools: ['Bash(git tag:*)', 'Bash(git log:*)', 'Read'],
+    model: 'claude-haiku-4-5-20251001',
+    body: `# Checkpoint list
+
+Enumerate every checkpoint tag (prefix \`checkpoint/\`) with metadata.
+
+## Steps
+
+1. \`git tag -l 'checkpoint/*'\` to list.
+2. For each: \`git log -1 --format='%h %ai %s' <tag>\` for sha, date, msg.
+3. Cross-reference with \`.claude/checkpoints/log.md\` for human-written
+   summaries.
+
+## Output
+
+| Checkpoint | SHA | Created | Summary |
+|------------|-----|---------|---------|
+| <name>     | <sha> | <date> | <summary> |
+
+Sort newest-first.
+`,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Command definitions — Quality
+// ---------------------------------------------------------------------------
+
+function validate(config: ProjectConfig): SlashCommandDef {
+  const lint =
+    config.techStack?.frontend === 'nextjs' || config.techStack?.frontend === 'react'
+      ? 'npm run lint'
+      : 'npm run lint';
+  const test = 'npm test';
+  return {
+    name: 'validate',
+    subdir: 'quality',
+    description: 'Run the full validation gate (lint + tests + typecheck).',
+    allowedTools: ['Bash(npm test:*)', 'Bash(npm run lint:*)', 'Bash(npx tsc:*)', 'Read'],
+    body: `# Validate
+
+Run every validation gate this project ships and report pass/fail per gate.
+
+## Gates
+
+| Gate | Command |
+|------|---------|
+| Lint | \`${lint}\` |
+| Typecheck | \`npx tsc --noEmit\` |
+| Tests | \`${test}\` |
+
+## Steps
+
+1. Run each gate sequentially. Capture stdout + stderr.
+2. After each gate, print a single status line:
+   - \`✅ <gate> passed (<duration>)\`
+   - \`❌ <gate> FAILED — first error: <one line>\`
+3. Do **not** skip subsequent gates on failure — run them all so the
+   operator sees the full damage.
+
+## Final report
+
+Print a summary at the bottom:
+
+\`\`\`
+Validation summary
+  Lint:     <pass|FAIL>
+  Type:     <pass|FAIL>
+  Tests:    <pass|FAIL>
+Verdict: <SHIP | BLOCK>
+\`\`\`
+`,
+  };
+}
+
+function review(): SlashCommandDef {
+  return {
+    name: 'review',
+    subdir: 'quality',
+    description: 'Comprehensive review of recent changes for quality, security, and conventions.',
+    argumentHint: '[scope = HEAD]',
+    allowedTools: ['Read', 'Grep', 'Glob', 'Bash(git diff:*)', 'Bash(git log:*)'],
+    model: 'claude-opus-4-7',
+    body: `# Review — $1
+
+Review the changes at scope **$1** (default \`HEAD\`) for code quality,
+security, and convention adherence.
+
+## Scope
+
+- If $1 looks like a sha or branch: \`git diff $1\`.
+- If $1 is "HEAD" or empty: \`git diff HEAD~1\`.
+- If $1 is "staged": \`git diff --cached\`.
+
+## Review axes
+
+1. **Correctness.** Does the change do what its commit message claims?
+2. **Conventions.** Matches existing patterns? Naming, layout, module
+   boundaries.
+3. **Security.** Any unsanitised input, missing auth checks, secret leakage,
+   path traversal, SQL-injection-shaped code?
+4. **Performance.** Any N+1 queries, unbounded loops, missing memoisation
+   on hot paths?
+5. **Tests.** Is the change tested? Are the tests asserting behaviour or
+   implementation?
+6. **Docs.** Does the change need a README/CHANGELOG entry?
+
+## Output
+
+For each axis, emit one of:
+- ✅ no issues
+- ⚠️ <issue> — <file:line> — <suggested fix>
+- ❌ <blocker> — <file:line> — <suggested fix>
+
+Finish with a single-line verdict: \`APPROVE\` / \`REQUEST_CHANGES\` /
+\`COMMENT\`.
+`,
+  };
+}
+
+function securityScan(): SlashCommandDef {
+  return {
+    name: 'security-scan',
+    subdir: 'quality',
+    description: 'Scan the codebase for common security smells.',
+    allowedTools: ['Read', 'Grep', 'Glob', 'Bash(npm audit:*)'],
+    body: `# Security scan
+
+Sweep the codebase for high-signal security issues.
+
+## Static checks (Grep)
+
+Scan for the following patterns and report file:line for any hit:
+
+- Hardcoded secrets: \`(api[_-]?key|secret|token|password)\\s*=\\s*["']\`
+- \`eval(\` / \`Function(\` / \`new Function(\`
+- \`child_process\` invocation with interpolated user input
+- \`dangerouslySetInnerHTML\` (React)
+- \`innerHTML\` assignment from variable
+- SQL string concatenation that includes a request var
+- Path joins from request input without normalisation
+- \`http.\` / \`fetch(\` to non-https URLs in production code paths
+
+## Dependency check
+
+Run \`npm audit --omit=dev --json\` and report:
+- High severity: count + first 5 advisories
+- Critical severity: every one (with package + remediation)
+
+## Output
+
+Top of report:
+
+\`\`\`
+Security scan summary
+  Hardcoded secrets: <n>
+  Dynamic exec:      <n>
+  XSS surface:       <n>
+  SQL/path/SSRF:     <n>
+  Audit critical:    <n>
+  Audit high:        <n>
+\`\`\`
+
+Then per-issue detail with file:line and a one-line fix suggestion.
+`,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Command definitions — Session
+// ---------------------------------------------------------------------------
+
+function sessionSave(): SlashCommandDef {
+  return {
+    name: 'session-save',
+    subdir: 'session',
+    description: 'Persist the current working session as a resumable handoff.',
+    argumentHint: '[label]',
+    allowedTools: ['Bash(git status:*)', 'Bash(git diff:*)', 'Bash(git log:*)', 'Read', 'Write'],
+    body: `# Session save — $1
+
+Persist the current working session into \`.claude/sessions/\` for later
+resumption (or for handoff to a teammate).
+
+## Capture
+
+Gather:
+
+1. \`git status -s\` — uncommitted file list
+2. \`git log --oneline -20\` — recent history
+3. \`git diff HEAD\` (truncated to ~200 lines per file) — current dirty state
+4. The active TodoWrite list
+5. Any \`HANDOFF\` block from the most recent compaction summary
+
+## Compose
+
+Write to \`.claude/sessions/$1.md\` (or \`session-<timestamp>.md\` if $1
+is empty):
+
+\`\`\`markdown
+# Session: $1
+**Saved:** <iso timestamp>
+**Branch:** <branch>
+**HEAD:** <sha>
+
+## Active task
+<one paragraph>
+
+## What was just done
+<bulleted list, last ~5 actions>
+
+## What's next
+<numbered list, ordered by priority>
+
+## Open questions
+<list, or "none">
+
+## Dirty state
+\`\`\`diff
+<truncated diff>
+\`\`\`
+\`\`\`
+
+Confirm path written when done.
+`,
+  };
+}
+
+function sessionRestore(): SlashCommandDef {
+  return {
+    name: 'session-restore',
+    subdir: 'session',
+    description: 'Restore working context from a previously-saved session file.',
+    argumentHint: '[session-name]',
+    allowedTools: ['Read', 'Glob', 'Bash(git status:*)', 'Bash(git log:*)'],
+    body: `# Session restore — $1
+
+Resume from a saved session under \`.claude/sessions/\`.
+
+## Steps
+
+1. If $1 is empty: \`Glob\` for \`.claude/sessions/*.md\`, sort by mtime
+   desc, pick the newest. Tell the operator which one was picked.
+2. If $1 is provided: read \`.claude/sessions/$1.md\` (try with and without
+   \`.md\` suffix).
+3. Compare the saved branch + HEAD to current state. Warn if either differs.
+4. Re-create the TodoWrite list from the "What's next" section.
+5. Print a one-screen orientation:
+   - Active task
+   - What was just done (last 5 actions)
+   - What's next (top 3)
+   - Open questions
+
+Do not auto-resume code edits — surface the orientation, then wait.
+`,
+  };
+}
+
+function primeContext(config: ProjectConfig): SlashCommandDef {
+  return {
+    name: 'prime-context',
+    subdir: 'session',
+    description: 'Load project context and switch to architect or analysis mode based on state.',
+    allowedTools: ['Read', 'Grep', 'Glob', 'Bash(ls:*)', 'Bash(find:*)'],
+    body: `# Prime context — ${config.projectName ?? '(project)'}
+
+Detect whether this is a greenfield or brownfield project, then load the
+right context and adopt the right working mode.
+
+## Phase 1: detect state
 
 \`\`\`bash
-# Check for source code files
-find . -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" -o -name "*.py" -o -name "*.java" -o -name "*.go" -o -name "*.rs" -o -name "*.php" -o -name "*.rb" | grep -v node_modules | head -10
+# Source files present?
+find . -type f \\( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.py' -o -name '*.go' -o -name '*.rs' \\) \\
+  -not -path './node_modules/*' -not -path './.git/*' -not -path './dist/*' | head -10
 
-# Check package.json and dependencies
-if [ -f package.json ]; then
-  echo "=== Package.json found ==="
-  cat package.json | jq '.dependencies // {}'
-  echo "=== Dev Dependencies ==="
-  cat package.json | jq '.devDependencies // {}'
-fi
+# Deps installed?
+ls package.json node_modules 2>/dev/null
 
-# Check for build artifacts and installed dependencies
-ls -la | grep -E "(node_modules|dist|build|target|__pycache__|\.git)"
-
-# Check project structure
-tree -L 3 -I 'node_modules|\.git|dist|build' . || ls -la
+# Project shape
+ls -la
 \`\`\`
 
-## Phase 2: Mode Selection
+## Phase 2: choose mode
 
-Based on the analysis above, determine project state:
+**GREENFIELD signals:** no source files, empty/minimal package.json, no
+node_modules, only README/CLAUDE.md/configs.
 
-### NEW PROJECT INDICATORS:
-- No source code files (only documentation)
-- Empty or minimal package.json
-- No node_modules or build artifacts
-- Only README.md, CLAUDE.md, and basic config files
+**BROWNFIELD signals:** source code present, dependencies in
+package.json, established directory structure.
 
-### EXISTING PROJECT INDICATORS:
-- Source code files present
-- Package.json with dependencies
-- Build artifacts or node_modules exists
-- Established project structure
+## Phase 3: load context
 
-## Phase 3: Context Loading & Mode Execution
+In **both** modes, read in this order:
 
-### If NEW PROJECT - Switch to LEAD SOFTWARE ARCHITECT MODE:
+1. \`CLAUDE.md\` (root + any nested ones)
+2. \`README.md\`
+3. \`package.json\` (or equivalent manifest) — note scripts and deps
+4. Top-level directory tree (depth 2)
 
-\`\`\`
-🏗️ ARCHITECT MODE ACTIVATED
-Role: Lead Software Architect
-Mission: Transform requirements into working software
-\`\`\`
+## Phase 4: act
 
-**Immediate Actions:**
+### Greenfield → ARCHITECT MODE
 
-1. **Requirements Analysis**
-   - Read CLAUDE.md for project guidelines and requirements
-   - Read README.md for project overview and specifications
-   - Extract technical requirements, features, and constraints
-   - Identify target users and success criteria
+Tech stack target: ${describeTechStack(config)}
 
-2. **Technical Architecture Planning**
-   - Review specified tech stack: ${
-     config.techStack
-       ? Object.entries(config.techStack)
-           .map(([key, value]) => `${key}: ${value}`)
-           .join(', ')
-       : 'To be determined'
-   }
-   - Design system architecture and component structure
-   - Plan database schema and API design
-   - Identify external integrations and dependencies
+- Draft an MVP feature list from the PRD/README.
+- Stand up project skeleton (package.json scripts, directory layout).
+- Open a TodoWrite list of build tasks ordered by dependency.
+- Start coding the first vertical slice immediately.
 
-3. **Development Planning**
-   - Create TodoWrite tasks for immediate development priorities
-   - Set up project structure and boilerplate
-   - Plan MVP feature set and development phases
-   - Identify critical path and dependencies
+### Brownfield → ANALYST MODE
 
-4. **Implementation Kickoff**
-   - Generate initial project structure
-   - Set up development environment
-   - Create first working components
-   - Begin feature implementation immediately
+- Map the architecture: entry points, module boundaries, data flow.
+- Identify conventions in use (naming, layering, test style).
+- Surface 3–5 quick-win improvements and 1 strategic concern.
+- Wait for the operator to choose a target before editing anything.
 
-**TodoWrite Tasks to Create:**
-- [ ] Set up project structure and dependencies
-- [ ] Create core application framework
-- [ ] Implement authentication system (if required)
-- [ ] Build primary user interface
-- [ ] Set up database and data models
-- [ ] Create API endpoints and business logic
-- [ ] Implement key features from requirements
-- [ ] Add testing framework and initial tests
-- [ ] Set up deployment configuration
+## Constraints
 
-**🚫 CRITICAL: Git Commit Rules**
+- **Never** add Claude Code attribution to commit messages.
+- Mirror existing patterns; do not introduce new conventions silently.
+`,
+  };
+}
 
-**NEVER include these in commit messages:**
-- ❌ \`🤖 Generated with [Claude Code](https://claude.ai/code)\`
-- ❌ \`Co-Authored-By: Claude <noreply@anthropic.com>\`
-- ❌ Any Claude Code signatures or attributions
+// ---------------------------------------------------------------------------
+// Command definitions — Migration
+// ---------------------------------------------------------------------------
 
-**Always use clean commit messages:**
-\`\`\`bash
-# ✅ Good commit messages:
-git commit -m "Initial project setup with ${config.techStack?.frontend || 'web framework'}"
-git commit -m "Add user authentication components"
-git commit -m "Implement core business logic"
-git commit -m "Add responsive UI components"
+function migrateAnalyze(): SlashCommandDef {
+  return {
+    name: 'migrate-analyze',
+    subdir: 'migration',
+    description: 'Analyse the current stack and identify migration paths and risks.',
+    argumentHint: '<target-stack>',
+    allowedTools: ['Read', 'Grep', 'Glob', 'WebFetch'],
+    body: `# Migrate analyze — $1
 
-# ❌ BAD - Never include:
-git commit -m "Add components
+Analyse the current codebase against target stack **$1** and produce a
+migration feasibility report.
 
-🤖 Generated with [Claude Code](https://claude.ai/code)
+## Steps
 
-Co-Authored-By: Claude <noreply@anthropic.com>"
-\`\`\`
+1. **Detect current stack.** Read \`package.json\` (and lockfile, if any) to
+   identify framework + version. Use \`Grep\` to confirm framework usage in
+   actual source (not just declared deps).
+2. **Profile coupling.** Estimate how many files reference framework-
+   specific APIs (router, ORM, auth, build tooling). Bucket as low (<20),
+   medium (20–100), high (>100).
+3. **Pull breaking-change docs** for current → target version transition.
+   Cite specific URLs.
+4. **Enumerate shared resources** that survive the migration: database
+   schemas, auth providers, external API integrations.
 
-**Next Actions:**
-- Start with project setup and core framework
-- Focus on getting a working prototype quickly
-- Implement features incrementally with validation
-- Build, test, and iterate rapidly
-- **Commit frequently with clean, descriptive messages**
-
-### If EXISTING PROJECT - Switch to ANALYSIS & GUIDANCE MODE:
+## Output
 
 \`\`\`
-🔍 ANALYSIS MODE ACTIVATED
-Role: Senior Developer & Code Architect
-Mission: Understand codebase and provide strategic guidance
+Migration analysis: <current-stack> → $1
+
+Coupling:        <low|medium|high>  (<n> files touch framework APIs)
+Breaking changes: <count, with severity histogram>
+Shared resources: <list>
+Estimated risk:  <low|medium|high|critical>
+Recommended strategy: <big-bang | incremental | parallel-run>
 \`\`\`
 
-**Comprehensive Analysis:**
+Append a 3-paragraph rationale for the recommended strategy.
+`,
+  };
+}
 
-1. **Project Discovery**
-   - Read CLAUDE.md for project guidelines and context
-   - Read README.md for project overview and setup
-   - Analyze package.json for dependencies and scripts
-   - Review project structure and organization patterns
+function migratePlan(): SlashCommandDef {
+  return {
+    name: 'migrate-plan',
+    subdir: 'migration',
+    description: 'Build a phased migration plan with checkpoints and rollback strategy.',
+    argumentHint: '<target-stack>',
+    allowedTools: ['Read', 'Grep', 'Glob', 'WebFetch', 'Write'],
+    model: 'claude-opus-4-7',
+    body: `# Migrate plan — $1
 
-2. **Codebase Analysis**
-   - Examine key source files and entry points
-   - Identify architectural patterns and frameworks
-   - Analyze code quality, structure, and conventions
-   - Review testing strategy and coverage
+Construct a phased migration plan from the current stack to **$1**, with
+explicit checkpoints, validation gates, and a rollback strategy.
 
-3. **Technical Assessment**
-   - Evaluate current tech stack and dependencies
-   - Identify potential security vulnerabilities
-   - Assess performance and scalability considerations
-   - Review configuration and environment setup
+Prerequisite: \`/migrate-analyze $1\` must have been run; consult its
+report.
 
-4. **Strategic Recommendations**
-   - Suggest architectural improvements
-   - Recommend code quality enhancements
-   - Identify technical debt and refactoring opportunities
-   - Propose new feature development approaches
+## Plan structure
 
-**Report Structure:**
-- **Project Overview**: Purpose, architecture, and tech stack
-- **Current State**: Strengths, weaknesses, and opportunities
-- **Code Quality**: Patterns, conventions, and areas for improvement
-- **Technical Recommendations**: Specific actionable suggestions
-- **Development Workflow**: Best practices and next steps
+For each phase, specify:
 
-**Key Analysis Areas:**
-- Project structure and organization
-- Code patterns and architectural decisions
-- Dependencies and security considerations
-- Testing strategy and coverage
-- Development workflow and tooling
-- Performance and scalability factors
+- **Name + duration** (e.g. "Phase 2: Migrate routing layer — 1 week")
+- **Goal** — what's done at the end
+- **Tasks** — atomic, ordered, file-scope-explicit
+- **Validation** — commands to run before declaring the phase complete
+- **Checkpoint** — human-approval gate? automated? what triggers it?
+- **Rollback point** — yes/no; if yes, the rollback procedure
 
-## Phase 4: Continuous Context Awareness
+## Required phases (template)
 
-After initial priming, maintain context awareness:
+1. **Inventory & freeze** — lock current behaviour with characterisation
+   tests.
+2. **Foundation** — install target stack alongside current; no behavioural
+   changes yet.
+3. **Migrate leaves** — modules with the fewest inbound deps first.
+4. **Migrate core** — the high-coupling modules.
+5. **Cutover** — switch traffic / build pipeline / entrypoints.
+6. **Decommission** — remove old stack.
 
-- **For New Projects**: Focus on rapid development and feature delivery
-- **For Existing Projects**: Provide ongoing analysis and improvement suggestions
-- **For Both**: Track progress, identify blockers, and suggest optimizations
+## Output
 
-## 🎯 Key Success Factors
+Write the plan to \`MIGRATION-PLAN.md\` (or
+\`PRPs/migration-to-$1-prp.md\` if PRP discipline is in use). Surface a
+1-paragraph executive summary inline.
+`,
+  };
+}
 
-### For New Projects:
-1. **Act immediately** - Don't just plan, start building
-2. **Use TodoWrite** - Track concrete next steps
-3. **Build incrementally** - Working software over documentation
-4. **Clean commits** - No Claude Code signatures ever
-5. **Follow tech stack** - Use specified technologies consistently
+function migrateExecute(): SlashCommandDef {
+  return {
+    name: 'migrate-execute',
+    subdir: 'migration',
+    description: 'Execute one phase of an approved migration plan.',
+    argumentHint: '<phase-id>',
+    allowedTools: ['Read', 'Grep', 'Glob', 'Edit', 'Write', 'Bash'],
+    body: `# Migrate execute — $1
 
-### For Existing Projects:
-1. **Comprehensive analysis** - Understand before suggesting
-2. **Actionable recommendations** - Provide specific improvements
-3. **Respect existing patterns** - Build on current architecture
-4. **Identify quick wins** - Suggest immediate improvements
-5. **Long-term vision** - Plan strategic enhancements
+Execute phase **$1** of the migration plan.
 
-## 🚀 Execution Directive
+## Pre-flight
 
-**NEW PROJECT**: You are the Lead Software Architect. Your job is to build working software immediately. Use TodoWrite, start coding, and make it real.
+1. Read \`MIGRATION-PLAN.md\` (or the PRP) and locate phase **$1**.
+2. Confirm prior phases are marked complete; if not, refuse to start and
+   say which phase is the blocker.
+3. \`git status\` — refuse to start with a dirty tree (the phase needs an
+   atomic baseline for rollback).
 
-**EXISTING PROJECT**: You are the Senior Code Analyst. Your job is to understand deeply and guide effectively. Provide specific, actionable insights.
+## Execute
 
-Execute the appropriate mode based on your project state analysis above.`;
+1. Open a TodoWrite list from the phase's task list.
+2. Execute tasks in order, committing after each atomic task with message
+   \`migrate($1): <task name>\`.
+3. After every task, run the phase's validation gate. Halt on failure;
+   surface the diff that broke it.
+
+## Phase exit
+
+1. Run **all** of the phase's validation commands.
+2. If the phase has an automated checkpoint, run it; if a human checkpoint,
+   pause and request approval.
+3. Mark the phase complete in \`MIGRATION-PLAN.md\` with timestamp + sha.
+
+## Rollback
+
+If anything fails irrecoverably:
+
+1. \`git reset --hard <pre-phase-sha>\`.
+2. Annotate the plan with the failure mode and what would be needed to
+   retry.
+3. Surface a short post-mortem to the operator.
+`,
+  };
 }

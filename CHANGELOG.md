@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0] — 2026-05-11 — Claude-current refresh
+
+The first major refresh in nine months. Context-forge now generates **everything a modern (May 2026) Claude Code project expects** — settings.json with the full hook lifecycle, sub-agents, skills, and slash commands as real `.md` files with frontmatter. The wizard that drives `init` is now a full-screen Ink TUI.
+
+### Added
+
+- **`.claude/settings.json` generator** (`src/generators/claudeSettings.ts`) — emits a single canonical settings.json wiring `hooks` (8 lifecycle events), `mcpServers` (filesystem default), `statusLine`, `outputStyles`, and `permissions.allow` / `permissions.deny`. The schema URL points at `https://json.schemastore.org/claude-code-settings.json`.
+- **Sub-agents generator** (`src/generators/agents.ts`) — emits `.claude/agents/<name>.md` files with frontmatter (`name`, `description`, `tools`, `model`). Ships 5 defaults: `code-reviewer`, `test-runner`, `plan-architect`, `security-auditor`, `prp-executor`. Templates at `templates/claude/agents/`.
+- **Skills generator** (`src/generators/skills.ts`) — emits `.claude/skills/<name>/SKILL.md` with project-specific Handlebars-rendered procedures. Ships 3 defaults: `testing-protocol`, `deployment-checklist`, `codebase-navigation`. Auto-derives test framework / language / deploy target from tech stack.
+- **Slash commands now ship as real `.md` files** (`src/generators/slashCommands.ts` rewritten, 1,223 lines) — 21 commands across 6 subdirs (`PRPs/`, `orchestration/`, `checkpoints/`, `quality/`, `session/`, `migration/`), each with frontmatter (`allowed-tools`, `argument-hint`, `description`, `model`). Legacy `renderCommandsForClaudeMd(config)` retained for CLAUDE.md embedding; legacy `generateSlashCommandFiles` retained as a passthrough shim.
+- **Full hook lifecycle**: `src/generators/hooks.ts`, `enhancementHooks.ts`, `migrationHooks.ts` now emit settings.json hook fragments alongside hook scripts. All 8 lifecycle events covered (`PreToolUse`, `PostToolUse`, `SessionStart`, `UserPromptSubmit`, `PreCompact`, `Stop`, `SubagentStop`, `Notification`). 14 bash scripts + 4 Python (Python retained only where stdin-JSON / markdown scanning truly warrants it).
+- **Ink TUI wizard** (`src/cli/tui/`) — `context-forge init` now runs as a full-screen React-for-CLIs wizard with 10 screens (Welcome → ProjectName → Description → TechStack → Features → IdeTargets → PrpOptions → Confirm → Generating → Done). ESC = back, Enter = advance, Ctrl-C = clean exit. Falls back to the legacy inquirer flow when stdin is not a TTY or `--no-tui` is passed.
+- **`GeneratedFile.mode`** field on the adapter interface (`src/adapters/base.ts`) so hook generators can request `chmod 0o755`. The writer in `src/generators/index.ts` honors it after `fs.writeFile`.
+- **`ProjectConfig`** gains 10 optional fields for the modern Claude Code surface: `preferredModel`, `testCommand`, `deployTarget`, `mcpServers`, `statusLine`, `outputStyles`, `permissionsAllow`, `permissionsDeny`, `customAgents`, `customSkills`. New `extras.{claudeSettings, agents, skills}` flags default-on.
+- **Repo dogfooding refreshed** — `/Users/sem/code/context-forge/.claude/settings.json` exists with the canonical shape; `.claude/commands/{prime-context,project-status,session-save,session-restore}.md` have frontmatter; `.claude/hooks/` ships modern bash hooks (`pre-compact.sh`, `session-start.sh`, `stop.sh`, `lint-on-edit.sh`) with the old `PreCompact.py` left as a shim for downstream callers.
+
+### Changed
+
+- **`@anthropic-ai/claude-code`** pinned to `^1.0.128` (was `^1.0.51`). The 2.x line is intentionally CLI-only — Anthropic removed the programmatic `query()` export. Sticking with the last 1.x preserves `AIIntelligenceService` while we plan the v4.1.0 migration to direct `@anthropic-ai/sdk` calls.
+- **Models everywhere are 2026-current**: `keyManager.ts` validation uses `claude-haiku-4-5-20251001`, `apiKeyManager.ts` default is `claude-sonnet-4-6`, settings.json + agent templates default to `claude-opus-4-7`. Zero references to `claude-3-*` IDs remain in `src/`.
+- **Description and keywords** rewritten to surface the modern Claude Code surface.
+
+### Unchanged in v4.0.0 (preserved from v3.x)
+
+- The `orchestrate` and `dashboard` CLI commands ship as-is. They predate this refresh and weren't part of the wave-1 worker scope. They're documented in the README and continue to work; they'll get the same modernization treatment (Ink TUIs, modern-surface integration) in v4.1.0.
+- The `enhance` and `migrate` flows likewise use the inquirer prompt path. Their generators were touched (`enhancementHooks.ts`, `migrationHooks.ts` migrated to settings.json fragments), but their CLI surface is unchanged.
+
+### v4.1.0 backlog (intentional)
+
+- **W11 — Direct SDK paths for AI features.** Migrate `AIIntelligenceService.generateFeaturePRP` and `generateSmartDefaults` from the `claude-code` `query()` wrapper to direct `@anthropic-ai/sdk` `messages.create` calls. Unblocks prompt caching (5-min TTL on large system prompts) and extended thinking (`thinking: { type: "enabled", budget_tokens: 4000 }`) for planning paths.
+- **TUI for `analyze` / `enhance` / `migrate`.** Currently only `init` has the Ink TUI; the other commands still use inquirer.
+- **`@anthropic-ai/claude-code` 2.x migration.** Depends on W11.
+- **Plugins.** `.claude/plugins.json` scaffolding for the marketplace.
+
+## [3.3.0] — 2026-05-11 — SDK + model refresh
+
+Drop-in patch that lands the same SDK + model surface that v4.0.0 carries. Released ahead of the v4.0.0 cut for users who want the SDK/model bump without the new generators.
+
+### Changed
+
+- **`@anthropic-ai/sdk`** `^0.56.0` → `^0.94.0`.
+- **`@anthropic-ai/claude-code`** `^1.0.51` → `^1.0.128`.
+- **Model IDs everywhere**:
+  - `src/services/keyManager.ts:196` — validation model now `claude-haiku-4-5-20251001` (was `claude-3-haiku-20240307`).
+  - `src/services/apiKeyManager.ts:138` — anthropic default now `claude-sonnet-4-6` (was `claude-3-5-sonnet-20241022`).
+  - User-facing inquirer choice label updated `"Claude-3.5-Sonnet"` → `"Sonnet 4.6"`.
+
+### Notes
+
+- Prompt caching + extended thinking were considered for this release but deferred to v4.1.0 (W11). Context-forge calls Anthropic through the `@anthropic-ai/claude-code` `query()` wrapper, which doesn't currently surface those flags. Proper enablement requires switching the AI-features paths to direct `@anthropic-ai/sdk` calls.
+
 ## [3.2.6] - 2025-07-27 - Feature PRP Generation Fix
 
 ### 🐛 Bug Fixes

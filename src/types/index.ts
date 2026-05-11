@@ -16,6 +16,32 @@ export interface IDEInfo {
   supportsPRP: boolean;
 }
 
+// ── Modern Claude Code surface types (v4.0.0) ────────────────────────────
+// Mirrored on the generator side (claudeSettings.ts, agents.ts, skills.ts).
+// Re-declared here so ProjectConfig stays the single source of truth for
+// the public surface without forcing types/index.ts to import from generators.
+
+export interface McpServerConfig {
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+}
+
+export interface AgentDefRef {
+  name: string;
+  description: string;
+  tools?: string[];
+  model?: string;
+  body: string;
+}
+
+export interface SkillDefRef {
+  name: string;
+  description: string;
+  when_to_use: string;
+  body: string;
+}
+
 export interface ProjectConfig extends Record<string, unknown> {
   // Basic project info
   projectName: string;
@@ -69,7 +95,25 @@ export interface ProjectConfig extends Record<string, unknown> {
     hooks?: boolean;
     checkpoints?: boolean;
     dartIntegration?: boolean;
+    // v4.0.0 — modern Claude Code surface
+    claudeSettings?: boolean;
+    agents?: boolean;
+    skills?: boolean;
   };
+
+  // ── v4.0.0 modern Claude Code config ─────────────────────────────────────
+  // The fields below configure the new .claude/settings.json, .claude/agents/,
+  // .claude/skills/ generators. All optional — sensible defaults if omitted.
+  preferredModel?: string; // default: claude-opus-4-7
+  testCommand?: string; // for skills/agents templating
+  deployTarget?: string; // for deployment-checklist skill
+  mcpServers?: Record<string, McpServerConfig>; // settings.json mcpServers
+  statusLine?: { type: 'command'; command: string }; // settings.json statusLine
+  outputStyles?: Record<string, string>; // settings.json outputStyles
+  permissionsAllow?: string[]; // settings.json permissions.allow
+  permissionsDeny?: string[]; // settings.json permissions.deny
+  customAgents?: AgentDefRef[]; // user-supplied agent overrides
+  customSkills?: SkillDefRef[]; // user-supplied skill overrides
 
   // Checkpoint configuration
   checkpointConfig?: CheckpointConfig;

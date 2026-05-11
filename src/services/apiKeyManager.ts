@@ -42,7 +42,7 @@ export class ApiKeyManager {
         name: 'provider',
         message: 'Which AI provider would you like to use for analysis?',
         choices: [
-          { name: 'Anthropic Claude (Claude-3.5-Sonnet)', value: 'anthropic' },
+          { name: 'Anthropic Claude (Sonnet 4.6)', value: 'anthropic' },
           { name: 'OpenAI (GPT-4)', value: 'openai' },
           { name: 'Google Gemini (Gemini-1.5-Pro)', value: 'gemini' },
         ],
@@ -135,7 +135,7 @@ export class ApiKeyManager {
 
   private getDefaultModel(provider: string): string {
     const models = {
-      anthropic: 'claude-3-5-sonnet-20241022',
+      anthropic: 'claude-sonnet-4-6',
       openai: 'gpt-4-turbo-preview',
       gemini: 'gemini-1.5-pro',
     };
